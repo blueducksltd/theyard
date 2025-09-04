@@ -23,9 +23,7 @@ To be Enugu’s go-to destination for intimate celebrations, peaceful escapes, a
 - **Styling:** [Tailwind CSS / SCSS / Styled Components]  
 - **Backend:** [Node.js / Express / Django]  
 - **Database:** [MongoDB / PostgreSQL / MySQL] 
-- **Hosting:** [Vercel / Netlify / AWS]  
-
-*(Replace with actual technologies used in your project.)*  
+- **Hosting:** [Vercel / Netlify / AWS]
 
 ## 🚀 Getting Started  
 
