@@ -7,7 +7,7 @@ const Testimonials = () => {
         src={"/celebration-reverse.svg"}
         alt="Celebration Icon"
         width={70}
-        className="absolute top-60 left-44"
+        className="absolute top-60 left-44 2xl:left-96"
       />
       <div className="relative flex items-center justify-center">
         <div className="w-[720px] h-[470px] border-x-2 border-yard-lightgreen justify-center items-center"></div>
@@ -57,7 +57,7 @@ const Testimonials = () => {
         src={"/celebration.svg"}
         alt="Celebration Icon"
         width={70}
-        className="absolute top-32 right-44"
+        className="absolute top-32 right-44 2xl:right-96"
       />
     </main>
   );

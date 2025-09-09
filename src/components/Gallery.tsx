@@ -18,13 +18,13 @@ const Gallery = () => {
       </header>
 
       <section className="w-full flex flex-wrap items-center my-4 gap-1">
-        <div className="w-[772px] h-[260px] bg-[url('/gallery/gallery.svg')] bg-cover bg-center flex-grow"></div>
-        <div className="w-[384px] h-[260px] bg-[url('/gallery/gallery2.svg')] bg-cover bg-center flex-grow"></div>
-        <div className="w-[384px] h-[280px] bg-[url('/gallery/gallery3.svg')] bg-cover bg-center flex-grow"></div>
-        <div className="w-[384px] h-[280px] bg-[url('/gallery/gallery4.svg')] bg-cover bg-center flex-grow"></div>
-        <div className="w-[384px] h-[280px] bg-[url('/gallery/gallery5.svg')] bg-cover bg-center flex-grow"></div>
-        <div className="w-[384px] h-[260px] bg-[url('/gallery/gallery6.svg')] bg-cover bg-center flex-grow"></div>
-        <div className="w-[772px] h-[260px] bg-[url('/gallery/gallery7.svg')] bg-cover bg-center flex-grow"></div>
+        <div className="w-[817px] 2xl:w-[1093px] h-[260px] 2xl:h-[300px] bg-[url('/gallery/gallery.svg')] bg-cover bg-center flex-grow"></div>
+        <div className="w-[384px] 2xl:w-[500px] h-[260px] 2xl:h-[300px] bg-[url('/gallery/gallery2.svg')] bg-cover bg-center flex-grow"></div>
+        <div className="w-[384px] 2xl:w-[500px] h-[280px] 2xl:h-[320px] bg-[url('/gallery/gallery3.svg')] bg-cover bg-center flex-grow"></div>
+        <div className="w-[384px] 2xl:w-[500px] h-[280px] 2xl:h-[320px] bg-[url('/gallery/gallery4.svg')] bg-cover bg-center flex-grow"></div>
+        <div className="w-[384px] 2xl:w-[500px] h-[280px] 2xl:h-[320px] bg-[url('/gallery/gallery5.svg')] bg-cover bg-center flex-grow"></div>
+        <div className="w-[384px] 2xl:w-[500px] h-[260px] 2xl:h-[300px] bg-[url('/gallery/gallery6.svg')] bg-cover bg-center flex-grow"></div>
+        <div className="w-[817px] 2xl:w-[1093px] h-[260px] 2xl:h-[300px] bg-[url('/gallery/gallery7.svg')] bg-cover bg-center flex-grow"></div>
       </section>
     </main>
   );
