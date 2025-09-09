@@ -1,26 +1,71 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@plugin "daisyui" {
+    themes: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@layer base {
+    body {
+        @apply font-lato;
+    }
+    .title {
+        font-size: 32px;
+        font-weight: 700;
+        font-style: bold;
+        line-height: 40px;
+        letter-spacing: -0.1px;
+        color: #4b6450;
+        font-family: var(--font-playfair), serif;
+    }
+    .paragraph {
+        font-size: 16px;
+        font-weight: 400;
+        font-style: normal;
+        line-height: 24px;
+        letter-spacing: -0.5px;
+        color: #5a5a53;
+        font-family: var(--font-lato), sans-serif;
+    }
+    .cta-link {
+        font-family: var(--font-sen), sans-serif;
+        font-weight: 500;
+        font-style: medium;
+        font-size: 16px;
+        line-height: 24px;
+        letter-spacing: 0.4px;
+        color: #55544e;
+    }
+    .cta-btn {
+        width: 239px;
+        height: 52px;
+        border-width: 1.5px;
+        border-radius: 2px;
+        padding: 20px 24px;
+        border-color: #4b6450;
+        color: #4b6450;
+        font-family: var(--font-sen), sans-serif;
+        font-weight: 500;
+        font-style: medium;
+        font-size: 16px;
+        line-height: 24px;
+        letter-spacing: 0.4px;
+        align-items: center;
+        display: flex;
+        @apply w-max;
+    }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme {
+    --color-yard-white: #fdfbf9;
+    --color-yard-primary: #4b6450;
+    --color-yard-dark-primary: #3c5040;
+    --color-yard-orange: #d4a548;
+    --color-yard-light-orange: #e9d9c0;
+    --color-yard-lighter-orange: #f2e3c6;
+    --color-yard-pinkish-orange: #e9d9c0;
+    --color-yard-text: #5a5a53;
+    --color-yard-milk: #eeeee6;
+    --color-yard-lightgreen: #e4e8e5;
+    --font-lato: var(--font-lato), sans-serif;
+    --font-playfair: var(--font-playfair), serif;
+    --font-sen: var(--font-sen), sans-serif;
 }
