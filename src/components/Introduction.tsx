@@ -18,8 +18,12 @@ const Introduction = () => {
             memories you’ll cherish forever.
           </p>
 
-          <Link href={"#"} className="cta-btn bg-yard-primary text-yard-milk">
-            Learn more about us
+          <Link
+            href={"#"}
+            className="cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden"
+          >
+            <span className="z-50">Learn more about us</span>
+            <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
           </Link>
 
           <div className="flex absolute bottom-16 right-28">

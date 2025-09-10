@@ -22,9 +22,12 @@ const Hero = () => {
             Park offers a serene, picturesque setting—perfect for picnics,
             intimate gatherings, and unforgettable celebrations.
           </p>
-
-          <Link href="#" className="cta-btn">
-            Plan your perfect picnic
+          <Link
+            href={"#"}
+            className="cta-btn group relative overflow-hidden hover:text-yard-dark-primary"
+          >
+            <span className="z-50">Plan your perfect picnic</span>
+            <div className="absolute top-0 left-0 bg-yard-primary-active w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
           </Link>
         </section>
         <img

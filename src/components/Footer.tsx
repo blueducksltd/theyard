@@ -19,8 +19,12 @@ const Footer = () => {
               placeholder="Enter your email address"
               className="w-[257px] border-[1px] border-[#999999] p-3 placeholder:text-[#999999] rounded-l-[2px]"
             />
-            <button className="w-[160px] h-[52px] bg-white font-sen leading-6 tracking-[0.4px] text-[16px] font-medium rounded-r-[2px]">
-              Subscribe
+            <button
+              type="submit"
+              className="w-[160px] h-[52px] bg-white font-sen leading-6 tracking-[0.4px] text-[16px] font-medium rounded-r-[2px] group relative overflow-hidden"
+            >
+              <span className="z-50 relative">Subscribe</span>
+              <div className="cta-btn-hover"></div>
             </button>
           </div>
 
@@ -43,51 +47,58 @@ const Footer = () => {
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
               >
                 Home
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
               >
                 About
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
               >
                 Packages
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
               >
                 Booking
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
               >
                 Gallery
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
               >
                 Services
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
               >
                 Contact
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
             </div>
 
@@ -98,26 +109,29 @@ const Footer = () => {
 
               <Link
                 href={"tel:+2348147871946"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-center gap-2"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-center gap-2 group relative w-max"
               >
                 <img src={"/icons/call.svg"} />
                 +234 81 4787 1946
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-center gap-2"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-center gap-2 group relative w-max"
               >
                 <img src={"/icons/mail.svg"} />
                 info@theyard.com
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <Link
                 href={"#"}
-                className="w-[250px] text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-start gap-2"
+                className="w-[250px] text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-start gap-2 group relative"
               >
                 <img src={"/icons/location.svg"} className="mt-1" />
                 21 Umuawulu Street, Independence Layout, Enugu
+                <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <div className="mt-5">
@@ -127,35 +141,40 @@ const Footer = () => {
                 <div className="flex items-center gap-2">
                   <Link
                     href={"#"}
-                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px]"
+                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px] group relative overflow-hidden"
                   >
-                    <img src={"/icons/whatsapp.svg"} className="w-7" />
+                    <img src={"/icons/whatsapp.svg"} className="w-7 z-50" />
+                    <div className="cta-btn-hover"></div>
                   </Link>
                   <Link
                     href={"#"}
-                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px]"
+                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px] group relative overflow-hidden"
                   >
-                    <img src={"/icons/facebook.svg"} className="w-7" />
+                    <img src={"/icons/facebook.svg"} className="w-7 z-50" />
+                    <div className="cta-btn-hover"></div>
                   </Link>
                   <Link
                     href={"#"}
-                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px]"
+                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px] group relative overflow-hidden"
                   >
-                    <img src={"/icons/instagram.svg"} className="w-7" />
-                  </Link>
-
-                  <Link
-                    href={"#"}
-                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px]"
-                  >
-                    <img src={"/icons/x.svg"} className="w-7" />
+                    <img src={"/icons/instagram.svg"} className="w-7 z-50" />
+                    <div className="cta-btn-hover"></div>
                   </Link>
 
                   <Link
                     href={"#"}
-                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px]"
+                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px] group relative overflow-hidden"
                   >
-                    <img src={"/icons/linkedin.svg"} className="w-7" />
+                    <img src={"/icons/x.svg"} className="w-7 z-50" />
+                    <div className="cta-btn-hover"></div>
+                  </Link>
+
+                  <Link
+                    href={"#"}
+                    className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px] group relative overflow-hidden"
+                  >
+                    <img src={"/icons/linkedin.svg"} className="w-7 z-50" />
+                    <div className="cta-btn-hover"></div>
                   </Link>
                 </div>
               </div>

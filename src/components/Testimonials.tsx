@@ -25,8 +25,12 @@ const Testimonials = () => {
               <p className="paragraph">See what our clients say about us...</p>
             </div>
 
-            <Link href={"#"} className="cta-btn">
-              Write us a review
+            <Link
+              href={"#"}
+              className="cta-btn group relative overflow-hidden hover:text-yard-dark-primary"
+            >
+              <span className="z-50">Write us a review</span>
+              <div className="absolute top-0 left-0 bg-yard-primary-active w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
             </Link>
           </div>
 

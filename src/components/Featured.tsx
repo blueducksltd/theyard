@@ -16,8 +16,12 @@ const Featured = () => {
           </p>
         </div>
 
-        <Link href={"#"} className="cta-btn">
-          Explore all services
+        <Link
+          href={"#"}
+          className="cta-btn group relative overflow-hidden hover:text-yard-dark-primary"
+        >
+          <span className="z-50">Explore all services</span>
+          <div className="absolute top-0 left-0 bg-yard-primary-active w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
         </Link>
       </header>
 
@@ -29,8 +33,9 @@ const Featured = () => {
             Relax in nature with our charming picnic setups.
           </p>
 
-          <Link href={"#"} className="cta-link">
+          <Link href={"#"} className="cta-link w-max group relative">
             Book a space now
+            <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
           </Link>
         </div>
 
@@ -41,8 +46,9 @@ const Featured = () => {
             Celebrate life&apos;s special moments in grand and unique style.
           </p>
 
-          <Link href={"#"} className="cta-link">
+          <Link href={"#"} className="cta-link w-max group relative">
             Let&apos;s host your event
+            <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
           </Link>
         </div>
 
@@ -53,8 +59,9 @@ const Featured = () => {
             Add catering, décor, and games for a truly unique experience.
           </p>
 
-          <Link href={"#"} className="cta-link">
+          <Link href={"#"} className="cta-link w-max group relative">
             Explore packages
+            <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
           </Link>
         </div>
       </section>

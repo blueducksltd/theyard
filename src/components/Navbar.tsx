@@ -5,7 +5,7 @@ const Navbar = () => {
     <>
       <nav
         className={
-          "w-full h-28 px-16 flex items-center justify-between text-yard-gray text-base font-sen font-medium bg-yard-white fixed z-50"
+          "w-full h-28 px-4 lg:px-16 flex items-center justify-between text-yard-gray text-base font-sen font-medium bg-yard-white fixed z-50"
         }
       >
         <a href="">
@@ -13,7 +13,7 @@ const Navbar = () => {
           <img src="/logo-black.svg" alt="Logo" />
         </a>
 
-        <ul className="flex space-x-7">
+        <ul className="lg:flex space-x-7 hidden">
           <Link href={"#"} className="group relative border-b-[1px]">
             Home
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
@@ -52,10 +52,14 @@ const Navbar = () => {
 
         <Link
           href={"#"}
-          className="w-[171px] h-[52px] flex justify-center items-center bg-yard-primary text-white px-6 py-5 rounded-[2px]"
+          className="w-[171px] h-[52px] lg:flex justify-center items-center bg-yard-primary text-white px-6 py-5 rounded-[2px] hidden group relative overflow-hidden"
         >
-          Contact us now
+          <span className="z-50">Contact us now</span>
+          <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
         </Link>
+        <div className="lg:hidden">
+          <img src={"/icons/menu.svg"} className="w-6" />
+        </div>
       </nav>
     </>
   );

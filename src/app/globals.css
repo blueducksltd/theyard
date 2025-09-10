@@ -21,7 +21,7 @@
         font-weight: 400;
         font-style: normal;
         line-height: 24px;
-        letter-spacing: -0.5px;
+        letter-spacing: 0.5px;
         color: #5a5a53;
         font-family: var(--font-lato), sans-serif;
     }
@@ -52,12 +52,22 @@
         display: flex;
         @apply w-max;
     }
+    .cta-btn-hover {
+        @apply absolute top-0 left-0 bg-yard-primary-active w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0;
+    }
+    .rounded2px {
+        border-radius: 2px;
+    }
+    .yard-link-line {
+        @apply absolute left-0 -bottom-0.5 h-[1px] w-0 transition-all duration-500 group-hover:w-full;
+    }
 }
 
 @theme {
     --color-yard-white: #fdfbf9;
     --color-yard-primary: #4b6450;
     --color-yard-dark-primary: #3c5040;
+    --color-yard-primary-active: #c7cfc9;
     --color-yard-orange: #d4a548;
     --color-yard-light-orange: #e9d9c0;
     --color-yard-lighter-orange: #f2e3c6;
