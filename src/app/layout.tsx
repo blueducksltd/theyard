@@ -82,7 +82,7 @@ export const metadata: Metadata = {
     locale: "en_NG",
     images: [
       {
-        url: "https://theyard-test.vercel.app/logo-black.svg",
+        url: "https://theyard-beta.vercel.app/logo-black.svg",
         width: 1200,
         height: 630,
         alt: "The Yard Picnic Park Enugu",
