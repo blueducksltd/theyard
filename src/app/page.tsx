@@ -9,11 +9,11 @@ import Upcoming from "@/components/Upcoming";
 
 export default function Home() {
   return (
-    <main className={"h-max bg-yard-white"}>
+    <main className={"w-full h-max bg-yard-white"}>
       <Navbar />
 
       {/*Content */}
-      <section className={"pt-28 px-16 w-full"}>
+      <section className={"pt-28 px-4 md:px-16 w-full"}>
         <Hero />
         <Introduction />
         <Featured />

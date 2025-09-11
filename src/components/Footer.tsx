@@ -2,33 +2,34 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <main className="w-full mt-4 p-16 bg-yard-primary">
-      <section className="flex items-start justify-between">
+    <main className="mt-4 p-6 md:p-16 bg-yard-primary">
+      <section className="flex flex-col md:flex-row md:gap-20 lg:gap-0 items-start justify-between">
+        <img src={"/logo-white.svg"} className="md:hidden" />
         <div className="flex flex-col">
-          <h1 className="text-white font-playfair font-bold text-[28px] tracking-[-0.1px] leading-[36px]">
+          <h1 className="text-white font-playfair font-bold text-xl md:text-[28px] tracking-[-0.1px] leading-[36px]">
             Subscribe To Our Newsletter
           </h1>
-          <p className="paragraph text-[#CCCCCC] my-2 w-[415px]">
+          <p className="paragraph text-[#CCCCCC] my-2 md:w-[415px]">
             Join our picnic lovers list for updates, offers, and event
             inspiration.
           </p>
 
-          <div className="flex my-4">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-0 my-4">
             <input
               type="text"
               placeholder="Enter your email address"
-              className="w-[257px] border-[1px] border-[#999999] p-3 placeholder:text-[#999999] rounded-l-[2px]"
+              className="md:w-[257px] border-[1px] border-[#999999] p-3 placeholder:text-[#999999] rounded-l-[2px]"
             />
             <button
               type="submit"
-              className="w-[160px] h-[52px] bg-white font-sen leading-6 tracking-[0.4px] text-[16px] font-medium rounded-r-[2px] group relative overflow-hidden"
+              className="md:w-[160px] h-[52px] bg-white font-sen leading-6 tracking-[0.4px] text-[16px] font-medium rounded-r-[2px] group relative overflow-hidden"
             >
               <span className="z-50 relative">Subscribe</span>
               <div className="cta-btn-hover"></div>
             </button>
           </div>
 
-          <div className="mt-28">
+          <div className="mt-28 hidden md:block">
             <img src={"/logo-white.svg"} />
             <p className="text-[#CCCCCC] w-[415px] text-[12px] tracking-[0.5px] leading-[22px] mt-2">
               We believe every moment is worth celebrating. Whether you’re here
@@ -38,16 +39,16 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="flex flex-col h-[417px] relative">
-          <div className="flex items-start gap-36">
+        <div className="flex flex-col md:h-[417px] relative mt-10 md:mt-0">
+          <div className="flex flex-col md:flex-row items-start gap-10 lg:gap-36">
             <div className="flex flex-col gap-2">
-              <h3 className="font-[400] text-xs uppercase leading-[22px] tracking-[0.5px] text-[#C7CFC9]">
+              <h3 className="font-[400] md:text-xs uppercase leading-[22px] tracking-[0.5px] text-[#C7CFC9]">
                 Quick Links
               </h3>
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Home
                 <span className="yard-link-line bg-[#EDF0EE]"></span>
@@ -55,7 +56,7 @@ const Footer = () => {
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 About
                 <span className="yard-link-line bg-[#EDF0EE]"></span>
@@ -63,7 +64,7 @@ const Footer = () => {
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Packages
                 <span className="yard-link-line bg-[#EDF0EE]"></span>
@@ -71,7 +72,7 @@ const Footer = () => {
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Booking
                 <span className="yard-link-line bg-[#EDF0EE]"></span>
@@ -79,7 +80,7 @@ const Footer = () => {
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Gallery
                 <span className="yard-link-line bg-[#EDF0EE]"></span>
@@ -87,7 +88,7 @@ const Footer = () => {
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Services
                 <span className="yard-link-line bg-[#EDF0EE]"></span>
@@ -95,15 +96,15 @@ const Footer = () => {
 
               <Link
                 href={"#"}
-                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm group relative w-max"
+                className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Contact
                 <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <h3 className="font-[400] text-xs uppercase leading-[22px] tracking-[0.5px] text-[#C7CFC9]">
+            <div className="flex flex-col gap-2 mb-20">
+              <h3 className="font-[400] md:text-xs uppercase leading-[22px] tracking-[0.5px] text-[#C7CFC9]">
                 Contact
               </h3>
 
@@ -181,7 +182,7 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="absolute bottom-0 text-[#CCCCCC] w-[415px] text-[12px] tracking-[0.5px] leading-[22px] mt-2">
+          <div className="absolute bottom-0 text-[#CCCCCC] md:w-[415px] text-[12px] tracking-[0.5px] leading-[22px] mt-2">
             <p>&copy; 2025 - Copyright The Yard Picnic Park.</p>
             <p>All rights reserved</p>
           </div>

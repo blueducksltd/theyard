@@ -2,14 +2,14 @@ import Link from "next/link";
 
 const Featured = () => {
   return (
-    <main className="w-full my-4">
-      <header className="flex justify-between items-center">
+    <main className="md:my-4">
+      <header className="flex flex-col gap-5 md:flex-row justify-between md:items-center">
         <div className="flex flex-col items-start gap-4">
           <div className="title flex flex-col items-end">
             <h1 className="">Featured Services</h1>
             <img src={"/featured-line.svg"} alt="Line" className="-mt-3 w-28" />
           </div>
-          <p className="paragraph w-[650px]">
+          <p className="paragraph w-[280px] md:w-96 lg:w-[650px]">
             We offer more than just a venue—we create experiences. Our services
             are designed to be flexible, so you can make your day uniquely
             yours.
@@ -25,12 +25,12 @@ const Featured = () => {
         </Link>
       </header>
 
-      <section className="grid grid-cols-3 items-center my-4 gap-4">
+      <section className="grid md:grid-cols-3 items-center my-4 gap-4">
         <div className="flex flex-col border-[1px] border-yard-pinkish-orange py-4 px-2 gap-2 rounded-md">
           <div className="h-[156px] rounded-[2px] bg-[url('/featured1.svg')] bg-center bg-cover"></div>
           <h2>Picnic Spaces</h2>
           <p className="paragraph">
-            Relax in nature with our charming picnic setups.
+            Relax in nature with our charming picnic setups. Beautiful scenery.
           </p>
 
           <Link href={"#"} className="cta-link w-max group relative">

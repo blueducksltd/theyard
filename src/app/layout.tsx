@@ -3,21 +3,20 @@ import { Playfair, Lato, Sen } from "next/font/google";
 import "./globals.css";
 
 const sen = Sen({
-    variable: "--font-sen",
-    subsets: ["latin"]
-})
+  variable: "--font-sen",
+  subsets: ["latin"],
+});
 
 const lato = Lato({
-    variable: "--font-lato",
-    subsets: ["latin"],
-    weight: ['100', '300', '400', '700', '900']
-})
+  variable: "--font-lato",
+  subsets: ["latin"],
+  weight: ["100", "300", "400", "700", "900"],
+});
 
 const playfair = Playfair({
-    variable: "--font-playfair",
-    subsets: ["latin"]
-})
-
+  variable: "--font-playfair",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",
