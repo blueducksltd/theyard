@@ -39,7 +39,7 @@ const Navbar = () => {
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
           </Link>
 
-          <Link href={"#"} className="group relative">
+          <Link href={"/packages"} className="group relative">
             Packages
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
           </Link>
