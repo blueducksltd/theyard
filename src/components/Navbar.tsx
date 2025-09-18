@@ -51,7 +51,7 @@ const Navbar = () => {
         </ul>
 
         <Link
-          href={"#"}
+          href={"/contact"}
           className="w-[171px] h-[52px] lg:flex justify-center items-center bg-yard-primary text-white px-6 py-5 rounded-[2px] hidden group relative overflow-hidden"
         >
           <span className="z-50">Contact us now</span>
