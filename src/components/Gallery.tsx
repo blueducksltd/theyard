@@ -1,3 +1,6 @@
+{
+  /*eslint-disable @next/next/no-img-element*/
+}
 import Link from "next/link";
 
 const Gallery = () => {
@@ -31,6 +34,7 @@ const Gallery = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured-line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -46,7 +50,7 @@ const Gallery = () => {
               Join us in our new space at 21 Umuawulu Street!
             </p>
             <div className="w-7 h-7 md:w-9 md:h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute top-7 md:top-auto md:bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 right-5 md:left-5">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>
@@ -58,6 +62,7 @@ const Gallery = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured-line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -73,7 +78,7 @@ const Gallery = () => {
               Join us in our new space at 21 Umuawulu Street!
             </p>
             <div className="w-7 h-7 md:w-9 md:h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute top-7 md:top-auto md:bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 right-5 md:left-5">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>
@@ -85,6 +90,7 @@ const Gallery = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured-line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -100,7 +106,7 @@ const Gallery = () => {
               Join us in our new space at 21 Umuawulu Street!
             </p>
             <div className="w-7 h-7 md:w-9 md:h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute top-7 md:top-auto md:bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 right-5 md:left-5">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>
@@ -112,6 +118,7 @@ const Gallery = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured-line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -127,7 +134,7 @@ const Gallery = () => {
               Join us in our new space at 21 Umuawulu Street!
             </p>
             <div className="w-7 h-7 md:w-9 md:h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute top-7 md:top-auto md:bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 right-5 md:left-5">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>
@@ -139,6 +146,7 @@ const Gallery = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured-line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -154,7 +162,7 @@ const Gallery = () => {
               Join us in our new space at 21 Umuawulu Street!
             </p>
             <div className="w-7 h-7 md:w-9 md:h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute top-7 md:top-auto md:bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 right-5 md:left-5">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>
@@ -166,6 +174,7 @@ const Gallery = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured-line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -181,7 +190,7 @@ const Gallery = () => {
               Join us in our new space at 21 Umuawulu Street!
             </p>
             <div className="w-7 h-7 md:w-9 md:h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute top-7 md:top-auto md:bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 right-5 md:left-5">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>
@@ -193,6 +202,7 @@ const Gallery = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured-line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -208,7 +218,7 @@ const Gallery = () => {
               Join us in our new space at 21 Umuawulu Street!
             </p>
             <div className="w-7 h-7 md:w-9 md:h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute top-7 md:top-auto md:bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 right-5 md:left-5">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>

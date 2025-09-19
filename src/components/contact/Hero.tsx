@@ -1,3 +1,6 @@
+{
+  /*eslint-disable @next/next/no-img-element*/
+}
 const Hero = () => {
   return (
     <>

@@ -1,3 +1,6 @@
+{
+  /*eslint-disable @next/next/no-img-element*/
+}
 import Link from "next/link";
 
 const Upcoming = () => {
@@ -28,6 +31,7 @@ const Upcoming = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -43,7 +47,7 @@ const Upcoming = () => {
               Join us in our new space at 21 Umuawulu Street!
             </p>
             <div className="w-9 h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>
@@ -54,6 +58,7 @@ const Upcoming = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -69,7 +74,7 @@ const Upcoming = () => {
               Curated setups wiith exclusive perks.
             </p>
             <div className="w-9 h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>
@@ -80,6 +85,7 @@ const Upcoming = () => {
               12/09/2025
               <img
                 src={"/featured-line.svg"}
+                alt="featured line"
                 className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
               />
             </p>
@@ -95,7 +101,7 @@ const Upcoming = () => {
               Join us in our new space at 21 Umuawulu Street!
             </p>
             <div className="w-9 h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0">
-              <img src={"/icons/share.svg"} />
+              <img src={"/icons/share.svg"} alt="share icon" />
             </div>
           </div>
         </div>

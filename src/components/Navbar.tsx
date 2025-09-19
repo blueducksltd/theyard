@@ -1,6 +1,12 @@
+"use client";
+{
+  /*eslint-disable @next/next/no-img-element*/
+}
 import Link from "next/link";
+import { useState } from "react";
 
 const Navbar = () => {
+  const [openMenu, setOpenMenu] = useState<boolean>(false);
   return (
     <>
       <nav
@@ -8,18 +14,18 @@ const Navbar = () => {
           "w-full h-28 px-4 lg:px-16 flex items-center justify-between text-yard-gray text-base font-sen font-medium bg-yard-white fixed z-50"
         }
       >
-        <a href="">
+        <Link href="/">
           {/*eslint-disable-next-line @next/next/no-img-element*/}
           <img src="/logo-black.svg" alt="Logo" />
-        </a>
+        </Link>
 
-        <ul className="lg:flex space-x-7 hidden">
+        <ul className="flex flex-col space-x-7">
           <Link href={"/"} className="group relative border-b-[1px]">
             Home
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
           </Link>
 
-          <Link href={"#"} className="group relative">
+          <Link href={"/events"} className="group relative">
             Events
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
           </Link>
@@ -58,7 +64,7 @@ const Navbar = () => {
           <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
         </Link>
         <div className="lg:hidden">
-          <img src={"/icons/menu.svg"} className="w-6" />
+          <img src={"/icons/menu.svg"} alt="menu icon" className="w-6" />
         </div>
       </nav>
     </>

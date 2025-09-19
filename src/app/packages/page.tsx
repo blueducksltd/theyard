@@ -1,8 +1,6 @@
 import Hero from "@/components/packages/Hero";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import Vision from "@/components/about/Vision";
-import Space from "@/components/about/Space";
 
 const Page = () => {
   return (
