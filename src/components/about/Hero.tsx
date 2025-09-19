@@ -15,7 +15,7 @@ const Hero = () => {
             <img
               src={"/about-line.svg"}
               alt="Line"
-              className="md:-mt-4 -mt-2 w-24 mr-10 md:w-32"
+              className="md:-mt-4 -mt-2 w-24 mr-10 md:mr-0 md:w-32"
             />
           </div>
           <p className="w-[280px] md:w-[600px] lg:w-[814px] text-center text-yard-text my-4 font-lato text-[16px] font-[400] tracking-[0.5px] leading-6">

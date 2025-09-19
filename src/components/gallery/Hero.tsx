@@ -2,11 +2,11 @@ const Hero = () => {
   return (
     <>
       <header className="pt-10 md:pt-16 pb-5 px-4 md:px-14 flex justify-center relative">
-        <img
+        {/*<img
           src={"/celebration.svg"}
           alt="Celebration Icon"
           className="absolute bottom-[310px] -left-10 md:bottom-24 md:left-0 w-8 md:w-[70px]"
-        />
+        />*/}
         <section className="flex flex-col items-center justify-center">
           <div className="title flex flex-col items-end">
             <h1 className="font-playfair w-[250px] text-center text-[32px] md:w-96 lg:w-full md:text-[48px] text-yard-primary font-bold md:leading-[56px] tracking-[-0.1px]">
@@ -24,12 +24,12 @@ const Hero = () => {
             experience.
           </p>
         </section>
-        <img
+        {/*<img
           src={"/celebration.svg"}
           alt="Celebration Icon"
           width={70}
           className="absolute top-20 right-0 hidden md:block"
-        />
+        />*/}
       </header>
     </>
   );

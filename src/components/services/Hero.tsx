@@ -10,18 +10,18 @@ const Hero = () => {
         <section className="flex flex-col items-center justify-center">
           <div className="title flex flex-col items-end">
             <h1 className="font-playfair w-[250px] text-center text-[32px] md:w-96 lg:w-full md:text-[48px] text-yard-primary font-bold md:leading-[56px] tracking-[-0.1px]">
-              Get in Touch
+              Our Services
             </h1>
             <img
               src={"/about-line.svg"}
               alt="Line"
-              className="md:-mt-4 -mt-2 w-40 md:w-32"
+              className="md:-mt-4 -mt-3 mr-7 md:mr-0 w-32 md:w-44"
             />
           </div>
           <p className="w-[280px] md:w-[600px] lg:w-[814px] text-center text-yard-text my-4 font-lato text-[16px] font-[400] tracking-[0.5px] leading-6">
-            We&apos;d love to hear from you! Whether you&apos;re planning your
-            first picnic or your next big celebration, we&apos;re here to make
-            it special.
+            We offer more than just a venue, we create experiences. Our services
+            are designed to be flexible, so you can make your day uniquely
+            yours.
           </p>
         </section>
         {/*<img
