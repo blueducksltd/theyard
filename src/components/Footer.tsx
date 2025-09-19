@@ -27,7 +27,7 @@ const Footer = () => {
               type="submit"
               className="md:w-[160px] h-[52px] bg-white font-sen leading-6 tracking-[0.4px] text-[16px] font-medium rounded-r-[2px] group relative overflow-hidden"
             >
-              <span className="z-50 relative">Subscribe</span>
+              <span className="z-40 relative">Subscribe</span>
               <div className="cta-btn-hover"></div>
             </button>
           </div>
@@ -153,7 +153,7 @@ const Footer = () => {
                   >
                     <img
                       src={"/icons/whatsapp.svg"}
-                      className="w-7 z-50"
+                      className="w-7 z-40"
                       alt="Whatsapp Icon"
                     />
                     <div className="cta-btn-hover"></div>
@@ -164,7 +164,7 @@ const Footer = () => {
                   >
                     <img
                       src={"/icons/facebook.svg"}
-                      className="w-7 z-50"
+                      className="w-7 z-40"
                       alt="Facebook Icon"
                     />
                     <div className="cta-btn-hover"></div>
@@ -175,7 +175,7 @@ const Footer = () => {
                   >
                     <img
                       src={"/icons/instagram.svg"}
-                      className="w-7 z-50"
+                      className="w-7 z-40"
                       alt="Instagram Icon"
                     />
                     <div className="cta-btn-hover"></div>
@@ -187,7 +187,7 @@ const Footer = () => {
                   >
                     <img
                       src={"/icons/x.svg"}
-                      className="w-7 z-50"
+                      className="w-7 z-40"
                       alt="X Icon"
                     />
                     <div className="cta-btn-hover"></div>
@@ -199,7 +199,7 @@ const Footer = () => {
                   >
                     <img
                       src={"/icons/linkedin.svg"}
-                      className="w-7 z-50"
+                      className="w-7 z-40"
                       alt="LinkedIn Icon"
                     />
                     <div className="cta-btn-hover"></div>
