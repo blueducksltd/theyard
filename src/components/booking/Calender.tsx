@@ -260,7 +260,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             </div>
           </div>
         </section>
-        <div className="w-full flex flex-col mt-8 md:m-12 gap-5">
+        <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5">
           <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm">
             <input type="radio" className="mt-2" />
             <div>
