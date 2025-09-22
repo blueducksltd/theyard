@@ -2,6 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 import React, { useState } from "react";
 import Modal from "../Modal";
+import Link from "next/link";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
@@ -259,8 +260,8 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             </div>
           </div>
         </section>
-        <div className="w-full flex flex-col mt-10 md:m-12 gap-5">
-          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-5 py-6 flex items-start gap-3 rounded-sm">
+        <div className="w-full flex flex-col mt-8 md:m-12 gap-5">
+          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm">
             <input type="radio" className="mt-2" />
             <div>
               <h2 className="font-bold text-xl font-playfair">
@@ -272,7 +273,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             </div>
           </div>
 
-          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-5 py-6 flex items-start gap-3 rounded-sm">
+          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm">
             <input type="radio" className="mt-2" />
             <div>
               <h2 className="font-bold text-xl font-playfair">
@@ -284,7 +285,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             </div>
           </div>
 
-          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-5 py-6 flex items-start gap-3 rounded-sm">
+          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm">
             <input type="radio" className="mt-2" />
             <div>
               <h2 className="font-bold text-xl font-playfair">
@@ -297,7 +298,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             </div>
           </div>
 
-          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-5 py-6 flex items-start gap-3 rounded-sm">
+          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm">
             <input type="radio" className="mt-2" />
             <div>
               <h2 className="font-bold text-xl font-playfair">
@@ -306,6 +307,13 @@ const BookingCalendar: React.FC<CalendarProps> = ({
               <p className="text-[#8F4546] text-sm">Shut down the Yard!!!</p>
             </div>
           </div>
+          <Link
+            href={"#"}
+            className="w-full md:w-[554px] flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden"
+          >
+            <span className="z-40">Select package</span>
+            <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+          </Link>
         </div>
       </Modal>
     </>
