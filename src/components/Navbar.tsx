@@ -47,7 +47,7 @@ const Navbar = () => {
           </Link>
 
           <Link
-            href={"#"}
+            href={"/booking"}
             onClick={() => setOpenMenu(false)}
             className="group relative"
           >
