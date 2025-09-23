@@ -40,8 +40,21 @@ export function sanitizePackage(packages: IPackage): SafePackage {
 
 export const CreatePackageDTO = z.object({
   name: z.string(),
-  price: z.number(),
-  specs: z.array(z.string())
-})
+  price: z.coerce.number(), // accepts "1000" and coerces to 1000
+  specs: z.preprocess((val) => {
+    if (Array.isArray(val)) {
+      // already array (e.g., specs[]=a&specs[]=b)
+      return val;
+    }
+    if (typeof val === "string") {
+      // comma-separated string from form-data
+      return val.split(",").map((s) => s.trim());
+    }
+    return [];
+  }, z.array(z.string())),
+  description: z.string().optional(),
+  imageUrl: z.string().url().optional()
+});
+
 
 export type CreatePackageInput = z.infer<typeof CreatePackageDTO>;

@@ -15,6 +15,32 @@ export const POST = errorHandler(async (request: NextRequest) => {
     await connectDB();
     const body: CreateBookingInput = await request.json();
 
+    // cant book for previous days
+    const today = new Date();
+    const bookingDate = new Date(body.date);
+    if (bookingDate <= today) {
+        throw APIError.BadRequest("Please select a future date for the booking.");
+    }
+
+
+    // Validate times
+    const start = parse(body.startTime, "HH:mm", new Date());
+    const end = parse(body.endTime, "HH:mm", new Date());
+
+    const minutes = differenceInMinutes(end, start);
+    if (minutes < 0) throw APIError.BadRequest("End time must be after start time");
+
+    // convert fractions to full date ie: 09:59 should be 09:00
+    if (minutes % 60 !== 0) {
+        body.endTime = `${Math.floor(end.getHours())}:00`;
+    }
+    const hours = minutes / 60;
+
+    // start time cannot be before 8am or after 8pm
+    if (start.getHours() < 8 || end.getHours() > 20) {
+        throw APIError.BadRequest("Bookings can only be made between 08:00 and 20:00");
+    }
+
     const isBooked = await Booking.isDoubleBooked(
         body.spaceId,
         new Date(body.date),
@@ -60,20 +86,8 @@ export const POST = errorHandler(async (request: NextRequest) => {
         location: space.address,
     });
 
-    // Validate times
-    const start = parse(body.startTime, "HH:mm", new Date());
-    const end = parse(body.endTime, "HH:mm", new Date());
-
-    const minutes = differenceInMinutes(end, start);
-    if (minutes <= 0) throw APIError.BadRequest("End time must be after start time");
-
-    const hours = minutes / 60; // keep fractional if needed
-    if (!Number.isInteger(hours)) {
-        throw APIError.BadRequest("Bookings must be in full hours");
-    }
-
-    // Calculate price
-    const totalPrice = space.pricePerHour * hours + _package.price;
+    // Calculate totalPrice round up to nearest whole number
+    const totalPrice = Math.round((space.pricePerHour * hours) + _package.price);
 
     // Create booking
     const booking = await Booking.create({

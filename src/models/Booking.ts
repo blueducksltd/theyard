@@ -4,6 +4,7 @@ import {
   IBookingMethods,
   IBookingModel
 } from "../types/Booking";
+import { parse } from "date-fns";
 
 // Schema definition with TS generics
 const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
@@ -21,23 +22,29 @@ const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
   { timestamps: true }
 );
 
-// Static Methods
 BookingSchema.statics.isDoubleBooked = async function (
   spaceId: string,
   eventDate: Date,
   startTime: string,
   endTime: string
 ): Promise<boolean> {
-  const existing = await this.findOne({
-    space: spaceId,
-    eventDate,
-    $or: [
-      // booking starts inside requested window
-      { startTime: { $lt: endTime }, endTime: { $gt: startTime } }
-    ],
+  // Normalize requested booking times into Date objects
+  const start = parse(startTime, "HH:mm", eventDate);
+  const end = parse(endTime, "HH:mm", eventDate);
+
+  // Fetch all bookings for the same space & date
+  const bookings = await this.find({ space: spaceId, eventDate });
+
+  // Check for overlap in JS (date-to-date comparison)
+  return bookings.some((b: any) => {
+    const existingStart = parse(b.startTime, "HH:mm", eventDate);
+    const existingEnd = parse(b.endTime, "HH:mm", eventDate);
+
+    // Overlap condition: requested start < existing end AND requested end > existing start
+    return start < existingEnd && end > existingStart;
   });
-  return !!existing;
 };
+
 
 
 // Export model
