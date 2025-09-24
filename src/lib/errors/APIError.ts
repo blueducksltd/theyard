@@ -4,9 +4,13 @@ import mongoose from "mongoose";
 
 export default class APIError extends Error {
   statusCode: number;
-  details?: any;
+  details?: string | { [key: string]: string };
 
-  constructor(statusCode: number, message: string, details?: any) {
+  constructor(
+    statusCode: number,
+    message: string,
+    details?: string | { [key: string]: string },
+  ) {
     super(message);
     this.statusCode = statusCode;
     this.details = details;
@@ -55,7 +59,7 @@ export default class APIError extends Error {
       const issue = err.issues[0];
       const field = issue.path.join(".");
       let expected = "";
-      
+
       if (issue.code === "invalid_type") {
         expected = ` ${issue.expected}`;
       }
@@ -92,5 +96,4 @@ export default class APIError extends Error {
       ...(this.details && { details: this.details }),
     };
   }
-
 }
