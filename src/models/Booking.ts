@@ -4,7 +4,7 @@ import {
   IBookingMethods,
   IBookingModel
 } from "../types/Booking";
-import { parse } from "date-fns";
+import { generateSlots } from "@/lib/util";
 
 // Schema definition with TS generics
 const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
@@ -16,33 +16,38 @@ const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
     eventDate: { type: Date, required: true },
     startTime: { type: String, required: true },
     endTime: { type: String, required: true },
+    times: [{
+      type: String, required: true
+    }],
     status: { type: String, enum: ["Pending", "Confirmed", "Cancelled"], default: "Pending" },
     totalPrice: { type: Number, required: true },
   },
   { timestamps: true }
 );
 
+BookingSchema.pre("save", function (next) {
+  if (this.startTime && this.endTime) {
+    this.times = generateSlots(this.startTime, this.endTime);
+  }
+  next();
+});
+
+
 BookingSchema.statics.isDoubleBooked = async function (
   spaceId: string,
-  eventDate: Date,
+  date: Date,
   startTime: string,
   endTime: string
 ): Promise<boolean> {
-  // Normalize requested booking times into Date objects
-  const start = parse(startTime, "HH:mm", eventDate);
-  const end = parse(endTime, "HH:mm", eventDate);
+  const requestedSlots = generateSlots(startTime, endTime);
 
-  // Fetch all bookings for the same space & date
-  const bookings = await this.find({ space: spaceId, eventDate });
+  const bookings = await this.find({ space: spaceId, eventDate: date });
+  if (bookings.length === 0) return false;
 
-  // Check for overlap in JS (date-to-date comparison)
-  return bookings.some((b: any) => {
-    const existingStart = parse(b.startTime, "HH:mm", eventDate);
-    const existingEnd = parse(b.endTime, "HH:mm", eventDate);
-
-    // Overlap condition: requested start < existing end AND requested end > existing start
-    return start < existingEnd && end > existingStart;
-  });
+  // Check overlap
+  return bookings.some((b: any) =>
+    b.times.some((t: string) => requestedSlots.includes(t))
+  );
 };
 
 

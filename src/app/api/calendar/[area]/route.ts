@@ -1,9 +1,9 @@
-// app/api/calendar/[area]/route.ts
-import { NextRequest } from "next/server";
-import { errorHandler } from "@/lib/errors/ErrorHandler";
 import APIResponse from "@/lib/APIResponse";
-import Booking from "@/models/Booking";
+import { errorHandler } from "@/lib/errors/ErrorHandler";
+import { NextRequest } from "next/server";
+import { connectDB } from "@/lib/db";
 import Space from "@/models/Space";
+import Booking from "@/models/Booking";
 import {
     startOfDay,
     endOfDay,
@@ -11,16 +11,12 @@ import {
     endOfMonth,
     addDays,
     format,
-    // addHours,
 } from "date-fns";
-import { generateTimeSlots, toMinutes } from "@/lib/util";
-import { connectDB } from "@/lib/db";
-
-
+import { generateSlots } from "@/lib/util";
 
 export const GET = errorHandler(
     async (request: NextRequest, context: { params: { area: string } }) => {
-        const area = await context.params.area;
+        const { area } = context.params;
         const { searchParams } = new URL(request.url);
         await connectDB();
 
@@ -40,7 +36,7 @@ export const GET = errorHandler(
                 eventDate: { $gte: dayStart, $lte: dayEnd },
             });
 
-            const slots = generateTimeSlots(); // ["08:00", ..., "20:00"]
+            const daySlots = generateSlots("00:00", "23:00"); // baseline slots
 
             const spacesWithSlots = spaces.map((space) => {
                 const spaceBookings = bookings.filter(
@@ -48,23 +44,12 @@ export const GET = errorHandler(
                 );
 
                 const slotStatuses: Record<string, "available" | "booked"> = {};
+                const booked = new Set(
+                    spaceBookings.flatMap((b) => b.times) // <-- using the times field
+                );
 
-                slots.forEach((slot) => {
-                    const [hour, minute] = slot.split(":").map(Number);
-                    const slotTime = new Date(date);
-                    slotTime.setHours(hour, minute, 0, 0);
-
-                    const isBooked = spaceBookings.some((b) => {
-                        const bookingStart = toMinutes(b.startTime);
-                        const bookingEnd = toMinutes(b.endTime);
-                        const slotMinutes = toMinutes(slot);
-
-                        // Include the end boundary if you want the last slot blocked
-                        return slotMinutes >= bookingStart && slotMinutes <= bookingEnd;
-                    });
-
-
-                    slotStatuses[slot] = isBooked ? "booked" : "available";
+                daySlots.forEach((slot) => {
+                    slotStatuses[slot] = booked.has(slot) ? "booked" : "available";
                 });
 
                 return {
@@ -79,7 +64,6 @@ export const GET = errorHandler(
                 spaces: spacesWithSlots,
             });
         }
-
 
         // ---------------------
         // MONTH VIEW
@@ -99,12 +83,12 @@ export const GET = errorHandler(
                 eventDate: { $gte: start, $lte: end },
             });
 
+            const fullDaySlots = generateSlots("00:00", "23:00");
+
             const days: { date: string; status: "available" | "partial" | "unavailable" }[] = [];
 
             for (let d = start; d <= end; d = addDays(d, 1)) {
                 const dateStr = format(d, "yyyy-MM-dd");
-                // const dayStart = startOfDay(d);
-                // const dayEnd = endOfDay(d);
 
                 const dayBookings = bookings.filter(
                     (b) => format(b.eventDate, "yyyy-MM-dd") === dateStr
@@ -117,12 +101,15 @@ export const GET = errorHandler(
 
                     if (spaceBookings.length === 0) return "available";
 
-                    // Check if fully booked (covers entire 8–20 range)
-                    const fullyBooked = spaceBookings.some((b) => {
-                        return b.startTime === "08:00" && b.endTime === "20:00";
-                    });
+                    const booked = new Set(
+                        spaceBookings.flatMap((b) => b.times) // <-- use times field
+                    );
 
-                    if (fullyBooked) return "unavailable";
+                    const isFullyBooked = fullDaySlots.every((slot) =>
+                        booked.has(slot)
+                    );
+
+                    if (isFullyBooked) return "unavailable";
                     return "partial";
                 });
 

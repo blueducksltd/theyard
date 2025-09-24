@@ -2,11 +2,16 @@
 // ---------------------
 // Helpers
 // ---------------------
-export function generateTimeSlots(startHour = 8, endHour = 20) {
+
+export function generateSlots(start: string, end: string): string[] {
     const slots: string[] = [];
-    for (let h = startHour; h <= endHour; h++) {
+    const [startH] = start.split(":").map(Number);
+    const [endH] = end.split(":").map(Number);
+
+    for (let h = startH; h <= endH; h++) {
         slots.push(`${String(h).padStart(2, "0")}:00`);
     }
+
     return slots;
 }
 

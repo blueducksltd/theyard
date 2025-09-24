@@ -18,6 +18,7 @@ export interface IBooking extends Document, IBookingMethods {
     eventDate: Date;
     startTime: string;
     endTime: string;
+    times: string[];
     status: "Pending" | "Confirmed" | "Cancelled";
     totalPrice: number;
 }
@@ -45,14 +46,12 @@ export interface IBookingModel extends Model<IBooking, {}, IBookingMethods> {
 
 // Other utility types
 export type SafeBooking = {
-    booking: {
-        id: string;
-        eventDate: Date;
-        startTime: string;
-        endTime: string;
-        status: string;
-        totalPrice: number
-    };
+    id: string;
+    eventDate: Date;
+    startTime: string;
+    endTime: string;
+    status: string;
+    totalPrice: number;
     customer: SafeCustomer | null;
     space: SafeSpace | null;
     event: SafeEvent | null;
@@ -60,16 +59,14 @@ export type SafeBooking = {
 };
 
 
-export function sanitizeBooking(booking: any): SafeBooking {
+export function sanitizeBooking(booking: IBooking): SafeBooking {
     return {
-        booking: {
-            id: booking._id.toString(),
-            eventDate: booking.eventDate,
-            startTime: booking.startTime,
-            endTime: booking.endTime,
-            status: booking.status,
-            totalPrice: booking.totalPrice
-        },
+        id: booking.id.toString(),
+        eventDate: booking.eventDate,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        status: booking.status,
+        totalPrice: booking.totalPrice,
         customer: booking.customer ? sanitizeCustomer(booking.customer) : null,
         space: booking.space ? sanitizeSpace(booking.space) : null,
         event: booking.event ? sanitizeEvent(booking.event) : null,

@@ -34,12 +34,13 @@ export const POST = errorHandler(async (request: NextRequest) => {
     if (minutes % 60 !== 0) {
         body.endTime = `${Math.floor(end.getHours())}:00`;
     }
-    const hours = minutes / 60;
+    let hours = minutes / 60;
+    hours = Math.ceil(hours); // round up to nearest hour
 
     // start time cannot be before 8am or after 8pm
-    if (start.getHours() < 8 || end.getHours() > 20) {
-        throw APIError.BadRequest("Bookings can only be made between 08:00 and 20:00");
-    }
+    // if (start.getHours() < 8 || start.getHours() > 20) {
+    //     throw APIError.BadRequest("Bookings can only be made between 08:00 and 20:00");
+    // }
 
     const isBooked = await Booking.isDoubleBooked(
         body.spaceId,
