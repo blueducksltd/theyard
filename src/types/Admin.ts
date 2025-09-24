@@ -6,7 +6,7 @@ import { z } from "zod";
 // -----------------------------
 // TypeScript interface
 // -----------------------------
-export interface IAdmin extends Document, IAdminMethods{
+export interface IAdmin extends Document, IAdminMethods {
   name: string;
   email: string;
   password: string; // hashed
@@ -15,18 +15,15 @@ export interface IAdmin extends Document, IAdminMethods{
 
 type SafeAdmin = Omit<IAdmin, "password" | "__v">;
 
-
 // Instance methods
 export interface IAdminMethods {
   comparePassword(password: string): Promise<boolean>;
 }
 
 // Statics
-export interface IAdminModel extends Model<IAdmin, {}, IAdminMethods> {
+export interface IAdminModel extends Model<IAdmin, IAdminMethods> {
   findByEmail(email: string): Promise<IAdmin | null>;
 }
-
-
 
 // ---------------------------
 //      Zod Schemas (DTOs)    //
@@ -54,7 +51,10 @@ export const CreateAdminDto = z.object({
 export const UpdateAdminDto = z.object({
   name: z.string().optional(),
   email: z.string().email("field `email` must be valid").optional(),
-  password: z.string().min(6, "field `password` must be at least 6 chars").optional(),
+  password: z
+    .string()
+    .min(6, "field `password` must be at least 6 chars")
+    .optional(),
   role: z.enum(["admin", "manager"]).optional(),
 });
 
@@ -70,12 +70,10 @@ export const LoginAdminDto = z.object({
   }),
 });
 
-
 export function sanitizeAdmin(admin: IAdmin): SafeAdmin {
   const { password, __v, ...rest } = admin.toObject();
   return rest;
 }
-
 
 // -----------------------------
 // Types inferred from DTOs

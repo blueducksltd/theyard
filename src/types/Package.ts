@@ -1,4 +1,4 @@
-import { Document, Model } from "mongoose";
+import { Document } from "mongoose";
 import z from "zod";
 
 // Document fields
@@ -7,16 +7,16 @@ export interface IPackage extends Document {
   price: number;
   specs: string[];
   description: string;
-  imageUrl: string
+  imageUrl: string;
 }
 
 // Instance methods
-export interface IPackageMethods {
-}
+// export interface IPackageMethods {
+// }
 
 // Statics
-export interface IPackageModel extends Model<IPackage, {}, IPackageMethods> {
-}
+// export interface IPackageModel extends Model<IPackage, {}, IPackageMethods> {
+// }
 
 export type SafePackage = {
   id: string;
@@ -24,7 +24,7 @@ export type SafePackage = {
   price: number;
   specs: string[];
   description: string;
-  imageUrl: string
+  imageUrl: string;
 };
 
 export function sanitizePackage(packages: IPackage): SafePackage {
@@ -34,14 +34,14 @@ export function sanitizePackage(packages: IPackage): SafePackage {
     price: packages.price,
     specs: packages.specs,
     description: packages.description,
-    imageUrl: packages.imageUrl
+    imageUrl: packages.imageUrl,
   };
 }
 
 export const CreatePackageDTO = z.object({
   name: z.string(),
   price: z.number(),
-  specs: z.array(z.string())
-})
+  specs: z.array(z.string()),
+});
 
 export type CreatePackageInput = z.infer<typeof CreatePackageDTO>;

@@ -10,11 +10,18 @@ export interface ICustomer extends Document {
 
 // Instance methods
 export interface ICustomerMethods {
-  getContactInfo(): Promise<{ email: ICustomer["email"], phone: ICustomer["phone"] }>;
+  getContactInfo(): Promise<{
+    email: ICustomer["email"];
+    phone: ICustomer["phone"];
+  }>;
 }
 
 // Statics
-export interface ICustomerModel extends Model<ICustomer, {}, ICustomerMethods> {
+// export interface ICustomerModel extends Model<ICustomer, {}, ICustomerMethods> {
+//   findByEmail(email: string): Promise<ICustomer | null>;
+// }
+
+export interface ICustomerModel extends Model<ICustomer, ICustomerMethods> {
   findByEmail(email: string): Promise<ICustomer | null>;
 }
 
@@ -25,7 +32,7 @@ export type SafeCustomer = {
   lastname: string;
   email: string;
   phone?: string;
-}
+};
 
 export function sanitizeCustomer(customer: ICustomer): SafeCustomer {
   return {
