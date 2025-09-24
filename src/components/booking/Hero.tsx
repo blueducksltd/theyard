@@ -24,7 +24,7 @@ const Hero = () => {
           </div>
         </section>
       </header>
-      <section className="w-full flex flex-col md:flex-row items-start h-max gap-10 px-7 md:px-14 mt-10">
+      <section className="w-full flex flex-col md:flex-row items-start h-max gap-10 px-5 md:px-14 mt-10">
         <div className="md:w-[257px] h-[358px] md:h-[404px] shadow-2xl">
           <h2 className="w-full bg-yard-primary text-2xl text-yard-lightgreen flex justify-center items-center py-4 px-6 font-playfair font-bold md:text-xl">
             How To Book a Date

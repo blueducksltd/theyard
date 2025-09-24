@@ -168,7 +168,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             />
           </button>
 
-          <h2 className="text-2xl font-bold text-[#3C5040] leading-8">
+          <h2 className="text-[16px] md:text-2xl font-bold text-[#3C5040] leading-8">
             {months[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h2>
 
@@ -308,7 +308,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             </div>
           </div>
           <Link
-            href={"#"}
+            href={"/booking/checkout"}
             className="w-full md:w-[554px] flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden"
           >
             <span className="z-40">Select package</span>

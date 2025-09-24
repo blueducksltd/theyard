@@ -10,7 +10,7 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className={`w-full md:h-28 pt-12 pb-20 px-7 md:py-0 lg:px-16 flex justify-between text-yard-gray text-base font-sen font-medium bg-yard-white fixed z-50 ${openMenu ? "items-start h-auto md:items-center shadow-2xl" : "items-center h-28"}`}
+        className={`w-full md:h-28 pt-12 pb-20 px-7 md:py-0 lg:px-16 flex justify-between text-yard-primary text-base font-sen font-medium bg-yard-white fixed z-50 ${openMenu ? "items-start h-auto md:items-center shadow-2xl" : "items-center h-28"}`}
       >
         <Link href="/" className={`${openMenu ? "hidden md:block" : "block"}`}>
           <img src="/logo-black.svg" alt="Logo" />
