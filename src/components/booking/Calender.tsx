@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Modal from "../Modal";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
@@ -14,6 +15,7 @@ interface BookingData {
 interface CalendarProps {
   initialDate?: Date;
   bookingData?: BookingData;
+  calenderWidth?: string;
   onDateClick?: (date: Date) => void;
 }
 
@@ -21,9 +23,13 @@ const BookingCalendar: React.FC<CalendarProps> = ({
   initialDate = new Date(2025, 8),
   bookingData,
   onDateClick,
+  calenderWidth = "w-[813px]",
 }) => {
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [unavailableModal, setUnavailableModal] = useState(false);
+  // const [pendingModal, setPendingModal] = useState(false);
+  const router = useRouter();
 
   // I will replace this with the actual data
   const defaultBookingStatus: BookingData = {
@@ -136,9 +142,21 @@ const BookingCalendar: React.FC<CalendarProps> = ({
     return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`;
   };
 
-  const handleDateClick = (day: number): void => {
-    setIsModalOpen(true);
-    console.log("ddd");
+  const handleDateClick = (day: number, status: BookingStatus): void => {
+    switch (status) {
+      case "unavailable":
+        return setUnavailableModal(true);
+      case "pending":
+        return router.push("/booking/pending");
+      default:
+        setIsModalOpen(true);
+    }
+    const clickedDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day,
+    );
+    console.log(clickedDate, status);
     if (onDateClick) {
       const clickedDate = new Date(
         currentDate.getFullYear(),
@@ -153,19 +171,20 @@ const BookingCalendar: React.FC<CalendarProps> = ({
 
   return (
     <>
-      <div className="w-full md:w-[813px] p-6 rounded-lg shadow-2xl">
+      <div className={`w-full md:${calenderWidth} p-6 rounded-lg shadow-2xl`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={() => navigateMonth(-1)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="w-9 h-9 bg-[#EDF0EE] p-2 rounded2px group relative overflow-hidden"
             aria-label="Previous month"
           >
             <img
               src={"/icons/arrow-left.svg"}
               alt="arrow icon"
-              className="w-5 h-5"
+              className="w-5 h-5 z-40 relative"
             />
+            <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
           </button>
 
           <h2 className="text-[16px] md:text-2xl font-bold text-[#3C5040] leading-8">
@@ -174,14 +193,15 @@ const BookingCalendar: React.FC<CalendarProps> = ({
 
           <button
             onClick={() => navigateMonth(1)}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="w-9 h-9 bg-[#EDF0EE] p-2 rounded2px group relative overflow-hidden"
             aria-label="Next month"
           >
             <img
               src={"/icons/arrow-right.svg"}
               alt="arrow icon"
-              className="w-5 h-5"
+              className="w-5 h-5 z-40 relative"
             />
+            <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
           </button>
         </div>
 
@@ -206,26 +226,25 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             return (
               <div
                 key={index}
-                className="relative h-20 flex items-center justify-center duration-1000 hover:bg-yard-primary-active transition-colors rounded-sm"
+                onClick={() => handleDateClick(day!, status!)}
+                className="relative h-20 flex items-center justify-center duration-10 rounded-sm group overflow-hidden"
               >
                 {day && (
                   <>
-                    <div
-                      className="flex flex-col gap-2 items-center"
-                      onClick={() => handleDateClick(day)}
-                    >
+                    <div className="flex flex-col gap-2 items-center">
                       {status && (
                         <div
-                          className={`w-2 h-2 ${getStatusColor(status)}`}
+                          className={`w-2 h-2 z-40 ${getStatusColor(status)}`}
                           aria-label={`Status: ${status}`}
                         />
                       )}
                       <button
-                        className="w-full h-full flex items-center justify-center text-black rounded"
+                        className="w-full h-full flex items-center justify-center text-black rounded z-40"
                         aria-label={`Select ${day}`}
                       >
                         {day}
                       </button>
+                      <div className="absolute top-0 -left-0 bg-yard-primary-active group-hover:w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
                     </div>
                   </>
                 )}
@@ -316,6 +335,76 @@ const BookingCalendar: React.FC<CalendarProps> = ({
           </Link>
         </div>
       </Modal>
+
+      <Modal isOpen={unavailableModal}>
+        <section className="w-full">
+          <div className="w-full flex items-center justify-end">
+            <div
+              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
+              onClick={() => setUnavailableModal(false)}
+            >
+              <img
+                src={"/icons/cancel.svg"}
+                alt="Close Icon"
+                className="z-40"
+              />
+              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            </div>
+          </div>
+        </section>
+        <div className="w-full flex flex-col justify-center items-center mt-5 md:mt-8 md:my-5 gap-5">
+          <div className="title flex flex-col items-end">
+            <h1 className="font-playfair text-xl md:text-[28px] text-yard-red font-bold leading-9 tracking-[-0.1px]">
+              Ouch! Spot Unavailable
+            </h1>
+            <img
+              src={"/line.svg"}
+              alt="Line"
+              className="-mt-3 w-40 md:mr-0 md:w-38"
+            />
+          </div>
+          <p className="text-[#5A5A53] leading-6">
+            Please this day is not available
+          </p>
+          <button
+            onClick={() => setUnavailableModal(false)}
+            className="text-yard-primary font-medium font-sen cursor-pointer"
+          >
+            Please select another day
+          </button>
+        </div>
+      </Modal>
+
+      {/*<Modal isOpen={pendingModal}>
+        <section className="w-full">
+          <div className="w-full flex items-center justify-between">
+            <div className="title flex flex-col items-end">
+              <h1 className="font-playfair text-xl md:text-[28px] text-yard-red font-bold leading-9 tracking-[-0.1px]">
+                Pending
+              </h1>
+              <img
+                src={"/about-line.svg"}
+                alt="Line"
+                className="-mt-3 w-20 md:mr-0 md:w-28"
+              />
+            </div>
+            <div
+              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
+              onClick={() => setPendingModal(false)}
+            >
+              <img
+                src={"/icons/cancel.svg"}
+                alt="Close Icon"
+                className="z-40"
+              />
+              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            </div>
+          </div>
+        </section>
+        <div className="w-full flex flex-col items-center mt-5 md:my-5 md:ml-10 gap-5">
+          <p>...</p>
+        </div>
+      </Modal>*/}
     </>
   );
 };
