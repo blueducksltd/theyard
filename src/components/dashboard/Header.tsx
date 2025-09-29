@@ -4,16 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface IProps {
-  section: string;
+  section?: string;
 }
 
-export default function Header({ section = "Admin Dashboard" }: IProps) {
+export default function Header({ section }: IProps) {
   return (
     <main className="w-full flex items-center justify-between py-4 px-5 border-b-[1px] border-[#E4E8E5]">
       <section className="flex items-center gap-[188px]">
         <img src={"/logo-black.svg"} alt="Logo" className="w-[67px]" />
         <h2 className="font-bold text-2xl leading-8 text-yard-primary mt-4">
-          {section}
+          {section || "Admin Dashboard"}
         </h2>
       </section>
 
