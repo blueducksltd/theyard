@@ -1,3 +1,6 @@
+{
+  /*eslint-disable @next/next/no-img-element*/
+}
 import Link from "next/link";
 
 const Featured = () => {
@@ -20,7 +23,7 @@ const Featured = () => {
           href={"#"}
           className="cta-btn group relative overflow-hidden hover:text-yard-dark-primary"
         >
-          <span className="z-50">Explore all services</span>
+          <span className="z-40">Explore all services</span>
           <div className="absolute top-0 left-0 bg-yard-primary-active w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
         </Link>
       </header>

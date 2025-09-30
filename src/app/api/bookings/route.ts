@@ -65,7 +65,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
     const customer = await Customer.findOneAndUpdate(
         { email: body.email },
         {
-            $setOnInsert: {
+            $set: {
                 firstname: body.firstName,
                 lastname: body.lastName,
                 phone: body.phone,
@@ -73,6 +73,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         },
         { new: true, upsert: true }
     );
+
 
     // Create event
     const event = await Event.create({
@@ -83,7 +84,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         public: body.public,
         date: body.date,
         time: { start: body.startTime, end: body.endTime },
-        status: "Pending",
+        status: "pending",
         location: space.address,
     });
 
@@ -99,7 +100,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         eventDate: new Date(body.date),
         startTime: body.startTime,
         endTime: body.endTime,
-        status: "Pending",
+        status: "pending",
         totalPrice,
     });
 
@@ -141,13 +142,19 @@ export const GET = errorHandler(
             .populate("space")
             .populate("event")
             .populate("package")
-            .lean();
 
         if (bookings.length === 0) {
             throw APIError.NotFound("No bookings found");
         }
 
         const safeBookings = bookings.map((booking) => sanitizeBooking(booking));
+
+        // remove booking.event.customer
+        safeBookings.forEach((booking) => {
+            if (booking.event && 'customer' in booking.event) {
+                delete booking.event.customer;
+            }
+        });
 
         return APIResponse.success(
             "Fetched all bookings",

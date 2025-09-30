@@ -5,6 +5,7 @@ import {
   IBookingModel
 } from "../types/Booking";
 import { generateSlots } from "@/lib/util";
+import { startOfDay, endOfDay } from "date-fns";
 
 // Schema definition with TS generics
 const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
@@ -19,7 +20,7 @@ const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
     times: [{
       type: String, required: true
     }],
-    status: { type: String, enum: ["Pending", "Confirmed", "Cancelled"], default: "Pending" },
+    status: { type: String, enum: ["pending", "confirmed", "cancelled"], default: "pending" },
     totalPrice: { type: Number, required: true },
   },
   { timestamps: true }
@@ -49,6 +50,23 @@ BookingSchema.statics.isDoubleBooked = async function (
     b.times.some((t: string) => requestedSlots.includes(t))
   );
 };
+
+
+BookingSchema.statics.findByDateRange = async function (start: Date, end?: Date): Promise<IBooking[]> {
+  if (!end) {
+    const dayStart = startOfDay(start);
+    const dayEnd = endOfDay(start);
+
+    return this.find({
+      eventDate: { $gte: dayStart, $lte: dayEnd },
+    });
+  }
+
+  return this.find({
+    eventDate: { $gte: start, $lte: end },
+  });
+};
+
 
 
 

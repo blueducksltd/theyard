@@ -1,3 +1,6 @@
+{
+  /*eslint-disable @next/next/no-img-element*/
+}
 const Vision = () => {
   return (
     <section className="flex flex-col md:flex-row gap-10 md:gap-28 justify-center py-20">

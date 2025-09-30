@@ -1,3 +1,6 @@
+{
+  /*eslint-disable @next/next/no-img-element*/
+}
 import Link from "next/link";
 
 const Testimonials = () => {
@@ -47,10 +50,10 @@ const Testimonials = () => {
 
               <div className="flex items-center gap-2 justify-end">
                 <div className="w-9 h-9 bg-yard-lightgreen flex justify-center items-center rounded-[2px] p-2 cursor-pointer">
-                  <img src={"/icons/arrow-left.svg"} />
+                  <img src={"/icons/arrow-left.svg"} alt="Left Icon" />
                 </div>
                 <div className="w-9 h-9 bg-yard-lightgreen flex justify-center items-center rounded-[2px] p-2 cursor-pointer">
-                  <img src={"/icons/arrow-right.svg"} />
+                  <img src={"/icons/arrow-right.svg"} alt="Right Icon" />
                 </div>
               </div>
             </div>

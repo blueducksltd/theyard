@@ -19,10 +19,9 @@ export interface IBooking extends Document, IBookingMethods {
     startTime: string;
     endTime: string;
     times: string[];
-    status: "Pending" | "Confirmed" | "Cancelled";
+    status: "pending" | "confirmed" | "cancelled";
     totalPrice: number;
 }
-
 
 // Instance methods
 export interface IBookingMethods {
@@ -32,16 +31,17 @@ export interface IBookingMethods {
 }
 
 // Statics
-export interface IBookingModel extends Model<IBooking, {}, IBookingMethods> {
+export interface IBookingModel extends Model<IBooking, IBookingMethods> {
     isDoubleBooked(
         spaceId: string,
         eventDate: Date,
         startTime: string,
-        endTime: string
+        endTime: string,
     ): Promise<boolean>;
     filterByStatus(status: IBooking["status"]): Promise<IBooking[]>;
     findByCustomer(customerId: ICustomer["id"]): Promise<IBooking[]>;
     findBySpace(spaceId: ISpace["id"]): Promise<IBooking[]>;
+    findByDateRange(start: Date, end?: Date): Promise<IBooking[]>;
 }
 
 // Other utility types
@@ -61,7 +61,7 @@ export type SafeBooking = {
 
 export function sanitizeBooking(booking: IBooking): SafeBooking {
     return {
-        id: booking.id.toString(),
+        id: booking.id,
         eventDate: booking.eventDate,
         startTime: booking.startTime,
         endTime: booking.endTime,
@@ -73,8 +73,6 @@ export function sanitizeBooking(booking: IBooking): SafeBooking {
         package: booking.package ? sanitizePackage(booking.package) : null,
     };
 }
-
-
 
 // ---------------------------
 //      Zod Schemas (DTOs)    //
@@ -99,12 +97,22 @@ export const CreateBookingDto = z.object({
     date: z
         .string()
         .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, use YYYY-MM-DD"),
-    startTime: z.string({
-        error: "field `startTime` is required",
-    }).regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "field `startTime` must be in HH:MM 24-hour format"),
-    endTime: z.string({
-        error: "field `endTime` is required",
-    }).regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "field `endTime` must be in HH:MM 24-hour format"),
+    startTime: z
+        .string({
+            error: "field `startTime` is required",
+        })
+        .regex(
+            /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+            "field `startTime` must be in HH:MM 24-hour format",
+        ),
+    endTime: z
+        .string({
+            error: "field `endTime` is required",
+        })
+        .regex(
+            /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+            "field `endTime` must be in HH:MM 24-hour format",
+        ),
     spaceId: z.string({
         error: "field `spaceId` is required",
     }),
@@ -114,9 +122,13 @@ export const CreateBookingDto = z.object({
     eventTitle: z.string({
         error: "field `eventTitle` is required",
     }),
-    eventType: z.enum(["Picnics", "Birthdays", "Weddings", "Corporate", "Seasonal"], {
-        error: "field `eventType` is required and must be one of Picnics, Birthdays, Weddings, Corporate, Seasonal",
-    }),
+    eventType: z.enum(
+        ["picnics", "birthdays", "weddings", "corporate", "seasonal"],
+        {
+            error:
+                "field `eventType` is required and must be one of Picnics, Birthdays, Weddings, Corporate, Seasonal",
+        },
+    ),
     eventDescription: z.string().optional(),
     public: z.boolean().optional().default(false),
 });

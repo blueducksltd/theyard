@@ -1,4 +1,5 @@
 import { Document, Model } from "mongoose";
+import z from "zod";
 
 // Document fields
 export interface ICustomer extends Document {
@@ -10,12 +11,16 @@ export interface ICustomer extends Document {
 
 // Instance methods
 export interface ICustomerMethods {
-  getContactInfo(): Promise<{ email: ICustomer["email"], phone: ICustomer["phone"] }>;
+  getContactInfo(): Promise<{
+    email: ICustomer["email"];
+    phone: ICustomer["phone"];
+  }>;
 }
 
 // Statics
-export interface ICustomerModel extends Model<ICustomer, {}, ICustomerMethods> {
+export interface ICustomerModel extends Model<ICustomer, ICustomerMethods> {
   findByEmail(email: string): Promise<ICustomer | null>;
+  subscribe(email: string): Promise<ICustomer>;
 }
 
 // Other utility types
@@ -25,7 +30,7 @@ export type SafeCustomer = {
   lastname: string;
   email: string;
   phone?: string;
-}
+};
 
 export function sanitizeCustomer(customer: ICustomer): SafeCustomer {
   return {
@@ -36,3 +41,11 @@ export function sanitizeCustomer(customer: ICustomer): SafeCustomer {
     phone: customer.phone,
   };
 }
+
+// DTOs
+export const SubscribeDTO = z.object({
+  email: z.string().email()
+});
+
+
+export type SubscribeInput = z.infer<typeof SubscribeDTO>;

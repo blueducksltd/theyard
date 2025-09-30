@@ -5,7 +5,7 @@ import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Package from "@/models/Package";
-import { CreatePackageDTO, sanitizePackage } from "@/types/Package";
+import { CreatePackageDTO, IPackage, sanitizePackage } from "@/types/Package";
 import { NextRequest } from "next/server";
 
 export const POST = errorHandler(async (request: NextRequest) => {
@@ -53,7 +53,7 @@ export const GET = errorHandler(async () => {
     await connectDB();
 
     const packages = await Package.find();
-    const safePackages = packages.map((_package) => sanitizePackage(_package));
+    const safePackages = packages.map((_package: IPackage) => sanitizePackage(_package));
 
     return APIResponse.success(
         "fetched all packages",

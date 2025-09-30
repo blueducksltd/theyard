@@ -1,8 +1,8 @@
 import { Schema, models, model } from "mongoose";
 import {
-    ICustomer,
-    ICustomerMethods,
-    ICustomerModel
+  ICustomer,
+  ICustomerMethods,
+  ICustomerModel
 } from "../types/Customer";
 
 // Schema definition with TS generics
@@ -17,14 +17,21 @@ const CustomerSchema = new Schema<ICustomer, ICustomerModel, ICustomerMethods>(
 );
 
 // Instance method
-CustomerSchema.methods.getContactInfo = async function (): Promise<{email: ICustomer["email"], phone: ICustomer["phone"]}> {
-    return { email: this.email, phone: this.phone}
+CustomerSchema.methods.getContactInfo = async function (): Promise<{ email: ICustomer["email"], phone: ICustomer["phone"] }> {
+  return { email: this.email, phone: this.phone }
 };
 
 // Static method
 CustomerSchema.statics.findByEmail = function (email: string) {
   return this.findOne({ email });
 };
+
+CustomerSchema.statics.subscribe = async function (email: string) {
+  const existing = await this.findOne({ email });
+  if (existing) return existing;
+  const subscriber = await this.create({ email, firstname: "Subscriber", lastname: "Subscriber" });
+  return subscriber;
+}
 
 // Export model
 const Customer =

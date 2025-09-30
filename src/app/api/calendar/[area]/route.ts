@@ -13,10 +13,12 @@ import {
     format,
 } from "date-fns";
 import { generateSlots } from "@/lib/util";
+import { ISpace } from "@/types/Space";
 
 export const GET = errorHandler(
     async (request: NextRequest, context: { params: { area: string } }) => {
-        const { area } = context.params;
+        const query = await context.params;
+        const { area } = query;
         const { searchParams } = new URL(request.url);
         await connectDB();
 
@@ -38,18 +40,18 @@ export const GET = errorHandler(
 
             const daySlots = generateSlots("00:00", "23:00"); // baseline slots
 
-            const spacesWithSlots = spaces.map((space) => {
+            const spacesWithSlots = spaces.map((space: ISpace) => {
                 const spaceBookings = bookings.filter(
                     (b) => b.space.toString() === space.id
                 );
 
-                const slotStatuses: Record<string, "available" | "booked"> = {};
+                const slotStatuses: Record<string, "available" | "unavailable"> = {};
                 const booked = new Set(
                     spaceBookings.flatMap((b) => b.times) // <-- using the times field
                 );
 
                 daySlots.forEach((slot) => {
-                    slotStatuses[slot] = booked.has(slot) ? "booked" : "available";
+                    slotStatuses[slot] = booked.has(slot) ? "unavailable" : "available";
                 });
 
                 return {
@@ -79,35 +81,34 @@ export const GET = errorHandler(
             const end = endOfMonth(targetMonth);
 
             const spaces = await Space.find();
-            const bookings = await Booking.find({
-                eventDate: { $gte: start, $lte: end },
-            });
+            const bookings = await Booking.findByDateRange(start, end);
 
             const fullDaySlots = generateSlots("00:00", "23:00");
 
-            const days: { date: string; status: "available" | "partial" | "unavailable" }[] = [];
+            const days: {
+                date: string;
+                status: "available" | "partial" | "unavailable";
+                totalBookings: number;
+            }[] = [];
 
             for (let d = start; d <= end; d = addDays(d, 1)) {
                 const dateStr = format(d, "yyyy-MM-dd");
 
+                // ✅ Just filter the pre-fetched bookings for this day
                 const dayBookings = bookings.filter(
                     (b) => format(b.eventDate, "yyyy-MM-dd") === dateStr
                 );
 
-                const statuses = spaces.map((space) => {
+                const statuses = spaces.map((space: ISpace) => {
                     const spaceBookings = dayBookings.filter(
                         (b) => b.space.toString() === space.id
                     );
 
                     if (spaceBookings.length === 0) return "available";
 
-                    const booked = new Set(
-                        spaceBookings.flatMap((b) => b.times) // <-- use times field
-                    );
+                    const booked = new Set(spaceBookings.flatMap((b) => b.times));
 
-                    const isFullyBooked = fullDaySlots.every((slot) =>
-                        booked.has(slot)
-                    );
+                    const isFullyBooked = fullDaySlots.every((slot) => booked.has(slot));
 
                     if (isFullyBooked) return "unavailable";
                     return "partial";
@@ -117,7 +118,12 @@ export const GET = errorHandler(
                 if (statuses.every((s) => s === "available")) overall = "available";
                 else if (statuses.every((s) => s === "unavailable")) overall = "unavailable";
 
-                days.push({ date: dateStr, status: overall });
+                // ✅ Already have dayBookings, no need for another DB query
+                days.push({
+                    date: dateStr,
+                    status: overall,
+                    totalBookings: dayBookings.length,
+                });
             }
 
             return APIResponse.success("fetched month view", {
@@ -125,6 +131,7 @@ export const GET = errorHandler(
                 days,
             });
         }
+
 
         throw new Error("Invalid area. Must be 'days' or 'months'");
     }
