@@ -1,3 +1,4 @@
+import { Model } from "mongoose";
 import { Document } from "mongoose";
 import z from "zod";
 
@@ -11,12 +12,14 @@ export interface IPackage extends Document {
 }
 
 // Instance methods
-// export interface IPackageMethods {
-// }
+export interface IPackageMethods {
+  formatPrice(): string;
+}
 
 // Statics
-// export interface IPackageModel extends Model<IPackage, {}, IPackageMethods> {
-// }
+export interface IPackageModel extends Model<IPackage, {}, IPackageMethods> {
+  findByName(name: string): Promise<IPackage | null>;
+}
 
 export type SafePackage = {
   id: string;
@@ -40,8 +43,21 @@ export function sanitizePackage(packages: IPackage): SafePackage {
 
 export const CreatePackageDTO = z.object({
   name: z.string(),
-  price: z.number(),
-  specs: z.array(z.string()),
+  price: z.coerce.number(), // accepts "1000" and coerces to 1000
+  specs: z.preprocess((val) => {
+    if (Array.isArray(val)) {
+      // already array (e.g., specs[]=a&specs[]=b)
+      return val;
+    }
+    if (typeof val === "string") {
+      // comma-separated string from form-data
+      return val.split(",").map((s) => s.trim());
+    }
+    return [];
+  }, z.array(z.string())),
+  description: z.string().optional(),
+  imageUrl: z.string().url().optional()
 });
+
 
 export type CreatePackageInput = z.infer<typeof CreatePackageDTO>;

@@ -23,7 +23,7 @@ export default class APIError extends Error {
     }
   }
 
-  static BadRequest(message: string, details?: any) {
+  static BadRequest(message: string, details?: {}) {
     return new APIError(400, message, details);
   }
 

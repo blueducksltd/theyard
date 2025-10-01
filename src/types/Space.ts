@@ -1,4 +1,5 @@
 // types/Space.ts
+import { Model } from "mongoose";
 import { Document } from "mongoose";
 // import { Model } from "mongoose";
 import { z } from "zod";
@@ -16,14 +17,15 @@ export interface ISpace extends Document {
 }
 
 // Instance methods
-// export interface ISpaceMethods {
-
-// }
+export interface ISpaceMethods {
+  formatAddress(): string;
+}
 
 // Statics
-// export interface ISpaceModel extends Model<ISpace, {}, ISpaceMethods> {
-
-// }
+export interface ISpaceModel extends Model<ISpace, {}, ISpaceMethods> {
+  findByName(name: string): Promise<ISpace | null>;
+  filterByCapacity(minCapacity: number): Promise<ISpace[]>;
+}
 
 // Other utility types
 export type SafeSpace = {
