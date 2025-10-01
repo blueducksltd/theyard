@@ -116,7 +116,7 @@ const Footer = () => {
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-center gap-2 group relative w-max"
               >
                 <img src={"/icons/call.svg"} alt="Call Icon" />
-                +234 81 4787 1946
+                +234 901 825 7388
                 <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 

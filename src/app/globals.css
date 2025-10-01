@@ -101,7 +101,8 @@
 
 @theme {
     --color-yard-white: #fdfbf9;
-    --color-yard-primary: #4b6450;
+    /*--color-yard-primary: #4b6450;*/
+    --color-yard-primary: #0f3830;
     --color-yard-dark-primary: #3c5040;
     --color-yard-primary-active: #c7cfc9;
     --color-yard-orange: #d4a548;
