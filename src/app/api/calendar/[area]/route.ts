@@ -15,10 +15,10 @@ import {
 import { generateSlots } from "@/lib/util";
 import { ISpace } from "@/types/Space";
 
-export const GET = errorHandler(
-    async (request: NextRequest, context: { params: { area: string } }) => {
-        const query = await context.params;
-        const { area } = query;
+export const GET = errorHandler<{ params: { area: string } }>(
+
+    async (request: NextRequest, context) => {
+        const { area } = context.params;
         const { searchParams } = new URL(request.url);
         await connectDB();
 

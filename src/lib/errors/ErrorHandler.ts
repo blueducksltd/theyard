@@ -3,10 +3,11 @@ import { NextRequest } from "next/server";
 import APIError from "./APIError";
 import APIResponse from "../APIResponse";
 
-export function errorHandler<
-  T extends (req: NextRequest, context?: unknown) => Promise<Response>
->(handler: T) {
-  return async (req: NextRequest, context?: unknown) => {
+// Generic error handler with typed context
+export function errorHandler<C>(
+  handler: (req: NextRequest, context: C) => Promise<Response>
+) {
+  return async (req: NextRequest, context: C) => {
     try {
       return await handler(req, context);
     } catch (err) {
