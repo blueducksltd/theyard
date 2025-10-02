@@ -25,7 +25,6 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
     const form = await request.formData();
     const images = form.getAll("images") as File[];
-    console.log({ form })
 
     if (images.length === 0) {
         throw APIError.BadRequest("No images provided");
