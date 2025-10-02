@@ -78,7 +78,7 @@ function getDuration(startTime: string, endTime: string): string {
     const [endHour, endMinute] = endTime.split(":").map(Number);
     const start = new Date(0, 0, 0, startHour, startMinute);
     const end = new Date(0, 0, 0, endHour, endMinute);
-    let diff = (end.getTime() - start.getTime()) / 1000 / 60; // difference in minutes
+    const diff = (end.getTime() - start.getTime()) / 1000 / 60; // difference in minutes
     const hours = Math.floor(diff / 60);
     const minutes = diff % 60;
     return `${hours}hrs ${minutes}mins`;

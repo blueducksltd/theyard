@@ -1,12 +1,12 @@
 // lib/errors/withErrorHandler.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import APIError from "./APIError";
 import APIResponse from "../APIResponse";
 
 export function errorHandler<
-  T extends (req: NextRequest, context?: any) => Promise<Response>
+  T extends (req: NextRequest, context?: unknown) => Promise<Response>
 >(handler: T) {
-  return async (req: NextRequest, context?: any) => {
+  return async (req: NextRequest, context?: unknown) => {
     try {
       return await handler(req, context);
     } catch (err) {

@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import APIResponse from "@/lib/APIResponse";
 import { requireAuth, requireRole } from "@/lib/auth";
 import { uploadToCloudinary } from "@/lib/cloudinary";
@@ -5,8 +6,11 @@ import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Package from "@/models/Package";
-import { CreatePackageDTO, IPackage, sanitizePackage } from "@/types/Package";
-import { NextRequest } from "next/server";
+import { CreatePackageDTO, IPackage, SafePackage, sanitizePackage } from "@/types/Package";
+import { z } from "zod";
+
+// Infer input type from DTO for type safety
+type PackageInput = z.infer<typeof CreatePackageDTO>;
 
 export const POST = errorHandler(async (request: NextRequest) => {
     await connectDB();
@@ -16,35 +20,39 @@ export const POST = errorHandler(async (request: NextRequest) => {
         throw APIError.Forbidden("No permission to access this endpoint");
     }
 
-    const contentType = request.headers.get("content-type") || "";
-    let body: Record<string, any> = {};
+    const contentType = request.headers.get("content-type") ?? "";
+    let body: Partial<PackageInput> = {};
     let file: File | null = null;
 
     if (contentType.includes("multipart/form-data")) {
         const form = await request.formData();
 
-        form.forEach((value, key) => {
+        for (const [key, value] of form.entries()) {
             if (key === "image" && value instanceof File) {
                 file = value;
             } else {
-                body[key] = value;
+                body[key as keyof PackageInput] = value.toString() as any;
             }
-        });
+        }
     } else {
-        body = await request.json();
+        // request.json() returns unknown by default, safe to cast
+        body = (await request.json()) as Partial<PackageInput>;
     }
 
     const imageUrl = file ? await uploadToCloudinary(file) : undefined;
-    // Parse with Zod
-    body.imageUrl = imageUrl;
-    const data = CreatePackageDTO.parse(body);
+
+    // Validate & coerce with Zod
+    const data = CreatePackageDTO.parse({
+        ...body,
+        imageUrl,
+    });
 
     const newPackage = await Package.create(data);
-    const _package = sanitizePackage(newPackage);
+    const sanitized = sanitizePackage(newPackage);
 
     return APIResponse.success(
         "New package added successfully",
-        { package: _package },
+        { package: sanitized },
         201
     );
 });
@@ -53,10 +61,10 @@ export const GET = errorHandler(async () => {
     await connectDB();
 
     const packages = await Package.find();
-    const safePackages = packages.map((_package: IPackage) => sanitizePackage(_package));
+    const safePackages: SafePackage[] = packages.map((pkg) => sanitizePackage(pkg));
 
     return APIResponse.success(
-        "fetched all packages",
+        "Fetched all packages",
         { packages: safePackages },
         200
     );

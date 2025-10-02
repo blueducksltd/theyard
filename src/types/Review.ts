@@ -18,7 +18,7 @@ export interface IReviewMethods {
 }
 
 // Statics
-export interface IReviewModel extends Model<IReview> {
+export interface IReviewModel extends Model<IReview, IReviewMethods> {
     filter(filter: Record<string, string>, sort: string, direction: "ASC" | "DESC", admin?: boolean): Promise<IReview[]>;
 }
 

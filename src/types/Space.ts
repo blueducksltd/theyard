@@ -22,7 +22,7 @@ export interface ISpaceMethods {
 }
 
 // Statics
-export interface ISpaceModel extends Model<ISpace, {}, ISpaceMethods> {
+export interface ISpaceModel extends Model<ISpace, ISpaceMethods> {
   findByName(name: string): Promise<ISpace | null>;
   filterByCapacity(minCapacity: number): Promise<ISpace[]>;
 }

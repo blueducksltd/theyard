@@ -33,7 +33,7 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
   { timestamps: true }
 );
 
-EventSchema.statics.filter = async function (filter: {}, sort: string, direction: "ASC" | "DESC", admin?: boolean) {
+EventSchema.statics.filter = async function (filter: Record<string, string>, sort: string, direction: "ASC" | "DESC", admin?: boolean) {
   let events;
   if (admin) {
     events = this.find(filter)

@@ -17,7 +17,7 @@ export interface IPackageMethods {
 }
 
 // Statics
-export interface IPackageModel extends Model<IPackage, {}, IPackageMethods> {
+export interface IPackageModel extends Model<IPackage, IPackageMethods> {
   findByName(name: string): Promise<IPackage | null>;
 }
 

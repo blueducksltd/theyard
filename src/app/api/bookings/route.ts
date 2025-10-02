@@ -1,4 +1,5 @@
 import APIResponse from "@/lib/APIResponse";
+import { requireAuth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
@@ -8,19 +9,34 @@ import Event from "@/models/Event";
 import Package from "@/models/Package";
 import Space from "@/models/Space";
 import { CreateBookingDto, CreateBookingInput, sanitizeBooking } from "@/types/Booking";
-import { differenceInMinutes, parse } from "date-fns";
+import { addHours, differenceInMinutes, isBefore, isSameDay, parse } from "date-fns";
 import { NextRequest } from "next/server";
 
 export const POST = errorHandler(async (request: NextRequest) => {
     await connectDB();
     const body: CreateBookingInput = await request.json();
 
-    // cant book for previous days
-    const today = new Date();
-    const bookingDate = new Date(body.date);
-    if (bookingDate <= today) {
-        throw APIError.BadRequest("Please select a future date for the booking.");
+    const now = new Date();
+
+    // Parse booking date (yyyy-MM-dd) into midnight of that day
+    const bookingDate = parse(body.date, "yyyy-MM-dd", new Date());
+
+    // Parse startTime (HH:mm) on the chosen date
+    const bookingStart = parse(body.startTime, "HH:mm", bookingDate);
+
+    // 1️⃣ Past date check
+    if (isBefore(bookingDate, new Date(now.toDateString()))) {
+        throw APIError.BadRequest("Booking date must be today or in the future");
     }
+
+    // 2️⃣ Today’s date special rule
+    if (isSameDay(bookingDate, now)) {
+        const minStartTime = addHours(now, 1);
+        if (isBefore(bookingStart, minStartTime)) {
+            throw APIError.BadRequest("Bookings must be made at least 1 hour in advance");
+        }
+    }
+    // 3️⃣ Future dates are automatically fine
 
 
     // Validate times
@@ -135,30 +151,61 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
 
 export const GET = errorHandler(
-    async () => {
+    async (request: NextRequest) => {
         await connectDB();
-        const bookings = await Booking.find()
-            .populate("customer")
-            .populate("space")
-            .populate("event")
-            .populate("package")
-
-        if (bookings.length === 0) {
-            throw APIError.NotFound("No bookings found");
+        const authHeader = request.headers.get("authorization");
+        let admin = false;
+        if (authHeader) {
+            const payload = requireAuth(request);
+            // Role is not required, just checking if admin to show all bookings
+            if (payload) admin = true;
         }
 
-        const safeBookings = bookings.map((booking) => sanitizeBooking(booking));
 
-        // remove booking.event.customer
-        safeBookings.forEach((booking) => {
-            if (booking.event && 'customer' in booking.event) {
-                delete booking.event.customer;
-            }
-        });
+        // const safeBookings = bookings.map((booking) => sanitizeBooking(booking));
+
+        // // remove booking.event.customer
+        // safeBookings.forEach((booking) => {
+        //     if (booking.event && 'customer' in booking.event) {
+        //         delete booking.event.customer;
+        //     }
+        // });
+
+
+        // check query params
+        const { searchParams } = new URL(request.url);
+        const status = searchParams.get("status");
+        const sort = searchParams.get("sort") || "date";
+        const direction = (searchParams.get("direction") as "ASC" | "DESC") || "ASC";
+        const page = parseInt(searchParams.get("page") || "1");
+        const limit = parseInt(searchParams.get("limit") || "10");
+
+        const filter = {};
+        if (status) Object.assign(filter, { status });
+
+        const bookings = await Booking.filter(filter, sort, direction, admin);
+        if (!bookings) throw APIError.NotFound("No bookings found");
+        // Pagination
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        const paginatedBookings = bookings.slice(startIndex, endIndex);
+
+        if (paginatedBookings.length === 0) return APIResponse.success("No bookings found", { bookings: [] });
+
+        const sanitizedBookings = paginatedBookings.map(event => sanitizeBooking(event));
+
+        const pagination = {
+            currentPage: page,
+            totalPages: Math.ceil(bookings.length / limit),
+            pageSize: limit,
+            totalItems: bookings.length,
+            nextPage: endIndex < bookings.length ? page + 1 : null,
+            prevPage: startIndex > 0 ? page - 1 : null
+        }
 
         return APIResponse.success(
             "Fetched all bookings",
-            { bookings: safeBookings },
+            { bookings: sanitizedBookings, pagination },
             200
         );
     }
