@@ -17,7 +17,7 @@ export default function Modal({ isOpen, children }: IProps) {
       </button>*/}
       <dialog
         id="my_modal_2"
-        className={`modal flex flex-col md:flex-row justify-center md:items-start px-4 py-10 md:p-10 ${isOpen ? "modal-open" : ""}`}
+        className={`modal flex flex-col md:flex-row justify-center px-4 py-10 md:p-10 ${isOpen ? "modal-open" : ""}`}
       >
         <div className="flex flex-col items-start px-10 py-5 justify-start bg-yard-white rounded-lg w-full md:w-[800px]">
           {children}

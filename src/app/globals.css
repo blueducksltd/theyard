@@ -101,7 +101,8 @@
 
 @theme {
     --color-yard-white: #fdfbf9;
-    --color-yard-primary: #4b6450;
+    /*--color-yard-primary: #4b6450;*/
+    --color-yard-primary: #0f3830;
     --color-yard-dark-primary: #3c5040;
     --color-yard-primary-active: #c7cfc9;
     --color-yard-orange: #d4a548;
@@ -111,6 +112,8 @@
     --color-yard-text: #5a5a53;
     --color-yard-milk: #eeeee6;
     --color-yard-lightgreen: #e4e8e5;
+    --color-yard-hover: #e4e8e5;
+    --color-yard-red: #704646;
     --font-lato: var(--font-lato), sans-serif;
     --font-playfair: var(--font-playfair), serif;
     --font-sen: var(--font-sen), sans-serif;
