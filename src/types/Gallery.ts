@@ -18,7 +18,7 @@ export interface IGalleryMethods {
 }
 
 // Statics
-export interface IGalleryModel extends Model<IGallery> {
+export interface IGalleryModel extends Model<IGallery, IGalleryMethods> {
   filter(filter: Record<string, string>, sort: string, direction: "ASC" | "DESC", admin?: boolean): Promise<IGallery[]>;
 }
 

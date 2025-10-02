@@ -38,7 +38,7 @@ export interface IBookingModel extends Model<IBooking, IBookingMethods> {
         startTime: string,
         endTime: string,
     ): Promise<boolean>;
-    filterByStatus(status: IBooking["status"]): Promise<IBooking[]>;
+    filter(filter: Record<string, string>, sort: string, direction: "ASC" | "DESC", admin?: boolean): Promise<IBooking[]>;
     findByCustomer(customerId: ICustomer["id"]): Promise<IBooking[]>;
     findBySpace(spaceId: ISpace["id"]): Promise<IBooking[]>;
     findByDateRange(start: Date, end?: Date): Promise<IBooking[]>;

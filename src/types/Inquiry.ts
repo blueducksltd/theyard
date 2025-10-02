@@ -20,7 +20,7 @@ export interface IInquiryMethods {
 }
 
 // Statics
-export interface IInquiryModel extends Model<IInquiry, {}, IInquiryMethods> {
+export interface IInquiryModel extends Model<IInquiry, IInquiryMethods> {
     findByEmail(email: string): Promise<IInquiry | null>;
     filter(filter: Record<string, string>, sort: string, direction: "ASC" | "DESC"): Promise<IInquiry[]>;
 }

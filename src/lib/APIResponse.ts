@@ -1,22 +1,6 @@
 import { NextResponse } from "next/server";
 
 export default class APIResponse {
-  /**
-   * Remove common sensitive fields from mongoose docs or plain objects
-   */
-  static sanitize<T extends Record<string, any>>(doc: T | null): Partial<T> | null {
-    if (!doc) return null;
-
-    const obj =
-      typeof (doc as any).toObject === "function"
-        ? (doc as any).toObject()
-        : { ...doc };
-
-    delete obj.password;
-    delete obj.__v;
-
-    return obj;
-  }
 
   /**
    * Success response

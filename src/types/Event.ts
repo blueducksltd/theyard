@@ -27,7 +27,7 @@ export interface IEventMethods {
 }
 
 // Statics
-export interface IEventModel extends Model<IEvent, {}, IEventMethods> {
+export interface IEventModel extends Model<IEvent, IEventMethods> {
   filter(filter: {}, sort: string, direction: "ASC" | "DESC", admin?: boolean): Promise<IEvent[]>;
 }
 
