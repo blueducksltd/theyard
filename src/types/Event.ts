@@ -28,7 +28,7 @@ export interface IEventMethods {
 
 // Statics
 export interface IEventModel extends Model<IEvent, IEventMethods> {
-  filter(filter: {}, sort: string, direction: "ASC" | "DESC", admin?: boolean): Promise<IEvent[]>;
+  filter(filter: Record<string, string>, sort: string, direction: "ASC" | "DESC", admin?: boolean): Promise<IEvent[]>;
 }
 
 // Other utility types
@@ -58,7 +58,7 @@ export function sanitizeEvent(event: IEvent): SafeEvent {
     startTime: event.time.start,
     endTime: event.time.end,
     location: event.location,
-    customer: event.customer ? sanitizeCustomer(event.customer) : null
+    customer: event.customer ? sanitizeCustomer(event.customer) : null,
   };
 }
 

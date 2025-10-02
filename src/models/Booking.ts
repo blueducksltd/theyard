@@ -46,7 +46,7 @@ BookingSchema.statics.isDoubleBooked = async function (
   if (bookings.length === 0) return false;
 
   // Check overlap
-  return bookings.some((b: any) =>
+  return bookings.some((b: IBooking) =>
     b.times.some((t: string) => requestedSlots.includes(t))
   );
 };

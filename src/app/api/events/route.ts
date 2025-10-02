@@ -50,7 +50,6 @@ export const GET = errorHandler(
             nextPage: endIndex < events.length ? page + 1 : null,
             prevPage: startIndex > 0 ? page - 1 : null
         }
-
         return APIResponse.success("Events retrieved successfully", { events: sanitizedEvents, pagination });
     }
 );

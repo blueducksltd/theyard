@@ -6,7 +6,7 @@ import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Package from "@/models/Package";
-import { CreatePackageDTO, IPackage, SafePackage, sanitizePackage } from "@/types/Package";
+import { CreatePackageDTO, SafePackage, sanitizePackage } from "@/types/Package";
 import { z } from "zod";
 
 // Infer input type from DTO for type safety

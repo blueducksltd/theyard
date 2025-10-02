@@ -4,12 +4,12 @@ import mongoose from "mongoose";
 
 export default class APIError extends Error {
   statusCode: number;
-  details?: string | { [key: string]: string };
+  details?: string | Record<string, unknown> | unknown[];
 
   constructor(
     statusCode: number,
     message: string,
-    details?: string | { [key: string]: string },
+    details?: string | Record<string, unknown> | unknown[],
   ) {
     super(message);
     this.statusCode = statusCode;
@@ -23,7 +23,7 @@ export default class APIError extends Error {
     }
   }
 
-  static BadRequest(message: string, details?: {}) {
+  static BadRequest(message: string, details?: string | Record<string, unknown> | unknown[]) {
     return new APIError(400, message, details);
   }
 

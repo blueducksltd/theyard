@@ -26,7 +26,7 @@ export default class APIResponse {
   static error(
     message: string,
     status = 400,
-    errors: any = null
+    errors: string | Record<string, string> | null = null
   ) {
     return NextResponse.json(
       {
