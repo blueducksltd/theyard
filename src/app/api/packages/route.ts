@@ -6,11 +6,9 @@ import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Package from "@/models/Package";
-import { CreatePackageDTO, SafePackage, sanitizePackage } from "@/types/Package";
+import { CreatePackageDTO, CreatePackageInput, SafePackage, sanitizePackage } from "@/types/Package";
 import { z } from "zod";
 
-// Infer input type from DTO for type safety
-type PackageInput = z.infer<typeof CreatePackageDTO>;
 
 export const POST = errorHandler(async (request: NextRequest) => {
     await connectDB();
@@ -21,23 +19,23 @@ export const POST = errorHandler(async (request: NextRequest) => {
     }
 
     const contentType = request.headers.get("content-type") ?? "";
-    let body: Partial<PackageInput> = {};
-    let file: File | null = null;
 
-    if (contentType.includes("multipart/form-data")) {
-        const form = await request.formData();
-
-        for (const [key, value] of form.entries()) {
-            if (key === "image" && value instanceof File) {
-                file = value;
-            } else {
-                body[key as keyof PackageInput] = value.toString() as any;
-            }
-        }
-    } else {
-        // request.json() returns unknown by default, safe to cast
-        body = (await request.json()) as Partial<PackageInput>;
+    if (!contentType.includes("multipart/form-data")) {
+        throw APIError.BadRequest("Content-Type must be multipart/form-data");
     }
+    const form = await request.formData();
+    const file = form.get("image") as File | null;
+
+    // convert string seperated by commas to array of strings
+    const specsString = form.get("specs") as string;
+    const specs = specsString ? specsString.split(",").map(s => s.trim()) : [];
+
+    const body: CreatePackageInput = {
+        name: form.get("name") as string,
+        description: form.get("description") as string || undefined,
+        price: z.coerce.number().parse(form.get("price")),
+        specs,
+    };
 
     const imageUrl = file ? await uploadToCloudinary(file) : undefined;
 

@@ -2,19 +2,19 @@
 import { ZodError } from "zod";
 import mongoose from "mongoose";
 
+// 🔑 define once
+export type ErrorDetails = string | Record<string, unknown> | unknown[];
+
 export default class APIError extends Error {
   statusCode: number;
-  details?: string | Record<string, unknown> | unknown[];
+  details?: ErrorDetails;
 
-  constructor(
-    statusCode: number,
-    message: string,
-    details?: string | Record<string, unknown> | unknown[],
-  ) {
+  constructor(statusCode: number, message: string, details?: ErrorDetails) {
     super(message);
     this.statusCode = statusCode;
     this.details = details;
     Object.setPrototypeOf(this, new.target.prototype);
+
     // log directly to Sentry
     if (process.env.NODE_ENV === "production") {
       console.error(this);
@@ -23,7 +23,7 @@ export default class APIError extends Error {
     }
   }
 
-  static BadRequest(message: string, details?: string | Record<string, unknown> | unknown[]) {
+  static BadRequest(message: string, details?: ErrorDetails) {
     return new APIError(400, message, details);
   }
 
@@ -77,7 +77,8 @@ export default class APIError extends Error {
       return APIError.BadRequest(`Invalid ${err.path}: ${err.value}`);
     }
 
-    if ((err as any).code === 11000) {
+    // 11000 = Mongo duplicate key error
+    if ((err as { code?: number }).code === 11000) {
       return APIError.Conflict("Duplicate key error");
     }
 
