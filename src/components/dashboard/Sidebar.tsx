@@ -14,7 +14,7 @@ export default function Sidebar() {
             alt="Dashboard Icon"
           />
           <Link
-            href={"#"}
+            href={"/admin/dashboard"}
             className="md:flex justify-center text-[#44433E] z-40"
           >
             <span>Dashboard</span>
@@ -31,7 +31,7 @@ export default function Sidebar() {
             alt="Bookmark Icon"
           />
           <Link
-            href={"#"}
+            href={"/admin/bookings"}
             className="md:flex justify-center text-[#44433E] z-40"
           >
             <span>Bookings Mgt</span>

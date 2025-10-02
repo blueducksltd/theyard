@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function HomeContent() {
   return (
-    <main className="flex-1 py-4 px-5">
+    <main className="flex-1 py-4 px-5 md:h-[600px] 2xl:h-[770px] overflow-y-auto">
       <section className="grid grid-cols-2 gap-5">
         {/*Outer box*/}
         <div className="w-full h-[390px] bg-[#fdfdfd] border-[1px] border-[#C7CFC9] rounded-lg py-5 px-4 gap-6">

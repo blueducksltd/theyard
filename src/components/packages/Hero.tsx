@@ -62,32 +62,32 @@ const Hero = () => {
 
           <div className="flex flex-col gap-4 my-3">
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Perfect for casual gatherings or date days</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Blankets</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p> Cushions</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Low Tables</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Decor Props</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Lush Garden Setting</p>
             </div>
           </div>
@@ -127,32 +127,32 @@ const Hero = () => {
 
           <div className="flex flex-col gap-4 my-3">
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Perfect for casual gatherings or date days</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Blankets</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p> Cushions</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Low Tables</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Decor Props</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Lush Garden Setting</p>
             </div>
           </div>
@@ -192,32 +192,32 @@ const Hero = () => {
 
           <div className="flex flex-col gap-4 my-3">
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Perfect for casual gatherings or date days</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Blankets</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p> Cushions</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Low Tables</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Decor Props</p>
             </div>
 
             <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} />
+              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
               <p>Lush Garden Setting</p>
             </div>
           </div>
