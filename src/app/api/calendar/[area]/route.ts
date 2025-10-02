@@ -18,7 +18,7 @@ import { ISpace } from "@/types/Space";
 export const GET = errorHandler<{ params: { area: string } }>(
 
     async (request: NextRequest, context) => {
-        const { area } = context.params;
+        const { area } = await context.params;
         const { searchParams } = new URL(request.url);
         await connectDB();
 
