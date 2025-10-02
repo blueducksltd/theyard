@@ -193,6 +193,11 @@ export const GET = errorHandler(
         if (paginatedBookings.length === 0) return APIResponse.success("No bookings found", { bookings: [] });
 
         const sanitizedBookings = paginatedBookings.map(event => sanitizeBooking(event));
+        sanitizedBookings.forEach((booking) => {
+            if (booking.event && 'customer' in booking.event) {
+                delete booking.event.customer;
+            }
+        });
 
         const pagination = {
             currentPage: page,

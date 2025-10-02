@@ -1,6 +1,5 @@
 import { Model } from "mongoose";
 import { Document } from "mongoose";
-import z from "zod";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
 
 // Document fields

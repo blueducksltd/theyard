@@ -71,7 +71,7 @@ export const LoginAdminDto = z.object({
 });
 
 export function sanitizeAdmin(admin: IAdmin): SafeAdmin {
-  const { password, __v, ...rest } = admin.toObject();
+  const { password: _password, __v: _v, ...rest } = admin.toObject();
   return rest;
 }
 

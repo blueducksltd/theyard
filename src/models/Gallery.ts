@@ -4,6 +4,7 @@ import {
   IGalleryMethods,
   IGalleryModel
 } from "../types/Gallery";
+import Event from "./Event";
 
 // Schema definition with TS generics
 const GallerySchema = new Schema<IGallery, IGalleryModel, IGalleryMethods>(
@@ -23,18 +24,17 @@ const GallerySchema = new Schema<IGallery, IGalleryModel, IGalleryMethods>(
   { timestamps: true }
 );
 
-GallerySchema.statics.filter = async function (
-  filter: Record<string, string>,
-  sort: string,
-  direction: "ASC" | "DESC",
-  admin?: boolean
-) {
-  const sortDirection = direction.toUpperCase() === "ASC" ? 1 : -1;
-
-  return admin
-    ? this.find(filter).sort({ [sort]: sortDirection })
-    : this.find({ status: "published" }).sort({ [sort]: sortDirection });
-};
+GallerySchema.post("save", async function (doc) {
+  // 'doc' is the saved Gallery document
+  if (doc.event) {
+    // Add this gallery to the event's gallery array if not already present
+    await Event.findByIdAndUpdate(
+      doc.event,
+      { $addToSet: { gallery: doc._id } }, // assumes Event has a 'gallery' array
+      { new: true }
+    );
+  }
+});
 
 
 // Export model
