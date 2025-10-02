@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ErrorDetails } from "./errors/APIError";
 
 export default class APIResponse {
 
@@ -26,7 +27,7 @@ export default class APIResponse {
   static error(
     message: string,
     status = 400,
-    errors: string | Record<string, string> | null = null
+    errors: ErrorDetails
   ) {
     return NextResponse.json(
       {

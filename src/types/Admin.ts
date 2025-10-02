@@ -13,7 +13,12 @@ export interface IAdmin extends Document, IAdminMethods {
   role: "admin" | "manager";
 }
 
-type SafeAdmin = Omit<IAdmin, "password" | "__v">;
+type SafeAdmin = {
+  id: string;
+  name: string;
+  email: string;
+  role: IAdmin["role"];
+};
 
 // Instance methods
 export interface IAdminMethods {
@@ -71,8 +76,12 @@ export const LoginAdminDto = z.object({
 });
 
 export function sanitizeAdmin(admin: IAdmin): SafeAdmin {
-  const { password: _password, __v: _v, ...rest } = admin.toObject();
-  return rest;
+  return {
+    id: admin.id,
+    name: admin.name,
+    email: admin.email,
+    role: admin.role,
+  };
 }
 
 // -----------------------------
