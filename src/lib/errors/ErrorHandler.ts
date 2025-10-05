@@ -4,9 +4,17 @@ import APIError from "./APIError";
 import APIResponse from "../APIResponse";
 
 export function errorHandler<
-  T extends (req: NextRequest, context?: unknown) => Promise<Response>
->(handler: T) {
-  return async (req: NextRequest, context?: unknown) => {
+  C extends { params?: Record<string, unknown> }
+>(
+  handler: (
+    req: NextRequest,
+    context: { params: Promise<C["params"]> }
+  ) => Promise<Response>
+) {
+  return async (
+    req: NextRequest,
+    context: { params: Promise<C["params"]> }
+  ) => {
     try {
       return await handler(req, context);
     } catch (err) {
