@@ -253,10 +253,10 @@ export default function Sidebar() {
               onClick={() => setSection("permission")}
             >
               <Image
-                src={"/icons/profile.svg"}
+                src={"/icons/password-check.svg"}
                 width={16}
                 height={16}
-                alt="Profile Icon"
+                alt="Password Check Icon"
               />
               <span className="text-[16px]">Permission</span>
             </button>
@@ -266,10 +266,10 @@ export default function Sidebar() {
               onClick={() => setSection("password")}
             >
               <Image
-                src={"/icons/profile.svg"}
+                src={"/icons/lock.svg"}
                 width={16}
                 height={16}
-                alt="Profile Icon"
+                alt="Lock Icon"
               />
               <span className="text-[16px]">Password</span>
             </button>
