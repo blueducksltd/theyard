@@ -4,7 +4,7 @@ import HomeContent from "@/components/dashboard/HomeContent";
 
 export default function Page() {
   return (
-    <main className="flex flex-col h-screen">
+    <main className="flex flex-col h-screen bg-[#fdfbf9]">
       <Header />
       <section className="flex-1 flex">
         <Sidebar />
