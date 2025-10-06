@@ -47,5 +47,12 @@ export const SubscribeDTO = z.object({
   email: z.string().email()
 });
 
+export const SendEmailDto = z.object({
+  subject: z.string().min(1, "Subject is required"),
+  message: z.string().min(1, "Body is required"),
+  customers: z.array(z.string()).optional()
+});
+
 
 export type SubscribeInput = z.infer<typeof SubscribeDTO>;
+export type SendEmailInput = z.infer<typeof SendEmailDto>;

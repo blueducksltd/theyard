@@ -29,7 +29,7 @@ CustomerSchema.statics.findByEmail = function (email: string) {
 CustomerSchema.statics.subscribe = async function (email: string) {
   const existing = await this.findOne({ email });
   if (existing) return existing;
-  const subscriber = await this.create({ email, firstname: "Subscriber", lastname: "Subscriber" });
+  const subscriber = await this.create({ email, firstname: "Subscribed", lastname: "Customer" });
   return subscriber;
 }
 

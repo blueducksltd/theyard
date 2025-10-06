@@ -59,5 +59,23 @@ export const CreatePackageDTO = z.object({
   imageUrl: z.string().url().optional()
 });
 
+export const UpdatePackageDTO = z.object({
+  name: z.string().optional(),
+  price: z.coerce.number().optional(), // accepts "1000" and coerces to 1000
+  specs: z.preprocess((val) => {
+    if (Array.isArray(val)) {
+      // already array (e.g., specs[]=a&specs[]=b)
+      return val;
+    }
+    if (typeof val === "string") {
+      // comma-separated string from form-data
+      return val.split(",").map((s) => s.trim());
+    }
+    return [];
+  }, z.array(z.string())).optional(),
+  description: z.string().optional(),
+  imageUrl: z.string().url().optional()
+});
 
 export type CreatePackageInput = z.infer<typeof CreatePackageDTO>;
+export type UpdatePackageInput = z.infer<typeof UpdatePackageDTO>;

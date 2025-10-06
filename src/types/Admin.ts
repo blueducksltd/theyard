@@ -11,6 +11,10 @@ export interface IAdmin extends Document, IAdminMethods {
   email: string;
   password: string; // hashed
   role: "admin" | "manager";
+  permissions: number[];
+  status: "active" | "inactive";
+  phone: string;
+  imageUrl: string
 }
 
 type SafeAdmin = {
@@ -18,6 +22,9 @@ type SafeAdmin = {
   name: string;
   email: string;
   role: IAdmin["role"];
+  status: IAdmin["status"];
+  phone: string;
+  imageUrl: string;
 };
 
 // Instance methods
@@ -61,6 +68,9 @@ export const UpdateAdminDto = z.object({
     .min(6, "field `password` must be at least 6 chars")
     .optional(),
   role: z.enum(["admin", "manager"]).optional(),
+  permissions: z.array(z.number()).optional(),
+  phone: z.string().min(10),
+  imageUrl: z.string().optional()
 });
 
 // Admin Login
@@ -81,6 +91,9 @@ export function sanitizeAdmin(admin: IAdmin): SafeAdmin {
     name: admin.name,
     email: admin.email,
     role: admin.role,
+    status: admin.status,
+    phone: admin.phone,
+    imageUrl: admin.imageUrl
   };
 }
 

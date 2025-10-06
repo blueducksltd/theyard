@@ -21,10 +21,19 @@ export const GET = errorHandler(
         }
 
         //  Bookings stats
-        const activeBookings = await Booking.find({ status: "confirmed" }).sort({ createdAt: -1 });
+        const activeBookings = await Booking.find({ status: "confirmed" }).sort({ createdAt: -1 })
+            .populate("event")
+            .populate("customer");
         const activeCount = activeBookings.length;
         // Get last 2 active bookings
         const bookings = activeBookings.slice(0, 2);
+        const _bookings = bookings.map(booking => ({
+            id: booking.id,
+            name: booking.customer ? `${booking.customer.firstname} ${booking.customer.lastname}` : "N/A",
+            date: booking.eventDate,
+            time: `${booking.event.time.start} - ${booking.event.time.end}`,
+            duration: getDuration(booking.event.time.start, booking.event.time.end)
+        }));
 
         // Events stats
         const upcomingEvents = await Event.find({ status: "active" }).sort({ date: 1 }).populate('customer');
@@ -52,7 +61,7 @@ export const GET = errorHandler(
         const dashboardData = {
             bookings: {
                 count: activeCount,
-                recent: bookings
+                recent: _bookings
             },
             events: {
                 count: upcomingEvents.length,

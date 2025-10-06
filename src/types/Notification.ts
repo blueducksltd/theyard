@@ -1,13 +1,15 @@
 import { Model } from "mongoose";
 import { Document } from "mongoose";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
+import z from "zod";
 
 // Document fields
 export interface INotification extends Document {
-    type: "inquiry" | "booking" | "payment";
+    type: "inquiry" | "booking" | "payment" | "review" | "admin";
     customer: ICustomer["id"];
     message: string;
-    meta?: Record<string, string>;
+    permission: number;
+    meta?: Record<string, unknown>;
     read: boolean;
 }
 
@@ -35,7 +37,7 @@ export type SafeNotification = {
     message: string;
     read: boolean;
     type: INotification["type"];
-    meta?: Record<string, string>;
+    meta?: Record<string, unknown>;
 };
 
 export function sanitizeNotification(Notification: INotification): SafeNotification {
@@ -48,3 +50,18 @@ export function sanitizeNotification(Notification: INotification): SafeNotificat
         meta: Notification.meta
     };
 }
+
+export const CreateNotificationDto = z.object({
+    type: z.enum(
+        ["inquiry", "booking", "payment"],
+        {
+            error: "field `type` is required and must be one of inquiry, booking, payment",
+        },
+    ),
+    customer: z.string(),
+    message: z.string(),
+    meta: z.record(z.string(), z.unknown()).optional(),
+    permission: z.number()
+});
+
+export type CreateNotificationInput = z.infer<typeof CreateNotificationDto>;

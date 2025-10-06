@@ -133,4 +133,50 @@ export const CreateBookingDto = z.object({
     public: z.boolean().optional().default(false),
 });
 
+export const UpdateBookingDto = z.object({
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    email: z
+        .string()
+        .email("field `email` must be a valid email").optional(),
+    phone: z
+        .string()
+        .min(10, "field `phone` must be at least 10 characters").optional(),
+    date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, use YYYY-MM-DD").optional(),
+    startTime: z
+        .string()
+        .regex(
+            /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+            "field `startTime` must be in HH:MM 24-hour format",
+        ).optional(),
+    endTime: z
+        .string()
+        .regex(
+            /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
+            "field `endTime` must be in HH:MM 24-hour format",
+        ).optional(),
+    spaceId: z.string().optional(),
+    packageId: z.string().optional(),
+    eventTitle: z.string().optional(),
+    eventType: z.enum(
+        ["picnics", "birthdays", "weddings", "corporate", "seasonal"],
+        {
+            error:
+                "field `eventType` is required and must be one of picnics, birthdays, weddings, corporate, seasonal",
+        },
+    ).optional(),
+    eventDescription: z.string().optional(),
+    public: z.boolean().optional().default(false).optional(),
+    status: z.enum(
+        ["pending", "confirmed", "cancelled"],
+        {
+            error:
+                "field `status` is required and must be one of pending,",
+        },
+    ).optional(),
+});
+
 export type CreateBookingInput = z.infer<typeof CreateBookingDto>;
+export type UpdateBookingInput = z.infer<typeof UpdateBookingDto>;

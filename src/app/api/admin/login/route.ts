@@ -19,12 +19,14 @@ export const POST = errorHandler(
         }
 
         const isMatch = await admin.comparePassword(parsed.password);
-        
+
         if (!isMatch) {
             throw APIError.Unauthorized("Invalid email or password");
         }
 
         const token = generateToken(admin);
+        admin.status = "active";
+        await admin.save();
 
         return NextResponse.json({
             success: true,

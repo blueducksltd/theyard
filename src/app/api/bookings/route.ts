@@ -3,13 +3,15 @@ import { requireAuth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
+import { sendBookingEmail } from "@/lib/mailer";
+import { sendNotification } from "@/lib/notification";
 import Booking from "@/models/Booking";
 import Customer from "@/models/Customer";
 import Event from "@/models/Event";
 import Package from "@/models/Package";
 import Space from "@/models/Space";
 import { CreateBookingDto, CreateBookingInput, sanitizeBooking } from "@/types/Booking";
-import { addHours, differenceInMinutes, isBefore, isSameDay, parse } from "date-fns";
+import { addDays, addHours, differenceInMinutes, isBefore, isSameDay, parse, startOfToday } from "date-fns";
 import { NextRequest } from "next/server";
 
 export const POST = errorHandler(async (request: NextRequest) => {
@@ -120,6 +122,19 @@ export const POST = errorHandler(async (request: NextRequest) => {
         totalPrice,
     });
 
+    try {
+        await sendBookingEmail(customer.email);
+        await sendNotification({
+            type: "booking",
+            customer: customer.id,
+            message: "New Booking",
+            meta: { booking },
+            permission: 2
+        })
+    } catch (error) {
+        throw APIError.Internal(`Error sending email: ${(error as Error).message}`)
+    }
+
     return APIResponse.success(
         "New booking created successfully",
         {
@@ -162,16 +177,6 @@ export const GET = errorHandler(
         }
 
 
-        // const safeBookings = bookings.map((booking) => sanitizeBooking(booking));
-
-        // // remove booking.event.customer
-        // safeBookings.forEach((booking) => {
-        //     if (booking.event && 'customer' in booking.event) {
-        //         delete booking.event.customer;
-        //     }
-        // });
-
-
         // check query params
         const { searchParams } = new URL(request.url);
         const status = searchParams.get("status");
@@ -180,8 +185,35 @@ export const GET = errorHandler(
         const page = parseInt(searchParams.get("page") || "1");
         const limit = parseInt(searchParams.get("limit") || "10");
 
-        const filter = {};
-        if (status) Object.assign(filter, { status });
+        const filter: Record<string, string> = {};
+        if (status && status !== "past") {
+            Object.assign(filter, { status });
+        }
+
+        if (status === "past") {
+            const now = new Date();
+
+            // cutoff time is "now minus 1 hour", formatted as "HH:mm", e.g. "09:00"
+            const cutoffHour = now.getHours() - 1;
+            const cutoffTimeStr = `${String(cutoffHour).padStart(2, "0")}:00`;
+
+            Object.assign(filter, {
+                status: "confirmed",
+                $or: [
+                    // Bookings from previous days
+                    { eventDate: { $lt: startOfToday() } },
+
+                    // Bookings from today but whose startTime is <= cutoff hour
+                    {
+                        eventDate: {
+                            $gte: startOfToday(),
+                            $lt: addDays(startOfToday(), 1),
+                        },
+                        startTime: { $lte: cutoffTimeStr },
+                    },
+                ],
+            });
+        }
 
         const bookings = await Booking.filter(filter, sort, direction, admin);
         if (!bookings) throw APIError.NotFound("No bookings found");
