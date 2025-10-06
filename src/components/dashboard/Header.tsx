@@ -32,18 +32,18 @@ export default function Header({ section }: IProps) {
         />
 
         <Link
-          href={"/contact"}
-          className="w-[143px] h-[52px] lg:flex justify-center items-center bg-yard-primary text-white py-3 px-4 rounded-sm gap-2 hidden group hover:text-yard-primary relative overflow-hidden"
+          href={"/admin/dashboard"}
+          className="w-[159px] h-[52px] lg:flex justify-center items-center bg-[#E4E8E5] text-yard-primary py-3 px-4 rounded-sm gap-2 hidden group relative overflow-hidden mr-5"
         >
           <Image
-            src={"/icons/dashboard-white.svg"}
-            width={16}
-            height={16}
+            src={"/gallery/girl.svg"}
+            width={32}
+            height={32}
             className="z-40"
             alt="Dashboard Icon"
           />
           <span className="z-50">User Profile</span>
-          <div className="absolute top-0 left-0 bg-yard-hover w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+          {/*<div className="absolute top-0 left-0 bg-yard-hover w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>*/}
         </Link>
       </section>
     </main>

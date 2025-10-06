@@ -13,7 +13,7 @@
         font-style: bold;
         line-height: 40px;
         letter-spacing: -0.1px;
-        color: #4b6450;
+        color: #0f3830;
         font-family: var(--font-playfair), serif;
     }
     .paragraph {
@@ -40,8 +40,8 @@
         border-width: 1.5px;
         border-radius: 2px;
         padding: 20px 24px;
-        border-color: #4b6450;
-        color: #4b6450;
+        border-color: #0f3830;
+        color: #0f3830;
         font-family: var(--font-sen), sans-serif;
         font-weight: 500;
         font-style: medium;
@@ -103,7 +103,8 @@
     --color-yard-white: #fdfbf9;
     /*--color-yard-primary: #4b6450;*/
     --color-yard-primary: #0f3830;
-    --color-yard-dark-primary: #3c5040;
+    --color-yard-dark-primary: #2f433f;
+    /*--color-yard-dark-primary: #3c5040;*/
     --color-yard-primary-active: #c7cfc9;
     --color-yard-orange: #d4a548;
     --color-yard-light-orange: #e9d9c0;

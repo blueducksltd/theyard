@@ -1,14 +1,14 @@
 import Header from "@/components/dashboard/Header";
 import Sidebar from "@/components/dashboard/Sidebar";
-import BookingContent from "@/components/dashboard/BookingContent";
+import UserContent from "@/components/dashboard/UserContent";
 
 export default function Page() {
   return (
     <main className="flex flex-col h-screen bg-[#fdfbf9]">
-      <Header section="Booking Mgt" />
+      <Header section="Users &amp; Roles" />
       <section className="flex-1 flex">
         <Sidebar />
-        <BookingContent />
+        <UserContent />
       </section>
     </main>
   );
