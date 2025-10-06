@@ -9,6 +9,12 @@ const AdminSchema = new Schema<IAdmin, IAdminModel, IAdminMethods>(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ["admin", "manager"], default: "manager" },
+    permissions: [
+      { type: Number }
+    ],
+    status: { type: String, enum: ["active", "inactive"], default: "inactive" },
+    phone: { type: String },
+    imageUrl: { type: String }
   },
   { timestamps: true }
 );

@@ -7,6 +7,7 @@ if (!MONGODB_URI) {
 }
 
 declare global {
+  // allow global `_mongoose` caching across hot reloads in dev
   var _mongoose: {
     conn: Mongoose | null;
     promise: Promise<Mongoose> | null;
@@ -19,7 +20,21 @@ export async function connectDB(): Promise<Mongoose> {
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI).then((m) => m);
+    cached.promise = mongoose.connect(MONGODB_URI).then(async (m) => {
+      // ✅ preload all models with dynamic imports
+      await Promise.all([
+        import("@/models/Customer"),
+        import("@/models/Space"),
+        import("@/models/Event"),
+        import("@/models/Package"),
+        import("@/models/Gallery"),
+        import("@/models/Booking"),
+        import("@/models/Service"),
+      ]);
+
+      console.log("📦 Models registered");
+      return m;
+    });
   }
 
   cached.conn = await cached.promise;

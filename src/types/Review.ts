@@ -24,6 +24,7 @@ export interface IReviewModel extends Model<IReview, IReviewMethods> {
 
 // Utility Types
 export type SafeReview = {
+    id: string;
     name: string;
     comment: string;
     status: IReview["status"];
@@ -33,6 +34,7 @@ export type SafeReview = {
 
 export const sanitizeReview = (review: IReview): SafeReview => {
     return {
+        id: review.id,
         name: review.name,
         comment: review.comment,
         status: review.status,
@@ -47,4 +49,14 @@ export const CreateReviewDTO = z.object({
     location: z.string()
 });
 
+export const UpdateReviewDTO = z.object({
+    name: z.string().optional(),
+    comment: z.string().max(200).optional(),
+    location: z.string().optional(),
+    status: z.enum([
+        "ignored", "published"
+    ]).optional()
+});
+
 export type CreateReviewInput = z.infer<typeof CreateReviewDTO>;
+export type UpdateReviewInput = z.infer<typeof UpdateReviewDTO>;

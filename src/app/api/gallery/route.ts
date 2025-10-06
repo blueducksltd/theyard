@@ -6,7 +6,7 @@ import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Gallery from "@/models/Gallery";
-import { CreateGalleryDTO, CreateGalleryInput } from "@/types/Gallery";
+import { CreateGalleryDTO, CreateGalleryInput, sanitizeGallery } from "@/types/Gallery";
 import Event from "@/models/Event";
 
 
@@ -30,12 +30,17 @@ export const POST = errorHandler(async (request: NextRequest) => {
         throw APIError.BadRequest("No images provided");
     }
 
+    if (images.length > 5) {
+        throw APIError.BadRequest("You can only upload a maximum of 5 images at once");
+    }
+
     const body: Partial<CreateGalleryInput> = {
         title: form.get("title") as CreateGalleryInput["title"],
         category: form.get("category") as CreateGalleryInput["category"],
         description: form.get("description") as CreateGalleryInput["description"] || undefined,
         eventId: form.get("eventId") as CreateGalleryInput["eventId"] || undefined,
-        imageUrl: undefined // will be set after upload
+        imageUrl: undefined, // will be set after upload
+        mediaDate: form.get("mediaDate") ? new Date(form.get("mediaDate") as string) : undefined
     };
 
     // Upload + create each gallery document concurrently
@@ -52,6 +57,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
                 description: data.description,
                 event: data.eventId,
                 imageUrl: data.imageUrl,
+                mediaDate: data.mediaDate
             });
 
             // If eventId provided, push gallery.id into Event.gallery
@@ -74,7 +80,8 @@ export const POST = errorHandler(async (request: NextRequest) => {
         category: gallery.category,
         description: gallery.description,
         imageUrl: gallery.imageUrl,
-        event: gallery.event
+        event: gallery.event,
+        mediaDate: gallery.mediaDate
     }));
 
     return APIResponse.success(
@@ -87,16 +94,9 @@ export const POST = errorHandler(async (request: NextRequest) => {
 export const GET = errorHandler(async (request: NextRequest) => {
     await connectDB();
 
-    // Check if user is admin (optional auth)
-    const authHeader = request.headers.get("authorization");
-    let isAdmin = false;
-    if (authHeader) {
-        const payload = requireAuth(request);
-        if (payload) isAdmin = true;
-    }
-
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
+    const mediaDate = searchParams.get("mediadate");
     const sort = searchParams.get("sort") ?? "createdAt";
     const direction = (searchParams.get("direction") as "ASC" | "DESC") ?? "ASC";
     const page = parseInt(searchParams.get("page") ?? "1", 10);
@@ -104,8 +104,9 @@ export const GET = errorHandler(async (request: NextRequest) => {
 
     const filter: Record<string, string> = {};
     if (category) filter.category = category;
+    if (mediaDate) filter.mediaDate = mediaDate;
 
-    const gallery = await Gallery.filter(filter, sort, direction, isAdmin);
+    const gallery = await Gallery.filter(filter, sort, direction);
     if (!gallery || gallery.length === 0) {
         return APIResponse.success("No gallery found", { gallery: [] }, 200);
     }
@@ -114,6 +115,7 @@ export const GET = errorHandler(async (request: NextRequest) => {
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
     const paginatedGallery = gallery.slice(startIndex, endIndex);
+    const sanitizedGallery = paginatedGallery.map(image => sanitizeGallery(image));
 
     const pagination = {
         currentPage: page,
@@ -126,7 +128,7 @@ export const GET = errorHandler(async (request: NextRequest) => {
 
     return APIResponse.success(
         "Gallery retrieved successfully",
-        { gallery: paginatedGallery, pagination },
+        { gallery: sanitizedGallery, pagination },
         200
     );
 });

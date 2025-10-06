@@ -1,6 +1,7 @@
 import APIResponse from "@/lib/APIResponse";
 import { connectDB } from "@/lib/db";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
+import { sendNotification } from "@/lib/notification";
 import Customer from "@/models/Customer";
 import Inquiry from "@/models/Inquiry";
 import { CreateInquiryDTO, CreateInquiryInput, sanitizeInquiry } from "@/types/Inquiry";
@@ -34,6 +35,13 @@ export const POST = errorHandler(async (request: NextRequest) => {
     });
 
     if (!inquiry) throw new Error("Failed to create inquiry");
+    await sendNotification({
+        type: "inquiry",
+        customer: customer.id,
+        message: "New Inquiry",
+        meta: { inquiry },
+        permission: 3
+    })
 
     // ✅ populate inquiry with customer details
     await inquiry.populate("customer");
