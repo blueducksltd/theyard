@@ -67,3 +67,16 @@ export async function sendNotificationEmail(admin: IAdmin, data: INotification) 
         html,
     });
 }
+
+export async function sendConfirmationEmail(email: IAdmin["email"], code: string) {
+    const html = `
+        Admin Email Verification Code,
+        < p > Your verification code is <b>${code} </b>. It expires in 10 minutes.</p >
+    `
+    await transporter.sendMail({
+        from: `"The Yard" <${process.env.MAIL}>`,
+        to: email,
+        subject: `Admin Email Verification Code`,
+        html,
+    });
+}

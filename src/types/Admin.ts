@@ -14,7 +14,12 @@ export interface IAdmin extends Document, IAdminMethods {
   permissions: number[];
   status: "active" | "inactive";
   phone: string;
-  imageUrl: string
+  imageUrl: string;
+  emailVerificationCode: string | null;
+  emailVerificationExpires: Date | null;
+  emailVerificationLastSent: Date | null;
+  emailVerifiedAt: Date | null;
+
 }
 
 type SafeAdmin = {
@@ -86,6 +91,12 @@ export const LoginAdminDto = z.object({
   }),
 });
 
+export const UpdatePasswordDTO = z.object({
+  currentPassword: z.string().min(6, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+});
+
+
 export function sanitizeAdmin(admin: IAdmin): SafeAdmin {
   return {
     id: admin.id,
@@ -105,3 +116,4 @@ export function sanitizeAdmin(admin: IAdmin): SafeAdmin {
 export type CreateAdminInput = z.infer<typeof CreateAdminDto>;
 export type UpdateAdminInput = z.infer<typeof UpdateAdminDto>;
 export type LoginAdminInput = z.infer<typeof LoginAdminDto>;
+export type UpdatePasswordInput = z.infer<typeof UpdatePasswordDTO>;
