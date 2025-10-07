@@ -35,13 +35,14 @@ export const POST = errorHandler(async (request: NextRequest) => {
     });
 
     if (!inquiry) throw new Error("Failed to create inquiry");
+
     await sendNotification({
         type: "inquiry",
-        customer: customer.id,
-        message: "New Inquiry",
-        meta: { inquiry },
-        permission: 3
-    })
+        title: "New Inquiry",
+        message: `Received a new inquiry from ${customer.firstname}`,
+        permission: 3,
+        meta: { inquiry }
+    });
 
     // ✅ populate inquiry with customer details
     await inquiry.populate("customer");

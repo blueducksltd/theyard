@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
+import { sendNotification } from "@/lib/notification";
 import Review from "@/models/Review";
 import { CreateReviewDTO, CreateReviewInput, sanitizeReview } from "@/types/Review";
 import { NextRequest } from "next/server";
@@ -20,6 +21,14 @@ export const POST = errorHandler(
         });
 
         if (!newReview) throw new Error("Failed to create review");
+
+        await sendNotification({
+            type: "review",
+            title: "New Review",
+            message: `Received a new review from ${newReview.name}`,
+            permission: 3,
+            meta: { review: newReview }
+        });
 
         return APIResponse.success("Review created successfully", { review: newReview }, 201);
     }

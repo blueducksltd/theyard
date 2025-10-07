@@ -1,15 +1,14 @@
 import { Model } from "mongoose";
 import { Document } from "mongoose";
-import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
+import { ICustomer } from "./Customer";
 import z from "zod";
 import { IAdmin } from "./Admin";
 
 // Document fields
 export interface INotification extends Document {
-    type: "inquiry" | "booking" | "payment" | "review" | "admin";
+    type: "inquiry" | "booking" | "payment" | "review" | "admin" | "subscription";
     title: string;
     message: string;
-    customer: ICustomer["id"];
     permission: number;
     meta?: Record<string, unknown>;
     readBy: IAdmin[];
@@ -35,7 +34,7 @@ export interface INotificationModel extends Model<INotification, INotificationMe
 // Utility Types
 export type SafeNotification = {
     id: string;
-    customer: SafeCustomer;
+    title: string;
     message: string;
     type: INotification["type"];
     meta?: Record<string, unknown>;
@@ -44,7 +43,7 @@ export type SafeNotification = {
 export function sanitizeNotification(Notification: INotification): SafeNotification {
     return {
         id: Notification.id,
-        customer: sanitizeCustomer(Notification.customer as ICustomer),
+        title: Notification.title,
         message: Notification.message,
         type: Notification.type,
         meta: Notification.meta
@@ -52,13 +51,13 @@ export function sanitizeNotification(Notification: INotification): SafeNotificat
 }
 
 export const CreateNotificationDto = z.object({
+    title: z.string(),
     type: z.enum(
-        ["inquiry", "booking", "payment"],
+        ["inquiry", "booking", "payment", "review", "admin", "subscription"],
         {
             error: "field `type` is required and must be one of inquiry, booking, payment",
         },
     ),
-    customer: z.string(),
     message: z.string(),
     meta: z.record(z.string(), z.unknown()).optional(),
     permission: z.number()

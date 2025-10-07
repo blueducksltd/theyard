@@ -126,8 +126,8 @@ export const POST = errorHandler(async (request: NextRequest) => {
         await sendBookingEmail(customer.email);
         await sendNotification({
             type: "booking",
-            customer: customer.id,
-            message: "New Booking",
+            title: "New Booking",
+            message: "A Customer just completed Booking",
             meta: { booking },
             permission: 2
         })

@@ -10,7 +10,6 @@ import { IAdmin } from "@/types/Admin";
 const NotificationSchema = new Schema<INotification, INotificationModel, INotificationMethods>(
     {
         type: { type: String, enum: ["inquiry", "booking", "payment"], required: true },
-        customer: { type: Types.ObjectId, ref: "Customer", required: true },
         message: { type: String, required: true },
         permission: { type: Number, required: true },
         meta: { type: Schema.Types.Mixed },
