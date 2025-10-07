@@ -48,6 +48,9 @@ export const PUT = errorHandler(async (request: NextRequest) => {
     const email = form.get("email") as string | null;
     if (email) data.email = email;
 
+    const phone = form.get("phone") as string | null;
+    if (phone) data.phone = phone;
+
     const role = form.get("role") as "admin" | "manager" | null;
     if (role) data.role = role;
 

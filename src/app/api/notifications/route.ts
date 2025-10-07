@@ -15,7 +15,7 @@ export const GET = errorHandler(async (request) => {
     // Find notifications where notification.permission is in admin.permissions
     const notifications = await Notification.find({
         permission: { $in: admin.permissions }
-    });
+    }).populate("customer");
     const sanitized = notifications.map(sanitizeNotification);
     return Response.json({ notifications: sanitized });
 });

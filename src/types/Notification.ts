@@ -2,15 +2,17 @@ import { Model } from "mongoose";
 import { Document } from "mongoose";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
 import z from "zod";
+import { IAdmin } from "./Admin";
 
 // Document fields
 export interface INotification extends Document {
     type: "inquiry" | "booking" | "payment" | "review" | "admin";
-    customer: ICustomer["id"];
+    title: string;
     message: string;
+    customer: ICustomer["id"];
     permission: number;
     meta?: Record<string, unknown>;
-    read: boolean;
+    readBy: IAdmin[];
 }
 
 // Instance methods
@@ -21,7 +23,7 @@ export interface INotificationMethods {
         email: ICustomer["email"];
         phone?: ICustomer["phone"];
     }>;
-    markAsRead(): Promise<INotification>;
+    markAsRead(adminId: IAdmin["id"]): Promise<INotification>;
 }
 
 // Statics
@@ -35,7 +37,6 @@ export type SafeNotification = {
     id: string;
     customer: SafeCustomer;
     message: string;
-    read: boolean;
     type: INotification["type"];
     meta?: Record<string, unknown>;
 };
@@ -45,7 +46,6 @@ export function sanitizeNotification(Notification: INotification): SafeNotificat
         id: Notification.id,
         customer: sanitizeCustomer(Notification.customer as ICustomer),
         message: Notification.message,
-        read: Notification.read,
         type: Notification.type,
         meta: Notification.meta
     };

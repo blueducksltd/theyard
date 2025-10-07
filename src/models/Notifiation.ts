@@ -4,6 +4,7 @@ import {
     INotificationMethods,
     INotificationModel
 } from "../types/Notification";
+import { IAdmin } from "@/types/Admin";
 
 // Schema definition with TS generics
 const NotificationSchema = new Schema<INotification, INotificationModel, INotificationMethods>(
@@ -13,7 +14,7 @@ const NotificationSchema = new Schema<INotification, INotificationModel, INotifi
         message: { type: String, required: true },
         permission: { type: Number, required: true },
         meta: { type: Schema.Types.Mixed },
-        read: { type: Boolean, default: false },
+        readBy: [{ type: Types.ObjectId, ref: "Admin" }],
     },
     { timestamps: true }
 );
@@ -31,6 +32,12 @@ NotificationSchema.statics.filter = async function (
         : this.find({ status: "published" }).sort({ [sort]: sortDirection });
 };
 
+NotificationSchema.methods.markAsRead = async function (adminId: IAdmin["id"]) {
+    this.readBy.push(adminId);
+    await this.save();
+
+    return this;
+}
 
 // Export model
 const Notification =

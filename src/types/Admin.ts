@@ -24,6 +24,7 @@ type SafeAdmin = {
   role: IAdmin["role"];
   status: IAdmin["status"];
   phone: string;
+  permissions: number[]
   imageUrl: string;
 };
 
@@ -93,6 +94,7 @@ export function sanitizeAdmin(admin: IAdmin): SafeAdmin {
     role: admin.role,
     status: admin.status,
     phone: admin.phone,
+    permissions: admin.permissions,
     imageUrl: admin.imageUrl
   };
 }

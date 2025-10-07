@@ -1,5 +1,6 @@
 import { IAdmin } from "@/types/Admin";
 import { ICustomer } from "@/types/Customer";
+import { INotification } from "@/types/Notification";
 import nodemailer from "nodemailer";
 import SMTPTransport from "nodemailer/lib/smtp-transport";
 // import { render } from "@react-email/render";
@@ -54,7 +55,7 @@ export async function inviteAdminEmail(admin: IAdmin, password: string) {
     });
 }
 
-export async function sendNotificationEmail(admin: IAdmin, data: unknown) {
+export async function sendNotificationEmail(admin: IAdmin, data: INotification) {
     const html = `
         <p> email: ${admin.email} </p>
         <p> data: ${data} </p>
@@ -62,7 +63,7 @@ export async function sendNotificationEmail(admin: IAdmin, data: unknown) {
     await transporter.sendMail({
         from: `"The Yard" <${process.env.MAIL}>`,
         to: admin.email,
-        subject: "The Yard Admin Invite",
+        subject: `${data.message}`,
         html,
     });
 }
