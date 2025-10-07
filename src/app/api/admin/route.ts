@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import { inviteAdminEmail } from "@/lib/mailer";
+import { sendNotification } from "@/lib/notification";
 import Admin from "@/models/Admin";
 import { CreateAdminDto, CreateAdminInput, sanitizeAdmin } from "@/types/Admin";
 import { NextRequest } from "next/server";
@@ -37,7 +38,14 @@ export const POST = errorHandler(
 
 
         const newAdmin = await Admin.create(data);
-        if (newAdmin) await inviteAdminEmail(newAdmin, body.password)
+        if (newAdmin) await inviteAdminEmail(newAdmin, body.password);
+        await sendNotification({
+            type: "admin",
+            title: "New Admin",
+            message: "New Admin Just joined the team",
+            permission: 1,
+            meta: { admin: newAdmin }
+        })
 
         return APIResponse.success("New admin created with success", { admin: sanitizeAdmin(newAdmin) }, 201);
     }

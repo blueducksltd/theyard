@@ -1,5 +1,5 @@
 import Admin from "@/models/Admin";
-import Notification from "@/models/Notifiation";
+import Notification from "@/models/Notification";
 import { CreateNotificationInput } from "@/types/Notification";
 import { sendNotificationEmail } from "./mailer";
 
@@ -23,6 +23,8 @@ export const sendNotification = async (
         default:
             break;
     }
+
+    console.log({ eligibleAdmins }, "cjcugu")
 
     if (eligibleAdmins.length > 0) {
         await Promise.all(

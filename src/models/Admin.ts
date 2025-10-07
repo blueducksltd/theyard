@@ -14,7 +14,11 @@ const AdminSchema = new Schema<IAdmin, IAdminModel, IAdminMethods>(
     ],
     status: { type: String, enum: ["active", "inactive"], default: "inactive" },
     phone: { type: String },
-    imageUrl: { type: String }
+    imageUrl: { type: String },
+    emailVerificationCode: { type: String },
+    emailVerificationExpires: { type: Date },
+    emailVerificationLastSent: { type: Date },
+    emailVerifiedAt: { type: Date },
   },
   { timestamps: true }
 );

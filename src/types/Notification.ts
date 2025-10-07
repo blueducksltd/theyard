@@ -1,16 +1,17 @@
 import { Model } from "mongoose";
 import { Document } from "mongoose";
-import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
+import { ICustomer } from "./Customer";
 import z from "zod";
+import { IAdmin } from "./Admin";
 
 // Document fields
 export interface INotification extends Document {
-    type: "inquiry" | "booking" | "payment" | "review" | "admin";
-    customer: ICustomer["id"];
+    type: "inquiry" | "booking" | "payment" | "review" | "admin" | "subscription";
+    title: string;
     message: string;
     permission: number;
     meta?: Record<string, unknown>;
-    read: boolean;
+    readBy: IAdmin[];
 }
 
 // Instance methods
@@ -21,7 +22,7 @@ export interface INotificationMethods {
         email: ICustomer["email"];
         phone?: ICustomer["phone"];
     }>;
-    markAsRead(): Promise<INotification>;
+    markAsRead(adminId: IAdmin["id"]): Promise<INotification>;
 }
 
 // Statics
@@ -33,9 +34,8 @@ export interface INotificationModel extends Model<INotification, INotificationMe
 // Utility Types
 export type SafeNotification = {
     id: string;
-    customer: SafeCustomer;
+    title: string;
     message: string;
-    read: boolean;
     type: INotification["type"];
     meta?: Record<string, unknown>;
 };
@@ -43,22 +43,21 @@ export type SafeNotification = {
 export function sanitizeNotification(Notification: INotification): SafeNotification {
     return {
         id: Notification.id,
-        customer: sanitizeCustomer(Notification.customer as ICustomer),
+        title: Notification.title,
         message: Notification.message,
-        read: Notification.read,
         type: Notification.type,
         meta: Notification.meta
     };
 }
 
 export const CreateNotificationDto = z.object({
+    title: z.string(),
     type: z.enum(
-        ["inquiry", "booking", "payment"],
+        ["inquiry", "booking", "payment", "review", "admin", "subscription"],
         {
             error: "field `type` is required and must be one of inquiry, booking, payment",
         },
     ),
-    customer: z.string(),
     message: z.string(),
     meta: z.record(z.string(), z.unknown()).optional(),
     permission: z.number()
