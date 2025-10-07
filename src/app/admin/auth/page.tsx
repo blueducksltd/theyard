@@ -2,6 +2,7 @@
 import { adminLogin } from "@/util";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 /* eslint-disable @next/next/no-img-element */
 export default function Page() {
@@ -15,7 +16,9 @@ export default function Page() {
 
     try {
       const response = await adminLogin(data);
-      if (response.success === "success") {
+      if (response.success == true) {
+        localStorage.setItem("user", JSON.stringify(response.data.admin));
+        Cookies.set("token", response.data.token);
         window.location.href = "/admin/dashboard";
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
