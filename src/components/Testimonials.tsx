@@ -1,9 +1,36 @@
+"use client";
 {
   /*eslint-disable @next/next/no-img-element*/
 }
+import { IReview } from "@/types/Review";
+import { getReviews } from "@/util";
 import Link from "next/link";
+import React from "react";
 
 const Testimonials = () => {
+  const [reviews, setReviews] = React.useState<IReview[]>([]);
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    const fetchReviews = async () => {
+      const data = await getReviews();
+      setReviews(data.data.reviews);
+    };
+    fetchReviews();
+  }, []);
+
+  const handleNext = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === reviews.length - 1 ? 0 : prevIndex + 1,
+    );
+  };
+
+  const handlePrev = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === 0 ? reviews.length - 1 : prevIndex - 1,
+    );
+  };
+
   return (
     <main className="pt-5 md:pt-0 pb-16 relative">
       <img
@@ -27,7 +54,6 @@ const Testimonials = () => {
               </div>
               <p className="paragraph">See what our clients say about us...</p>
             </div>
-
             <Link
               href={"#"}
               className="cta-btn group relative overflow-hidden hover:text-yard-dark-primary"
@@ -36,25 +62,35 @@ const Testimonials = () => {
               <div className="absolute top-0 left-0 bg-yard-primary-active w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
             </Link>
           </div>
-
           {/* Testimonial */}
-          <section>
-            <div className="shadow-xl p-8 rounded-sm my-4">
-              <p className="paragraph">
-                &quot;The Yard is the perfect picnic spot in Enugu—beautiful,
-                peaceful, and full of charm.&quot;
-              </p>
-              <p className="font-lato font-bold text-lg tracking-[0.4px] leading-[26px] my-4">
-                Ada, Enugu
-              </p>
-
+          <section className="w-full">
+            <div className="w-full shadow-xl p-8 rounded-sm my-4">
+              {reviews.length > 0 && (
+                <div className="w-full">
+                  <p className="paragraph">
+                    &quot;{reviews[currentIndex].comment}&quot;
+                  </p>
+                  <p className="font-lato font-bold text-lg tracking-[0.4px] leading-[26px] my-4">
+                    {reviews[currentIndex].name},{" "}
+                    {reviews[currentIndex].location}
+                  </p>
+                </div>
+              )}
               <div className="flex items-center gap-2 justify-end">
-                <div className="w-9 h-9 bg-yard-lightgreen flex justify-center items-center rounded-[2px] p-2 cursor-pointer">
+                <button
+                  onClick={handlePrev}
+                  disabled={reviews.length === 0}
+                  className="w-9 h-9 bg-yard-lightgreen flex justify-center items-center rounded-[2px] p-2 cursor-pointer hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <img src={"/icons/arrow-left.svg"} alt="Left Icon" />
-                </div>
-                <div className="w-9 h-9 bg-yard-lightgreen flex justify-center items-center rounded-[2px] p-2 cursor-pointer">
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={reviews.length === 0}
+                  className="w-9 h-9 bg-yard-lightgreen flex justify-center items-center rounded-[2px] p-2 cursor-pointer hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <img src={"/icons/arrow-right.svg"} alt="Right Icon" />
-                </div>
+                </button>
               </div>
             </div>
           </section>

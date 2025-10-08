@@ -22,7 +22,7 @@ const Introduction = () => {
           </p>
 
           <Link
-            href={"#"}
+            href={"/about"}
             className="cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden"
           >
             <span className="z-40">Learn more about us</span>
