@@ -15,10 +15,7 @@ export const POST = errorHandler(
         const body: CreateReviewInput = await request.json();
         const data = CreateReviewDTO.parse(body);
 
-        const newReview = await Review.create({
-            name: data.name,
-            comment: data.comment
-        });
+        const newReview = await Review.create(data);
 
         if (!newReview) throw new Error("Failed to create review");
 
