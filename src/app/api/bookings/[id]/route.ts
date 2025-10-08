@@ -40,8 +40,6 @@ export const PUT = errorHandler<{ params: { id: string } }>(
 
             if (eventStatus) {
                 await Event.findByIdAndUpdate(booking.event._id, { status: eventStatus });
-                // Reflect updated status locally
-                (booking.event as any).status = eventStatus;
             }
         }
 
