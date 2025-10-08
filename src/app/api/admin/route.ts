@@ -17,7 +17,6 @@ export const POST = errorHandler(
         const payload = requireAuth(request);
         const isPermitted = await requireRole(payload, "admin");
 
-        console.log({ isPermitted });
         if (!isPermitted) {
             throw APIError.Forbidden("No permission to access this endpoint")
         }

@@ -9,7 +9,7 @@ import { IAdmin } from "@/types/Admin";
 // Schema definition with TS generics
 const NotificationSchema = new Schema<INotification, INotificationModel, INotificationMethods>(
     {
-        type: { type: String, enum: ["inquiry", "booking", "payment"], required: true },
+        type: { type: String, enum: ["inquiry", "booking", "payment", "review", "admin", "subscription"], required: true },
         message: { type: String, required: true },
         permission: { type: Number, required: true },
         meta: { type: Schema.Types.Mixed },
