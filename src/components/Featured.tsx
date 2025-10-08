@@ -33,19 +33,19 @@ const Featured = async () => {
       </header>
 
       <section className="grid md:grid-cols-3 items-center my-4 gap-4">
-        {services.map((service: IService) => (
+        {services.slice(0, 3).map((service: IService) => (
           <div
-            key={service._id}
+            key={service.id}
             className="flex flex-col border-[1px] border-yard-pinkish-orange py-4 px-2 gap-2 rounded-md"
           >
-            <div className="h-[156px] rounded-[2px] bg-[url('/featured1.svg')] bg-center bg-cover"></div>
-            <h2>Picnic Spaces</h2>
-            <p className="paragraph">
-              Relax in nature with our charming picnic setups. Beautiful
-              scenery.
-            </p>
+            <div
+              className={`h-[156px] rounded-[2px] bg-center bg-cover`}
+              style={{ backgroundImage: `url(${service.imageUrl})` }}
+            ></div>
+            <h2>{service.name}</h2>
+            <p className="paragraph">{service.description}</p>
 
-            <Link href={"#"} className="cta-link w-max group relative">
+            <Link href={"/booking"} className="cta-link w-max group relative">
               Book a space now
               <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
             </Link>
