@@ -1,9 +1,13 @@
 {
   /*eslint-disable @next/next/no-img-element*/
 }
+import { IService } from "@/types/Service";
+import { getServices } from "@/util";
 import Link from "next/link";
 
-const Featured = () => {
+const Featured = async () => {
+  const services: IService[] = (await getServices()).data.services;
+
   return (
     <main className="md:my-4">
       <header className="flex flex-col gap-5 md:flex-row justify-between md:items-center">
@@ -29,44 +33,24 @@ const Featured = () => {
       </header>
 
       <section className="grid md:grid-cols-3 items-center my-4 gap-4">
-        <div className="flex flex-col border-[1px] border-yard-pinkish-orange py-4 px-2 gap-2 rounded-md">
-          <div className="h-[156px] rounded-[2px] bg-[url('/featured1.svg')] bg-center bg-cover"></div>
-          <h2>Picnic Spaces</h2>
-          <p className="paragraph">
-            Relax in nature with our charming picnic setups. Beautiful scenery.
-          </p>
+        {services.map((service: IService) => (
+          <div
+            key={service._id}
+            className="flex flex-col border-[1px] border-yard-pinkish-orange py-4 px-2 gap-2 rounded-md"
+          >
+            <div className="h-[156px] rounded-[2px] bg-[url('/featured1.svg')] bg-center bg-cover"></div>
+            <h2>Picnic Spaces</h2>
+            <p className="paragraph">
+              Relax in nature with our charming picnic setups. Beautiful
+              scenery.
+            </p>
 
-          <Link href={"#"} className="cta-link w-max group relative">
-            Book a space now
-            <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
-          </Link>
-        </div>
-
-        <div className="flex flex-col border-[1px] border-yard-pinkish-orange py-4 px-2 gap-2 rounded-md">
-          <div className="h-[156px] rounded-[2px] bg-[url('/featured2.svg')] bg-center bg-cover"></div>
-          <h2>Event Hosting</h2>
-          <p className="paragraph">
-            Celebrate life&apos;s special moments in grand and unique style.
-          </p>
-
-          <Link href={"#"} className="cta-link w-max group relative">
-            Let&apos;s host your event
-            <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
-          </Link>
-        </div>
-
-        <div className="flex flex-col border-[1px] border-yard-pinkish-orange py-4 px-2 gap-2 rounded-md">
-          <div className="h-[156px] rounded-[2px] bg-[url('/featured3.svg')] bg-center bg-cover"></div>
-          <h2>Custom Packages</h2>
-          <p className="paragraph">
-            Add catering, décor, and games for a truly unique experience.
-          </p>
-
-          <Link href={"#"} className="cta-link w-max group relative">
-            Explore packages
-            <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
-          </Link>
-        </div>
+            <Link href={"#"} className="cta-link w-max group relative">
+              Book a space now
+              <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
+            </Link>
+          </div>
+        ))}
       </section>
     </main>
   );

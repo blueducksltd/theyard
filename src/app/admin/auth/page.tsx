@@ -1,16 +1,41 @@
 "use client";
-import Link from "next/link";
+import { adminLogin } from "@/util";
 import { useState } from "react";
+import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 /* eslint-disable @next/next/no-img-element */
 export default function Page() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
+
+  const handleSubmit = async (formdata: FormData) => {
+    const data = {
+      email: formdata.get("email") as string,
+      password: formdata.get("password") as string,
+    };
+
+    try {
+      const response = await adminLogin(data);
+      if (response.success == true) {
+        localStorage.setItem("user", JSON.stringify(response.data.admin));
+        Cookies.set("token", response.data.token);
+        window.location.href = "/admin/dashboard";
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      toast.error(error.response.data.message, { position: "bottom-right" });
+    }
+  };
+
   return (
     <main className="w-full h-screen flex">
       {/*Image*/}
       <div className="hidden md:block w-[604px] h-full bg-[url('/auth.svg')] bg-center bg-cover"></div>
       <section className="flex justify-center items-center w-[53rem]">
-        <form className="flex flex-col w-[440px] items-center">
+        <form
+          action={handleSubmit}
+          className="flex flex-col w-[440px] items-center"
+        >
           <img src={"/logo-black.svg"} alt="Logo" className="w-[90px]" />
           <div className="title flex flex-col items-end mb-10 mt-5">
             <h1 className="font-playfair w-[250px] text-center text-[22px] md:w-96 lg:w-full md:text-[32px] text-yard-primary font-bold md:leading-[56px] tracking-[-0.1px]">
@@ -31,6 +56,7 @@ export default function Page() {
               <input
                 type="email"
                 id="email"
+                name="email"
                 placeholder="Enter your email address"
                 className="md:w-full h-[52px] rounded2px border-[1px] focus:outline-yard-dark-primary border-[#BFBFBF] p-3"
               />
@@ -45,6 +71,7 @@ export default function Page() {
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
+                name="password"
                 placeholder="Enter your password"
                 className="md:w-full h-[52px] rounded2px border-[1px] focus:outline-yard-dark-primary border-[#BFBFBF] p-3"
               />
@@ -57,13 +84,13 @@ export default function Page() {
             </div>
           </div>
 
-          <Link
-            href={"/admin/dashboard"}
-            className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden mt-5"
+          <button
+            type="submit"
+            className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden mt-5 cursor-pointer"
           >
             <span className="z-40">Login to dashboard</span>
             <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-          </Link>
+          </button>
         </form>
       </section>
     </main>

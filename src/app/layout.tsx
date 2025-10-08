@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair, Lato, Sen } from "next/font/google";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
 const sen = Sen({
@@ -137,6 +139,7 @@ export default function RootLayout({
       <body
         className={`${sen.variable} ${lato.variable} ${playfair.variable} antialiased`}
       >
+        <ToastContainer />
         {children}
       </body>
     </html>

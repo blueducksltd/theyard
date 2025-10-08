@@ -62,7 +62,7 @@ export default function ReviewContent() {
             </label>
           </div>
 
-          {/*<div className="dropdown dropdown-bottom dropdown-end">
+          <div className="dropdown dropdown-bottom dropdown-end">
             <div
               tabIndex={0}
               role="button"
@@ -80,22 +80,28 @@ export default function ReviewContent() {
 
             <ul
               tabIndex={0}
-              className="dropdown-content menu bg-white rounded-lg z-1 w-52 p-2 shadow-sm mt-2"
+              className="dropdown-content menu bg-white rounded-lg z-1 w-44 p-2 shadow-sm mt-2"
             >
               <li
                 className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
                 onClick={() => setShareModal(true)}
               >
-                <button>Share Gallery</button>
+                <button>Create comment</button>
               </li>
               <li
                 className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
+                onClick={() => setShareModal(true)}
+              >
+                <button>Publish comments</button>
+              </li>
+              <li
+                className="text-[#A44B4B] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
                 onClick={() => setTagModal(true)}
               >
-                <button>Create tags</button>
+                <button>Ignore comments</button>
               </li>
             </ul>
-          </div>*/}
+          </div>
         </div>
       </section>
 

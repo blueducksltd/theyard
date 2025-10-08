@@ -1,10 +1,13 @@
+"use client";
 {
   /*eslint-disable @next/next/no-img-element*/
 }
 
+import { adminLogin } from "@/util";
 import Link from "next/link";
 
 const Hero = () => {
+  const login = adminLogin({ email: "user@example.com", password: "password" });
   return (
     <>
       <header className="pt-10 md:pt-16 pb-10 px-4 md:px-14 flex justify-center relative">
