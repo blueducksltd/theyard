@@ -24,8 +24,6 @@ export const sendNotification = async (
             break;
     }
 
-    console.log({ eligibleAdmins }, "cjcugu")
-
     if (eligibleAdmins.length > 0) {
         await Promise.all(
             eligibleAdmins.map(admin => sendNotificationEmail(admin, newNotification))
