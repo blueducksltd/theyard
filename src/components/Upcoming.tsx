@@ -20,7 +20,7 @@ const Upcoming = async () => {
         </div>
 
         <Link
-          href={"#"}
+          href={"/events"}
           className="cta-btn group relative overflow-hidden hover:text-yard-dark-primary"
         >
           <span className="z-40">View all events</span>

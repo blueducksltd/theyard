@@ -1,9 +1,43 @@
+"use client";
 {
   /*eslint-disable @next/next/no-img-element*/
 }
+import { subscribeToNewsletter } from "@/util";
 import Link from "next/link";
+import React from "react";
+import { toast } from "react-toastify";
 
 const Footer = () => {
+  const [email, setEmail] = React.useState("");
+
+  const handleSubscribe = async (email: string) => {
+    // Progress toast with id
+    const progressId = toast.loading("Subscribing...", {
+      position: "bottom-right",
+    });
+    if (!email) {
+      toast.error("Please enter your email address", {
+        position: "bottom-right",
+      });
+      return;
+    }
+    try {
+      const response = await subscribeToNewsletter(email);
+      if (response.success == true) {
+        toast.success("You have been subscribed to our newsletter", {
+          position: "bottom-right",
+        });
+        setEmail("");
+      }
+    } catch (error) {
+      toast.error(`Something went wrong ${error}`, {
+        autoClose: false,
+        position: "bottom-right",
+      });
+    }
+    toast.dismiss(progressId);
+  };
+
   return (
     <main className="mt-4 p-6 md:p-16 bg-yard-primary">
       <section className="flex flex-col md:flex-row md:gap-20 lg:gap-0 items-start justify-between">
@@ -20,11 +54,14 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row gap-3 md:gap-0 my-4">
             <input
               type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
               className="md:w-[257px] border-[1px] border-[#999999] p-3 placeholder:text-[#999999] rounded-l-[2px]"
             />
             <button
-              type="submit"
+              type="button"
+              onClick={() => handleSubscribe(email)}
               className="md:w-[160px] h-[52px] bg-white font-sen leading-6 tracking-[0.4px] text-[16px] font-medium rounded-r-[2px] group relative overflow-hidden"
             >
               <span className="z-40 relative">Subscribe</span>
@@ -50,7 +87,7 @@ const Footer = () => {
               </h3>
 
               <Link
-                href={"#"}
+                href={"/"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Home
@@ -58,7 +95,7 @@ const Footer = () => {
               </Link>
 
               <Link
-                href={"#"}
+                href={"/about"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 About
@@ -66,7 +103,7 @@ const Footer = () => {
               </Link>
 
               <Link
-                href={"#"}
+                href={"/packages"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Packages
@@ -74,7 +111,7 @@ const Footer = () => {
               </Link>
 
               <Link
-                href={"#"}
+                href={"/booking"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Booking
@@ -82,7 +119,7 @@ const Footer = () => {
               </Link>
 
               <Link
-                href={"#"}
+                href={"/gallery"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Gallery
@@ -90,7 +127,7 @@ const Footer = () => {
               </Link>
 
               <Link
-                href={"#"}
+                href={"/services"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Services
@@ -98,7 +135,7 @@ const Footer = () => {
               </Link>
 
               <Link
-                href={"#"}
+                href={"/contact"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] md:text-sm group relative w-max"
               >
                 Contact
@@ -121,7 +158,7 @@ const Footer = () => {
               </Link>
 
               <Link
-                href={"#"}
+                href={"/contact"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-center gap-2 group relative w-max"
               >
                 <img src={"/icons/mail.svg"} alt="Mail Icon" />
@@ -130,7 +167,7 @@ const Footer = () => {
               </Link>
 
               <Link
-                href={"#"}
+                href={"/contact"}
                 className="w-[250px] text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-start gap-2 group relative"
               >
                 <img
