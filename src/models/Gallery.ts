@@ -33,7 +33,7 @@ GallerySchema.statics.filter = async function (
   direction: "ASC" | "DESC"
 ) {
   const sortDirection = direction.toUpperCase() === "ASC" ? 1 : -1;
-  return this.find(filter).sort({ [sort]: sortDirection })
+  return this.find(filter).sort({ [sort]: sortDirection }).populate("event")
 }
 
 

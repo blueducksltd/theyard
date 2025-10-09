@@ -82,7 +82,7 @@ export const GET = errorHandler<{ params: { id: string } }>(
         requireAuth(request);
         const { id } = await context.params;
 
-        const imageExist = await Gallery.findById(id);
+        const imageExist = await Gallery.findById(id).populate("event");
         if (!imageExist) throw APIError.NotFound(`Image with id: ${id} not found`);
 
         return APIResponse.success("fetched single gallery", { gallery: sanitizeGallery(imageExist) });
