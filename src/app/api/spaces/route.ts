@@ -20,3 +20,13 @@ export const POST = errorHandler(async (request: NextRequest) => {
   const space = sanitizeSpace(newSpace);
   return APIResponse.success("New space added successfuly", { space }, 201);
 });
+
+export const GET = errorHandler(
+  async () => {
+    await connectDB();
+    const spaces = await Space.find();
+    const sanitizedSpaces = spaces.map(sanitizeSpace)
+
+    return APIResponse.success("Fetched all spaces", { spaces: sanitizedSpaces });
+  }
+)
