@@ -1,6 +1,5 @@
 import { Document } from "mongoose";
 import z from "zod";
-import { IGallery } from "./Gallery";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
 import { Model } from "mongoose";
 import { ITag } from "./Tag";
