@@ -31,7 +31,7 @@ export type SafeGallery = {
   imageUrl: string;
   category: IEvent["type"];
   mediaDate: Date;
-  event: Partial<IEvent>
+  event: Partial<IEvent> | null
 }
 
 export function sanitizeGallery(gallery: IGallery) {
@@ -42,7 +42,7 @@ export function sanitizeGallery(gallery: IGallery) {
     imageUrl: gallery.imageUrl,
     category: gallery.category,
     mediaDate: gallery.mediaDate,
-    event: {
+    event: gallery.event ? {
       id: gallery.event.id,
       title: gallery.event.title,
       description: gallery.event.description,
@@ -52,7 +52,7 @@ export function sanitizeGallery(gallery: IGallery) {
       startTime: gallery.event.startTime,
       endTime: gallery.event.endTime,
       location: gallery.event.location,
-    }
+    } : null
   }
 }
 
