@@ -6,6 +6,7 @@ import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Event from "@/models/Event";
 import Gallery from "@/models/Gallery";
+import Tag from "@/models/Tag";
 import { IGallery, sanitizeGallery, UpdateGalleryDTO, UpdateGalleryInput } from "@/types/Gallery";
 import { NextRequest } from "next/server";
 
@@ -21,6 +22,18 @@ export const PUT = errorHandler<{ params: { id: string } }>(
 
         // Validate incoming data
         const data = UpdateGalleryDTO.parse(body);
+
+        if (data.category) {
+            const validTag = await Tag.findOne({ name: data.category });
+
+            if (!validTag) {
+                throw APIError.BadRequest("Invalid category", {
+                    message: `The provided category '${data.category}' does not exist in the list of valid tags.`,
+                    field: "category",
+                    expected: "One of the existing tag names"
+                });
+            }
+        }
 
         // Find the main gallery by id
         const gallery = await Gallery.findById(id);
