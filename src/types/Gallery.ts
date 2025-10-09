@@ -58,7 +58,7 @@ export function sanitizeGallery(gallery: IGallery) {
 
 export const CreateGalleryDTO = z.object({
   title: z.string(),
-  description: z.string().optional(),
+  description: z.string(),
   imageUrl: z.string().url(),
   eventId: z.string().optional(),
   category: z.string(),

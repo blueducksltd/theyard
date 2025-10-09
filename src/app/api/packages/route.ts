@@ -32,7 +32,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
     const body: CreatePackageInput = {
         name: form.get("name") as string,
-        description: form.get("description") as string || undefined,
+        description: form.get("description") as string,
         price: z.coerce.number().parse(form.get("price")),
         specs,
     };

@@ -14,6 +14,7 @@ export interface ISpace extends Document {
   address: string;
   capacity: number;
   description?: string;
+  createdAt?: Date;
 }
 
 // Instance methods
@@ -36,6 +37,7 @@ export type SafeSpace = {
   address: string;
   capacity: number;
   description?: string;
+  createdAt?: Date
 };
 
 export function sanitizeSpace(space: ISpace): SafeSpace {
@@ -47,6 +49,7 @@ export function sanitizeSpace(space: ISpace): SafeSpace {
     address: space.address,
     capacity: space.capacity,
     description: space.description,
+    createdAt: space.createdAt,
   };
 }
 
@@ -59,7 +62,8 @@ export const CreateSpaceDto = z.object({
   specs: z.array(z.string().min(1)).min(1),
   address: z.string().min(5).max(200),
   capacity: z.number().min(1),
-  description: z.string().min(10).max(1000).optional(),
+  description: z.string().min(10).max(1000),
+  imageUrl: z.string().url().optional(),
 });
 
 export type CreateSpaceInput = z.infer<typeof CreateSpaceDto>;

@@ -55,7 +55,7 @@ export const CreatePackageDTO = z.object({
     }
     return [];
   }, z.array(z.string())),
-  description: z.string().optional(),
+  description: z.string(),
   imageUrl: z.string().url().optional()
 });
 
