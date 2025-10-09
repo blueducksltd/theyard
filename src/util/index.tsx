@@ -17,9 +17,25 @@ export const getReviews = async () => {
   return response.data;
 };
 
+// Create review
+export const createReview = async (data: {
+  name: string;
+  location: string;
+  comment: string;
+}) => {
+  const response = await axios.post(`/reviews`, data);
+  return response.data;
+};
+
 // Get images
 export const getGallery = async () => {
   const response = await axios.get(`/gallery`);
+  return response.data;
+};
+
+// Get packages
+export const getPackages = async () => {
+  const response = await axios.get(`/packages`);
   return response.data;
 };
 

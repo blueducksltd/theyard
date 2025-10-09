@@ -14,6 +14,7 @@ export interface IEvent extends Document {
   type: ITag["name"];
   public: boolean;
   date: Date;
+  images?: string[];
   time: {
     start: string; // "14:00"
     end: string; // "18:00"
@@ -29,7 +30,12 @@ export interface IEventMethods {
 
 // Statics
 export interface IEventModel extends Model<IEvent, IEventMethods> {
-  filter(filter: Record<string, string>, sort: string, direction: "ASC" | "DESC", admin?: boolean): Promise<IEvent[]>;
+  filter(
+    filter: Record<string, string>,
+    sort: string,
+    direction: "ASC" | "DESC",
+    admin?: boolean,
+  ): Promise<IEvent[]>;
 }
 
 // Other utility types
@@ -52,7 +58,7 @@ export function sanitizeEvent(event: IEvent): SafeEvent {
     id: event.id,
     title: event.title,
     description: event.description,
-    images: event.gallery.map(g => (g as IGallery).imageUrl),
+    images: event.gallery.map((g) => (g as IGallery).imageUrl),
     type: event.type,
     public: event.public,
     date: event.date,

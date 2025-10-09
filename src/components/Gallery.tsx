@@ -8,6 +8,7 @@ import Link from "next/link";
 
 const Gallery = async () => {
   const gallery: IGallery[] = (await getGallery()).data.gallery;
+
   return (
     <main className="md:my-4">
       <header className="flex flex-col md:flex-row items-start gap-5 justify-between md:items-center">
@@ -32,11 +33,14 @@ const Gallery = async () => {
 
       <section className="w-full flex flex-wrap items-center my-5 md:my-4 gap-2">
         {gallery.map((image) => (
-          <div key={image.id} className="relative overflow-hidden group w-max">
+          <div
+            key={image.id}
+            className="relative overflow-hidden group w-max flex-grow"
+          >
             <img
               src={image.imageUrl}
               alt="Gallery"
-              className="h-[260px] 2xl:h-[300px] w-auto object-cover"
+              className="h-[260px] 2xl:h-[300px] w-full object-cover"
             />
             {/*Inner Hover - same as before*/}
             <div className="absolute w-full h-full p-4 bg-[#090F10CC] top-48 md:top-0 left-0 transition-all duration-500 md:translate-y-full group-hover:translate-y-0 opacity-80">
@@ -49,7 +53,7 @@ const Gallery = async () => {
                 />
               </p>
               <Link
-                href={"#"}
+                href={`${image.event == null ? "#" : `/event/${encodeURIComponent(image.event.id as string)}`}`}
                 className="w-max h-max group absolute top-8 md:top-auto md:bottom-10 md:relative text-yard-milk font-playfair font-[700] text-xl md:text-[28px] leading-[36px] tracking-[-0.1px]"
               >
                 {image.title}

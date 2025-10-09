@@ -1,9 +1,13 @@
 {
   /*eslint-disable @next/next/no-img-element*/
 }
+import { IPackage } from "@/types/Package";
+import { getPackages } from "@/util";
 import Link from "next/link";
 
-const Hero = () => {
+const Hero = async () => {
+  const packages: IPackage[] = (await getPackages()).data.packages;
+
   return (
     <>
       <header className="pt-10 md:pt-16 pb-5 px-4 md:px-14 flex justify-center relative">
@@ -38,198 +42,56 @@ const Hero = () => {
       </header>
       <section className="w-full h-max flex flex-wrap justify-center items-center gap-6 md:px-14">
         {/*Single Package*/}
-        <div className="w-[449px] border-2 border-yard-lighter-orange p-4 rounded-[1px]">
-          <div className="w-full h-[203px] bg-[url('/gallery/gallery4.svg')] bg-cover bg-center rounded-[2px]"></div>
-          <div className="flex flex-col md:flex-row items-start gap-4 md:gap-0 md:items-center justify-between my-3">
-            <div className="title flex flex-col items-end">
-              <h1 className="font-playfair text-2xl text-yard-primary font-bold md:leading-[56px] tracking-[-0.1px]">
-                Picnic Package
-              </h1>
-              <img
-                src={"/about-line.svg"}
-                alt="Line"
-                className="-mt-2 md:-mt-5 w-40 md:w-40"
-              />
-            </div>
-
-            <div className="w-max  bg-yard-primary-active font-playfair text-yard-dark-primary text-lg px-1.5 rounded-[2px]">
-              Starting at <b>N8000</b>
-            </div>
-          </div>
-          <p className="text-[16px] italic leading-6 tracking-[0.5px] text-[#717068]">
-            Includes:
-          </p>
-
-          <div className="flex flex-col gap-4 my-3">
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Perfect for casual gatherings or date days</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Blankets</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p> Cushions</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Low Tables</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Decor Props</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Lush Garden Setting</p>
-            </div>
-          </div>
-          {/*cta*/}
-          <Link
-            href={"#"}
-            className="w-full h-[52px] lg:flex justify-center items-center bg-yard-primary text-white mt-5 px-6 py-5 rounded-[2px] hidden group relative overflow-hidden"
+        {packages.map((pk) => (
+          <div
+            key={pk.id as string}
+            className="w-[449px] border-2 border-yard-lighter-orange p-4 rounded-[1px]"
           >
-            <span className="z-40">Book this package</span>
-            <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-          </Link>
-        </div>
-        {/*End of package*/}
+            <div
+              className="w-full h-[203px] bg-cover bg-center rounded-[2px]"
+              style={{ backgroundImage: `url(${pk.imageUrl})` }}
+            ></div>
+            <div className="flex flex-col md:flex-row items-start gap-4 md:gap-0 md:items-center justify-between my-3">
+              <div className="title flex flex-col items-end">
+                <h1 className="font-playfair text-2xl text-yard-primary font-bold md:leading-[56px] tracking-[-0.1px]">
+                  {pk.name}
+                </h1>
+                <img
+                  src={"/about-line.svg"}
+                  alt="Line"
+                  className="-mt-2 md:-mt-5 w-full"
+                />
+              </div>
 
-        {/*Single Package*/}
-        <div className="w-[449px] border-2 border-yard-lighter-orange p-4 rounded-[1px]">
-          <div className="w-full h-[203px] bg-[url('/gallery/gallery4.svg')] bg-cover bg-center rounded-[2px]"></div>
-          <div className="flex flex-col md:flex-row items-start gap-4 md:gap-0 md:items-center justify-between my-3">
-            <div className="title flex flex-col items-end">
-              <h1 className="font-playfair text-2xl text-yard-primary font-bold md:leading-[56px] tracking-[-0.1px]">
-                Intimate Event Package
-              </h1>
-              <img
-                src={"/about-line.svg"}
-                alt="Line"
-                className="-mt-2 md:-mt-5 w-40 md:w-40"
-              />
+              <div className="w-max  bg-yard-primary-active font-playfair text-yard-dark-primary text-lg px-1.5 rounded-[2px]">
+                Starting at <b>N{pk.price}</b>
+              </div>
             </div>
+            <p className="text-[16px] italic leading-6 tracking-[0.5px] text-[#717068]">
+              Includes:
+            </p>
 
-            <div className="w-max  bg-yard-primary-active font-playfair text-yard-dark-primary text-lg px-1.5 rounded-[2px]">
-              Starting at <b>N8000</b>
+            <div className="flex flex-col gap-4 my-3">
+              {pk.specs.map((spec) => (
+                <div
+                  key={spec}
+                  className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]"
+                >
+                  <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
+                  <p>{spec}</p>
+                </div>
+              ))}
             </div>
+            {/*cta*/}
+            <Link
+              href={"/booking"}
+              className="w-full h-[52px] lg:flex justify-center items-center bg-yard-primary text-white mt-5 px-6 py-5 rounded-[2px] hidden group relative overflow-hidden"
+            >
+              <span className="z-40">Book this package</span>
+              <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+            </Link>
           </div>
-          <p className="text-[16px] italic leading-6 tracking-[0.5px] text-[#717068]">
-            Includes:
-          </p>
-
-          <div className="flex flex-col gap-4 my-3">
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Perfect for casual gatherings or date days</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Blankets</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p> Cushions</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Low Tables</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Decor Props</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Lush Garden Setting</p>
-            </div>
-          </div>
-          {/*cta*/}
-          <Link
-            href={"#"}
-            className="w-full h-[52px] lg:flex justify-center items-center bg-yard-primary text-white mt-5 px-6 py-5 rounded-[2px] hidden group relative overflow-hidden"
-          >
-            <span className="z-40">Book this package</span>
-            <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-          </Link>
-        </div>
-        {/*End of package*/}
-
-        {/*Single Package*/}
-        <div className="w-[449px] border-2 border-yard-lighter-orange p-4 rounded-[1px]">
-          <div className="w-full h-[203px] bg-[url('/gallery/gallery4.svg')] bg-cover bg-center rounded-[2px]"></div>
-          <div className="flex flex-col md:flex-row items-start gap-4 md:gap-0 md:items-center justify-between my-3">
-            <div className="title flex flex-col items-end">
-              <h1 className="font-playfair text-2xl text-yard-primary font-bold md:leading-[56px] tracking-[-0.1px]">
-                Fully Party Package
-              </h1>
-              <img
-                src={"/about-line.svg"}
-                alt="Line"
-                className="-mt-2 md:-mt-5 w-40 md:w-40"
-              />
-            </div>
-
-            <div className="w-max  bg-yard-primary-active font-playfair text-yard-dark-primary text-lg px-1.5 rounded-[2px]">
-              Starting at <b>N8000</b>
-            </div>
-          </div>
-          <p className="text-[16px] italic leading-6 tracking-[0.5px] text-[#717068]">
-            Includes:
-          </p>
-
-          <div className="flex flex-col gap-4 my-3">
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Perfect for casual gatherings or date days</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Blankets</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p> Cushions</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Low Tables</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Decor Props</p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-[#717068]">
-              <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
-              <p>Lush Garden Setting</p>
-            </div>
-          </div>
-          {/*cta*/}
-          <Link
-            href={"#"}
-            className="w-full h-[52px] lg:flex justify-center items-center bg-yard-primary text-white mt-5 px-6 py-5 rounded-[2px] hidden group relative overflow-hidden"
-          >
-            <span className="z-40">Book this package</span>
-            <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-          </Link>
-        </div>
+        ))}
         {/*End of package*/}
       </section>
     </>
