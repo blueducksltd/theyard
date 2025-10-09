@@ -9,6 +9,7 @@ import { z } from "zod";
 // -----------------------------
 export interface ISpace extends Document {
   name: string;
+  imageUrl: string;
   pricePerHour: number;
   specs: string[];
   address: string;
@@ -33,6 +34,7 @@ export type SafeSpace = {
   id: string;
   name: string;
   pricePerHour: number;
+  imageUrl: string;
   specs: string[];
   address: string;
   capacity: number;
@@ -45,6 +47,7 @@ export function sanitizeSpace(space: ISpace): SafeSpace {
     id: space.id,
     name: space.name,
     pricePerHour: space.pricePerHour,
+    imageUrl: space.imageUrl,
     specs: space.specs,
     address: space.address,
     capacity: space.capacity,

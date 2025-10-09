@@ -10,11 +10,10 @@ export interface IEvent extends Document {
   title: string;
   description: string;
   customer: ICustomer["id"];
-  gallery: IGallery["id"][];
   type: ITag["name"];
   public: boolean;
   date: Date;
-  images?: string[];
+  images: string[];
   time: {
     start: string; // "14:00"
     end: string; // "18:00"
@@ -43,7 +42,7 @@ export type SafeEvent = {
   id: string;
   title: string;
   description: string;
-  images: IGallery["imageUrl"][];
+  images: string[];
   type: ITag["name"];
   public: boolean;
   date: Date;
@@ -58,7 +57,7 @@ export function sanitizeEvent(event: IEvent): SafeEvent {
     id: event.id,
     title: event.title,
     description: event.description,
-    images: event.gallery.map((g) => (g as IGallery).imageUrl),
+    images: event.images,
     type: event.type,
     public: event.public,
     date: event.date,

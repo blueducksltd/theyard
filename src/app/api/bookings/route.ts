@@ -1,5 +1,6 @@
 import APIResponse from "@/lib/APIResponse";
 import { requireAuth } from "@/lib/auth";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
@@ -17,7 +18,48 @@ import { NextRequest } from "next/server";
 
 export const POST = errorHandler(async (request: NextRequest) => {
     await connectDB();
-    const body: CreateBookingInput = await request.json();
+
+    const contentType = request.headers.get("content-type") ?? "";
+    if (!contentType.includes("multipart/form-data")) {
+        throw APIError.BadRequest("Content-Type must be multipart/form-data");
+    }
+
+    const form = await request.formData();
+    const images = form.getAll("images") as File[];
+
+    if (images.length > 5) {
+        throw APIError.BadRequest("You can only upload a maximum of 5 images at once");
+    }
+
+    const pblc = form.get("public") as string;//public
+    const _public = pblc === "true" ? true : false;
+
+    const data: Partial<CreateBookingInput> = {
+        firstName: form.get("firstName") as string,
+        lastName: form.get("lastName") as string,
+        email: form.get("email") as CreateBookingInput["email"],
+        phone: form.get("phone") as CreateBookingInput["phone"],
+        date: form.get("date") as CreateBookingInput["date"],
+        startTime: form.get("startTime") as CreateBookingInput["startTime"],
+        endTime: form.get("endTime") as CreateBookingInput["endTime"],
+        spaceId: form.get("spaceId") as CreateBookingInput["spaceId"],
+        packageId: form.get("packageId") as CreateBookingInput["packageId"],
+        eventTitle: form.get("eventTitle") as CreateBookingInput["eventTitle"],
+        eventType: form.get("eventType") as CreateBookingInput["eventType"],
+        eventDescription: form.get("eventDescription") as CreateBookingInput["eventDescription"],
+        public: _public,
+        imagesUrls: [],
+    };
+
+    data.imagesUrls = await Promise.all(
+        images.map(async (image) => {
+            const imageUrl = await uploadToCloudinary(image);
+            return imageUrl;
+        })
+    );
+
+    // Validate with Zod
+    const body = CreateBookingDto.parse(data);
 
     const now = new Date();
 
@@ -77,8 +119,6 @@ export const POST = errorHandler(async (request: NextRequest) => {
     const _package = await Package.findById(body.packageId);
     if (!_package) throw APIError.NotFound("Package not found");
 
-    // Validate with Zod
-    CreateBookingDto.parse(body);
     const validTag = await Tag.findOne({ name: body.eventType });
 
     if (!validTag) {
@@ -114,6 +154,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         date: body.date,
         time: { start: body.startTime, end: body.endTime },
         status: "pending",
+        images: body.imagesUrls,
         location: space.address,
     });
 

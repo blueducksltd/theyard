@@ -32,7 +32,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
   const body: CreateSpaceInput = {
     name: form.get("name") as string,
     description: form.get("description") as string,
-    pricePerHour: z.coerce.number().parse(form.get("price")),
+    pricePerHour: z.coerce.number().parse(form.get("pricePerHour")),
     capacity: z.coerce.number().parse(form.get("capacity")),
     specs,
     address: form.get("address") as string,
@@ -40,8 +40,8 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
   if (!file) throw APIError.BadRequest("Image is required");
 
-  const imageUrl = await uploadToCloudinary(file);
 
+  const imageUrl = await uploadToCloudinary(file);
   // Validate & coerce with Zod
   const data = CreateSpaceDto.parse({
     ...body,

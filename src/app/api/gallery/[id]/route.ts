@@ -76,7 +76,7 @@ export const DELETE = errorHandler<{ params: { id: string } }>(
         if (imageExist.event) {
             await Event.findByIdAndUpdate(
                 imageExist.event,
-                { $pull: { images: imageExist.id } }
+                { $pull: { images: imageExist.imageUrl } }
             )
         }
 
