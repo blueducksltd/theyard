@@ -61,7 +61,7 @@ export const CreateGalleryDTO = z.object({
   description: z.string().optional(),
   imageUrl: z.string().url(),
   eventId: z.string().optional(),
-  category: z.enum(["picnics", "birthdays", "weddings", "corporate", "seasonal"]),
+  category: z.string(),
   mediaDate: z.date(),
 });
 
@@ -70,7 +70,7 @@ export const UpdateGalleryDTO = z.object({
   description: z.string().optional(),
   imageUrl: z.string().url().optional(),
   eventId: z.string().optional(),
-  category: z.enum(["picnics", "birthdays", "weddings", "corporate", "seasonal"]).optional()
+  category: z.string().optional()
 });
 
 export type CreateGalleryInput = z.infer<typeof CreateGalleryDTO>;

@@ -122,13 +122,7 @@ export const CreateBookingDto = z.object({
     eventTitle: z.string({
         error: "field `eventTitle` is required",
     }),
-    eventType: z.enum(
-        ["picnics", "birthdays", "weddings", "corporate", "seasonal"],
-        {
-            error:
-                "field `eventType` is required and must be one of Picnics, Birthdays, Weddings, Corporate, Seasonal",
-        },
-    ),
+    eventType: z.string(),
     eventDescription: z.string().optional(),
     public: z.boolean().optional().default(false),
 });

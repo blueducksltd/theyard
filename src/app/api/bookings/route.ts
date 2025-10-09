@@ -10,6 +10,7 @@ import Customer from "@/models/Customer";
 import Event from "@/models/Event";
 import Package from "@/models/Package";
 import Space from "@/models/Space";
+import Tag from "@/models/Tag";
 import { CreateBookingDto, CreateBookingInput, sanitizeBooking } from "@/types/Booking";
 import { addDays, addHours, differenceInMinutes, isBefore, isSameDay, parse, startOfToday } from "date-fns";
 import { NextRequest } from "next/server";
@@ -78,6 +79,16 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
     // Validate with Zod
     CreateBookingDto.parse(body);
+    const validTag = await Tag.findOne({ name: body.eventType });
+
+    if (!validTag) {
+        throw APIError.BadRequest("Invalid eventType", {
+            message: `The provided eventType '${body.eventType}' does not exist in the list of valid tags.`,
+            field: "eventType",
+            expected: "One of the existing tag names"
+        });
+    }
+
 
     // Ensure customer exists (upsert)
     const customer = await Customer.findOneAndUpdate(

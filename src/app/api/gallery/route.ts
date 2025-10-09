@@ -8,6 +8,7 @@ import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Gallery from "@/models/Gallery";
 import { CreateGalleryDTO, CreateGalleryInput, sanitizeGallery } from "@/types/Gallery";
 import Event from "@/models/Event";
+import Tag from "@/models/Tag";
 
 
 export const POST = errorHandler(async (request: NextRequest) => {
@@ -42,6 +43,16 @@ export const POST = errorHandler(async (request: NextRequest) => {
         imageUrl: undefined, // will be set after upload
         mediaDate: form.get("mediaDate") ? new Date(form.get("mediaDate") as string) : undefined
     };
+
+    const validTag = await Tag.findOne({ name: body.category });
+
+    if (!validTag) {
+        throw APIError.BadRequest("Invalid category", {
+            message: `The provided category '${body.category}' does not exist in the list of valid tags.`,
+            field: "category",
+            expected: "One of the existing tag names"
+        });
+    }
 
     // Upload + create each gallery document concurrently
     const galleries = await Promise.all(

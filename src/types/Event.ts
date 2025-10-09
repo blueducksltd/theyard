@@ -3,6 +3,7 @@ import z from "zod";
 import { IGallery } from "./Gallery";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
 import { Model } from "mongoose";
+import { ITag } from "./Tag";
 
 // Document fields
 export interface IEvent extends Document {
@@ -10,7 +11,7 @@ export interface IEvent extends Document {
   description: string;
   customer: ICustomer["id"];
   gallery: IGallery["id"][];
-  type: "picnics" | "birthdays" | "weddings" | "corporate" | "seasonal";
+  type: ITag["name"];
   public: boolean;
   date: Date;
   time: {
@@ -37,7 +38,7 @@ export type SafeEvent = {
   title: string;
   description: string;
   images: IGallery["imageUrl"][];
-  type: "picnics" | "birthdays" | "weddings" | "corporate" | "seasonal";
+  type: ITag["name"];
   public: boolean;
   date: Date;
   startTime: string;
