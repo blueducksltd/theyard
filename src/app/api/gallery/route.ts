@@ -75,7 +75,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
             if (gallery.event) {
                 await Event.findByIdAndUpdate(
                     data.eventId,
-                    { $push: { gallery: gallery.id } },
+                    { $push: { images: imageUrl } },
                     { new: true }
                 );
             }

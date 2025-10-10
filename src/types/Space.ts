@@ -9,11 +9,13 @@ import { z } from "zod";
 // -----------------------------
 export interface ISpace extends Document {
   name: string;
+  imageUrl: string;
   pricePerHour: number;
   specs: string[];
   address: string;
   capacity: number;
   description?: string;
+  createdAt?: Date;
 }
 
 // Instance methods
@@ -32,10 +34,12 @@ export type SafeSpace = {
   id: string;
   name: string;
   pricePerHour: number;
+  imageUrl: string;
   specs: string[];
   address: string;
   capacity: number;
   description?: string;
+  createdAt?: Date
 };
 
 export function sanitizeSpace(space: ISpace): SafeSpace {
@@ -43,10 +47,12 @@ export function sanitizeSpace(space: ISpace): SafeSpace {
     id: space.id,
     name: space.name,
     pricePerHour: space.pricePerHour,
+    imageUrl: space.imageUrl,
     specs: space.specs,
     address: space.address,
     capacity: space.capacity,
     description: space.description,
+    createdAt: space.createdAt,
   };
 }
 
@@ -59,7 +65,8 @@ export const CreateSpaceDto = z.object({
   specs: z.array(z.string().min(1)).min(1),
   address: z.string().min(5).max(200),
   capacity: z.number().min(1),
-  description: z.string().min(10).max(1000).optional(),
+  description: z.string().min(10).max(1000),
+  imageUrl: z.string().url().optional(),
 });
 
 export type CreateSpaceInput = z.infer<typeof CreateSpaceDto>;

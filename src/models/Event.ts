@@ -11,7 +11,7 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
     title: { type: String, required: true },
     description: { type: String },
     customer: { type: Types.ObjectId, ref: "Customer", required: true },
-    gallery: [{ type: Types.ObjectId, ref: "Gallery" }],
+    images: [{ type: String }],
     type: {
       type: String,
       enum: ["picnics", "birthdays", "weddings", "corporate", "seasonal"],
