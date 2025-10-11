@@ -2,14 +2,13 @@ import { Document } from "mongoose";
 import z from "zod";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
 import { Model } from "mongoose";
-import { ITag } from "./Tag";
 
 // Document fields
 export interface IEvent extends Document {
   title: string;
   description: string;
   customer: ICustomer["id"];
-  type: ITag["name"];
+  // type: ITag["name"];
   public: boolean;
   date: Date;
   images: string[];
@@ -42,7 +41,7 @@ export type SafeEvent = {
   title: string;
   description: string;
   images: string[];
-  type: ITag["name"];
+  // type: ITag["name"];
   public: boolean;
   date: Date;
   startTime: string;
@@ -57,7 +56,7 @@ export function sanitizeEvent(event: IEvent): SafeEvent {
     title: event.title,
     description: event.description,
     images: event.images,
-    type: event.type,
+    // type: event.type,
     public: event.public,
     date: event.date,
     startTime: event.time.start,

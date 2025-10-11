@@ -11,7 +11,6 @@ import Customer from "@/models/Customer";
 import Event from "@/models/Event";
 import Package from "@/models/Package";
 import Space from "@/models/Space";
-import Tag from "@/models/Tag";
 import { CreateBookingDto, CreateBookingInput, sanitizeBooking } from "@/types/Booking";
 import { addDays, addHours, differenceInMinutes, isBefore, isSameDay, parse, startOfToday } from "date-fns";
 import { NextRequest } from "next/server";
@@ -45,7 +44,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         spaceId: form.get("spaceId") as CreateBookingInput["spaceId"],
         packageId: form.get("packageId") as CreateBookingInput["packageId"],
         eventTitle: form.get("eventTitle") as CreateBookingInput["eventTitle"],
-        eventType: form.get("eventType") as CreateBookingInput["eventType"],
+        // eventType: form.get("eventType") as CreateBookingInput["eventType"],
         eventDescription: form.get("eventDescription") as CreateBookingInput["eventDescription"],
         public: _public,
         imagesUrls: [],
@@ -109,7 +108,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         body.startTime,
         body.endTime
     );
-    if (isBooked) throw APIError.Conflict("The selected space is already booked for the specified date and time.");
+    if (isBooked) throw new APIError(200, "The selected space is already booked for the specified date and time.");
 
     // Validate space
     const space = await Space.findById(body.spaceId);
@@ -119,15 +118,15 @@ export const POST = errorHandler(async (request: NextRequest) => {
     const _package = await Package.findById(body.packageId);
     if (!_package) throw APIError.NotFound("Package not found");
 
-    const validTag = await Tag.findOne({ name: body.eventType });
+    // const validTag = await Tag.findOne({ name: body.eventType });
 
-    if (!validTag) {
-        throw APIError.BadRequest("Invalid eventType", {
-            message: `The provided eventType '${body.eventType}' does not exist in the list of valid tags.`,
-            field: "eventType",
-            expected: "One of the existing tag names"
-        });
-    }
+    // if (!validTag) {
+    //     throw APIError.BadRequest("Invalid eventType", {
+    //         message: `The provided eventType '${body.eventType}' does not exist in the list of valid tags.`,
+    //         field: "eventType",
+    //         expected: "One of the existing tag names"
+    //     });
+    // }
 
 
     // Ensure customer exists (upsert)
@@ -149,7 +148,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         title: body.eventTitle,
         description: body.eventDescription,
         customer: customer.id,
-        type: body.eventType,
+        // type: body.eventType,
         public: body.public,
         date: body.date,
         time: { start: body.startTime, end: body.endTime },

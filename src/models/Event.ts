@@ -12,11 +12,11 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
     description: { type: String },
     customer: { type: Types.ObjectId, ref: "Customer", required: true },
     images: [{ type: String }],
-    type: {
-      type: String,
-      enum: ["picnics", "birthdays", "weddings", "corporate", "seasonal"],
-      required: true
-    },
+    // type: {
+    //   type: String,
+    //   enum: ["picnics", "birthdays", "weddings", "corporate", "seasonal"],
+    //   required: true
+    // },
     public: { type: Boolean, default: false },
     date: { type: Date, required: true },
     time: {
