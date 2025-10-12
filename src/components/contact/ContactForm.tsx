@@ -1,6 +1,33 @@
-import Link from "next/link";
+"use client";
+import { sendInquiries } from "@/util";
+import { toast } from "react-toastify";
 
 export default function ContactForm() {
+  const handleSubmit = async (formdata: FormData) => {
+    const toastId = toast.loading("Sending message...", {
+      position: "bottom-right",
+    });
+    const data = {
+      firstName: formdata.get("firstName") as string,
+      lastName: formdata.get("lastName") as string,
+      phone: formdata.get("phone") as string,
+      email: formdata.get("email") as string,
+      message: formdata.get("message") as string,
+    };
+    try {
+      const response = await sendInquiries(data);
+      if (response.success == true) {
+        toast.success("Message sent successfully", {
+          position: "bottom-right",
+        });
+      }
+    } catch (error) {
+      toast.error(`An error occurred while sending your message: ${error}`, {
+        position: "bottom-right",
+      });
+    }
+    toast.dismiss(toastId);
+  };
   return (
     <main className="w-full h-max">
       {/*Socials*/}
@@ -45,7 +72,10 @@ export default function ContactForm() {
             ></iframe>
           </div>
         </div>
-        <form className="w-full md:w-[550px] md:h-[526px] p-6 shadow-md flex flex-col gap-4">
+        <form
+          action={handleSubmit}
+          className="w-full md:w-[550px] md:h-[526px] p-6 shadow-md flex flex-col gap-4"
+        >
           <div className="input-group flex flex-col md:flex-row gap-6">
             <div className="flex flex-col gap-3">
               <label htmlFor="firstname" className="text-[#1A1A1A] leading-6">
@@ -54,6 +84,7 @@ export default function ContactForm() {
               <input
                 type="text"
                 id="firstname"
+                name="firstName"
                 placeholder="Enter your first name"
                 className="md:w-[239px] h-[52px] rounded2px border-[1px] focus:outline-yard-dark-primary border-[#BFBFBF] p-3"
               />
@@ -66,6 +97,7 @@ export default function ContactForm() {
               <input
                 type="text"
                 id="lastname"
+                name="lastName"
                 placeholder="Enter your last name"
                 className="md:w-[239px] h-[52px] rounded2px border-[1px] focus:outline-yard-dark-primary border-[#BFBFBF] p-3"
               />
@@ -74,24 +106,26 @@ export default function ContactForm() {
 
           <div className="input-group flex flex-col md:flex-row gap-6">
             <div className="flex flex-col gap-3">
-              <label htmlFor="firstname" className="text-[#1A1A1A] leading-6">
+              <label htmlFor="email" className="text-[#1A1A1A] leading-6">
                 Enter your email address
               </label>
               <input
                 type="email"
-                id="firstname"
+                name="email"
+                id="email"
                 placeholder="Enter your email address"
                 className="md:w-[239px] h-[52px] rounded2px border-[1px] focus:outline-yard-dark-primary border-[#BFBFBF] p-3"
               />
             </div>
 
             <div className="flex flex-col gap-3">
-              <label htmlFor="lastname" className="text-[#1A1A1A] leading-6">
+              <label htmlFor="phone" className="text-[#1A1A1A] leading-6">
                 Enter your phone nummber
               </label>
               <input
                 type="text"
-                id="lastname"
+                id="phone"
+                name="phone"
                 placeholder="Enter your phone nummber"
                 className="md:w-[239px] h-[52px] rounded2px border-[1px] focus:outline-yard-dark-primary border-[#BFBFBF] p-3"
               />
@@ -105,19 +139,20 @@ export default function ContactForm() {
               </label>
               <textarea
                 id="message"
+                name="message"
                 placeholder="Enter your message"
                 className="w-full md:w-[502px] h-[181px] rounded2px border-[1px] focus:outline-yard-dark-primary border-[#BFBFBF] p-3"
               ></textarea>
             </div>
           </div>
 
-          <Link
-            href={"#"}
-            className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden"
+          <button
+            type="submit"
+            className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden cursor-pointer"
           >
             <span className="z-40">Send message</span>
             <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-          </Link>
+          </button>
         </form>
       </section>
 

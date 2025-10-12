@@ -491,7 +491,7 @@ export default function GalleryContent() {
                   alt="Upload Icon"
                 />
                 <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
-                  Choose up to 5 images or drag & drop them here
+                  Choose up to 5 images or drag &amp; drop them here
                 </p>
 
                 <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">

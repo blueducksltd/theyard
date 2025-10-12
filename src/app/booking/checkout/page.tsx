@@ -1,10 +1,134 @@
+"use client";
 /* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { ISpace } from "@/types/Space";
+import { createBookings, getSpaces } from "@/util";
+import { loadFromLS } from "@/util/helper";
+import moment from "moment";
+// import moment from "moment";
 import Link from "next/link";
+import Image from "next/image";
+import { ChangeEvent, useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const Page = () => {
+  const [spaces, setSpaces] = useState<ISpace[]>([]);
+  const [selectedSpace, setSelectedSpace] = useState<ISpace | null>(null);
+  const [isPublishing, setIsPublishing] = useState<boolean>(true);
+  const [image, setImage] = useState<File | undefined>();
+  const savedBookingDetails = loadFromLS("booking");
+  const [inputs] = useState<Record<string, any>>({});
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [endTime, setEndTime] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    const [hours, minutes] = startTime?.split(":") || ["0", "0"];
+
+    // Create booking datetime
+    const bookingDateTime = new Date(inputs.date);
+    bookingDateTime.setHours(+hours, +minutes, 0, 0);
+
+    const now = new Date();
+
+    // Check if the date is in the past
+    const bookingDateOnly = new Date(inputs.date).setHours(0, 0, 0, 0);
+    const todayDateOnly = new Date().setHours(0, 0, 0, 0);
+
+    if (bookingDateOnly < todayDateOnly) {
+      toast.error("Booking date cannot be in the past", {
+        position: "bottom-right",
+      });
+      return;
+    }
+
+    // Helper function to format time in 12-hour format
+    const formatTime = (hour: number) => {
+      const period = hour >= 12 ? "PM" : "AM";
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:00 ${period}`;
+    };
+
+    // If it's today, ensure booking is at least the next full hour
+    if (bookingDateOnly === todayDateOnly) {
+      const currentHour = now.getHours();
+      const bookingHour = +hours;
+
+      // User must book at least from the next full hour
+      if (bookingHour <= currentHour) {
+        const nextAvailableHour = currentHour + 1;
+        toast.error(
+          `Bookings for today must be made at least 1 hour in advance (${formatTime(nextAvailableHour)} onwards)`,
+          {
+            position: "bottom-right",
+          },
+        );
+        return;
+      }
+    }
+
+    if (inputs.date == null) {
+      inputs.date = savedBookingDetails.date;
+    }
+
+    const toastId = toast.loading("Booking your event, please wait...", {
+      position: "bottom-right",
+    });
+
+    inputs.packageId = savedBookingDetails.package.id;
+    inputs.startTime = startTime || "";
+    inputs.endTime = endTime || "";
+    inputs.public = isPublishing ? "true" : "false";
+    inputs.images = image;
+    // inputs.eventType = "weddings";
+
+    const formdata = new FormData();
+    Object.entries(inputs).map(([key, value]) => {
+      formdata.append(key, value);
+    });
+
+    // Create Booking
+    try {
+      const response = await createBookings(formdata);
+      if (response.success == true) {
+        // Handle success
+        toast.success(`${response.message}`, { position: "bottom-right" });
+      } else {
+        toast.warning(`${response.message}`, { position: "bottom-right" });
+      }
+    } catch (error) {
+      toast.error(
+        `An error occurred while creating your booking. Please try again later.`,
+        {
+          position: "bottom-right",
+        },
+      );
+    }
+    toast.dismiss(toastId);
+  };
+
+  const handleSpace = (e: ChangeEvent<HTMLSelectElement>) => {
+    const _selectedSpace = spaces.find((space) => space.id === e.target.value);
+    setSelectedSpace(_selectedSpace || null);
+    inputs.spaceId = e.target.value;
+  };
+
+  useEffect(() => {
+    (async () => {
+      const response = await getSpaces();
+      if (response.success == true) {
+        setSpaces(response.data.spaces);
+      }
+    })();
+    toast.info("Bookings made today must be made at least 1 hour in advance", {
+      autoClose: false,
+      position: "bottom-right",
+    });
+  }, []);
+
   return (
     <main className={"w-full h-max bg-yard-white"}>
       <Navbar />
@@ -15,7 +139,7 @@ const Page = () => {
           <header className="flex flex-col gap-5 md:flex-row justify-between md:items-center">
             <Link
               href={"/booking"}
-              className="group relative text-[#55544E] font-medium flex items-center gap-2 font-sen"
+              className="group relative text-[#55544E] font-medium flex items-center gap-2 font-sen w-max"
             >
               <img src={"/icons/arrow-left.svg"} alt="Back" className="w-5" />
               Back to calendar
@@ -44,6 +168,9 @@ const Page = () => {
                     type="text"
                     id="firstname"
                     name="firstname"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      (inputs.firstName = e.target.value)
+                    }
                     placeholder="Enter your first name"
                     className="w-full md:w-[316px] h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
@@ -60,6 +187,9 @@ const Page = () => {
                     type="text"
                     id="lastname"
                     name="lastname"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      (inputs.lastName = e.target.value)
+                    }
                     placeholder="Enter your last name"
                     className="w-full md:w-[316px] h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
@@ -78,6 +208,9 @@ const Page = () => {
                     type="text"
                     id="phone"
                     name="phone"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      (inputs.phone = e.target.value)
+                    }
                     placeholder="Enter your phone number"
                     className="w-full md:w-[316px] h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
@@ -94,6 +227,9 @@ const Page = () => {
                     type="text"
                     id="email"
                     name="email"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      (inputs.email = e.target.value)
+                    }
                     placeholder="Enter your email address"
                     className="w-full md:w-[316px] h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
@@ -112,6 +248,12 @@ const Page = () => {
                     type="date"
                     id="date"
                     name="date"
+                    defaultValue={new Date(
+                      savedBookingDetails.date,
+                    ).toLocaleDateString("en-CA")}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      (inputs.date = e.target.value)
+                    }
                     placeholder="Select a date"
                     className="md:w-[316px] md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
@@ -129,6 +271,9 @@ const Page = () => {
                       type="time"
                       id="time-from"
                       name="time-from"
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setStartTime(e.target.value)
+                      }
                       placeholder="Select time"
                       className="w-full md:w-[142px] md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                     />
@@ -139,6 +284,9 @@ const Page = () => {
                       type="time"
                       id="time-to"
                       name="time-to"
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setEndTime(e.target.value)
+                      }
                       placeholder="Select time"
                       className="w-full md:w-[142px] md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                     />
@@ -157,14 +305,17 @@ const Page = () => {
                   <select
                     id="space"
                     name="space"
+                    onChange={(e) => handleSpace(e)}
                     className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   >
                     <option value="" disabled selected>
                       Select a space
                     </option>
-                    <option value="space1">Space 1</option>
-                    <option value="space2">Space 2</option>
-                    <option value="space3">Space 3</option>
+                    {spaces.map((space) => (
+                      <option key={space.id} value={space.id}>
+                        {space.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -181,6 +332,9 @@ const Page = () => {
                     type="text"
                     id="title"
                     name="title"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      (inputs.eventTitle = e.target.value)
+                    }
                     placeholder="Enter the title of the event"
                     className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
@@ -198,10 +352,61 @@ const Page = () => {
                   <textarea
                     id="desc"
                     name="desc"
+                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                      (inputs.eventDescription = e.target.value)
+                    }
                     placeholder="Enter event description"
                     className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   ></textarea>
                 </div>
+              </div>
+
+              <div className="form-group flex flex-col md:flex-row items-start gap-6">
+                {image == undefined ? (
+                  <label htmlFor="image" className="w-full">
+                    <div className="flex flex-col h-[213px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
+                      <Image
+                        src={"/icons/upload.svg"}
+                        width={18}
+                        height={18}
+                        alt="Upload Icon"
+                      />
+                      <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
+                        Choose an image
+                        {/*or drag &amp; drop it here*/}
+                      </p>
+
+                      <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
+                        JPEG &amp; PNG up to 10mb
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={(e) => setImage(e.target.files?.[0])}
+                      id="image"
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <label
+                    htmlFor="image"
+                    className="w-full h-[213px] bg-center bg-cover rounded2px cursor-pointer"
+                    title="Change Image"
+                    style={{
+                      backgroundImage: `url(${URL.createObjectURL(image)})`,
+                    }}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      size={10}
+                      onChange={(e) => setImage(e.target.files?.[0])}
+                      id="image"
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
 
               <div className="form-group flex flex-col md:flex-row items-start gap-6">
@@ -222,6 +427,7 @@ const Page = () => {
                         id="yes"
                         value={"yes"}
                         defaultChecked={true}
+                        onChange={() => setIsPublishing(true)}
                         name="publish"
                         className="mt-3 radio radio-lg peer border-2 border-yard-primary checked:border-yard-dark-primary checked:text-yard-dark-primary"
                       />
@@ -242,6 +448,7 @@ const Page = () => {
                         type="radio"
                         id="no"
                         value={"no"}
+                        onChange={() => setIsPublishing(false)}
                         name="publish"
                         className="mt-3 radio radio-lg peer border-2 border-yard-primary checked:border-yard-dark-primary checked:text-yard-dark-primary"
                       />
@@ -272,7 +479,7 @@ const Page = () => {
                     Package
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    Picnic Package
+                    {savedBookingDetails.package.name}
                   </p>
                 </div>
 
@@ -281,7 +488,7 @@ const Page = () => {
                     Space
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    Game Space
+                    {selectedSpace?.name}
                   </p>
                 </div>
 
@@ -290,7 +497,8 @@ const Page = () => {
                     Event Date
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    12-09-2025
+                    {new Date(savedBookingDetails.date).toLocaleDateString()}
+                    {/*{moment(savedBookingDetails.date).format("d/MM/YYYY")}*/}
                   </p>
                 </div>
 
@@ -299,7 +507,7 @@ const Page = () => {
                     Event time
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    11:00 -14:00
+                    {startTime} - {endTime}
                   </p>
                 </div>
 
@@ -308,7 +516,7 @@ const Page = () => {
                     Publish Event
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    No
+                    {isPublishing ? "Yes" : "No"}
                   </p>
                 </div>
               </div>
@@ -326,7 +534,11 @@ const Page = () => {
                     Game Space
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    10,000
+                    {Intl.NumberFormat().format(
+                      selectedSpace?.pricePerHour
+                        ? +selectedSpace!.pricePerHour
+                        : 0,
+                    )}
                   </p>
                 </div>
 
@@ -334,7 +546,15 @@ const Page = () => {
                   <p className="leading-6 tracking-[0.5px] text-[#717068]">
                     No. Hours
                   </p>
-                  <p className="leading-6 tracking-[0.5px] text-[#1A231C]">3</p>
+                  <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
+                    {startTime && endTime
+                      ? moment(endTime, "HH:mm").diff(
+                          moment(startTime, "HH:mm"),
+                          "hours",
+                          true,
+                        )
+                      : 0}
+                  </p>
                 </div>
 
                 <div className="w-full flex justify-between">
@@ -342,16 +562,25 @@ const Page = () => {
                     Total
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    30,000
+                    {selectedSpace && endTime && startTime
+                      ? Intl.NumberFormat().format(
+                          moment(endTime, "HH:mm").diff(
+                            moment(startTime, "HH:mm"),
+                            "hours",
+                            true,
+                          ) * (selectedSpace?.pricePerHour ?? 0),
+                        )
+                      : 0}
                   </p>
                 </div>
-                <Link
-                  href={"/booking/checkout"}
-                  className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden"
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden cursor-pointer"
                 >
                   <span className="z-40">Proceed to pay</span>
                   <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-                </Link>
+                </button>
               </div>
             </div>
           </section>

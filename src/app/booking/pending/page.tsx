@@ -3,8 +3,11 @@
 import BookingCalendar from "@/components/booking/Calender";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import { IBooking } from "@/types/Booking";
+import { getBookings } from "@/util";
 
-const Page = () => {
+const Page = async () => {
+  const bookingData: IBooking[] = (await getBookings()).data.bookings;
   return (
     <main className={"w-full h-max bg-yard-white"}>
       <Navbar />
@@ -14,7 +17,10 @@ const Page = () => {
         <main className="pt-13 md:my-4 md:py-16">
           <section className="w-full flex flex-col-reverse md:flex-row items-start my-5 md:my-4 gap-14 md:gap-12">
             <div className="w-full md:w-[376] h-[max] shadow-xl">
-              <BookingCalendar calenderWidth="w-full" />
+              <BookingCalendar
+                bookingData={bookingData}
+                calenderWidth="w-full"
+              />
             </div>
 
             {/*Divider*/}
