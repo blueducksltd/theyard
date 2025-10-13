@@ -10,7 +10,7 @@ export interface IGallery extends Document {
   imageUrl: string;
   event: IEvent["id"] | null;
   mediaDate: Date;
-  category: IEvent["type"];
+  category: string;
 }
 
 // Instance methods
@@ -29,7 +29,7 @@ export type SafeGallery = {
   title: string;
   description: string;
   imageUrl: string;
-  category: IEvent["type"];
+  category: string;
   mediaDate: Date;
   event: Partial<IEvent> | null
 }
