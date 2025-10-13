@@ -22,7 +22,18 @@ export async function sendBookingEmail(to: string) {
     await transporter.sendMail({
         from: `"The Yard" <${process.env.MAIL}>`,
         to,
-        subject: "Booking Confirmed",
+        subject: "Booking submitted, complete payment to confirm",
+        html,
+    });
+};
+
+export async function sendBookingConfirmedEmail(to: string) {
+    // const html = render(<BookingConfirmationEmail name={ name } bookingId = { bookingId } />);
+    const html = `<p> Booking Confirmed </B>`;
+    await transporter.sendMail({
+        from: `"The Yard" <${process.env.MAIL}>`,
+        to,
+        subject: "We have received your payment and confirmed booking",
         html,
     });
 };

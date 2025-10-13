@@ -77,57 +77,45 @@ export const POST = errorHandler(async (request: NextRequest) => {
     if (isSameDay(bookingDate, now)) {
         const minStartTime = addHours(now, 1);
         if (isBefore(bookingStart, minStartTime)) {
-            throw APIError.BadRequest("Bookings must be made at least 1 hour in advance");
+            throw new APIError(200, "Bookings must be made at least 1 hour in advance");
         }
     }
     // 3️⃣ Future dates are automatically fine
-
 
     // Validate times
     const start = parse(body.startTime, "HH:mm", new Date());
     const end = parse(body.endTime, "HH:mm", new Date());
 
     const minutes = differenceInMinutes(end, start);
-    if (minutes < 0) throw APIError.BadRequest("End time must be after start time");
+    if (minutes <= 0) throw APIError.BadRequest("End time must be after start time");
 
-    // convert fractions to full date ie: 09:59 should be 09:00
-    if (minutes % 60 !== 0) {
-        body.endTime = `${Math.floor(end.getHours())}:00`;
-    }
-    let hours = minutes / 60;
-    hours = Math.ceil(hours); // round up to nearest hour
+    // Compute total hours precisely (for pricing)
+    const exactHours = minutes / 60;
 
-    // start time cannot be before 8am or after 8pm
-    // if (start.getHours() < 8 || start.getHours() > 20) {
-    //     throw APIError.BadRequest("Bookings can only be made between 08:00 and 20:00");
-    // }
+    // Keep user’s original times for the Event
+    const eventStartTime = body.startTime;
+    const eventEndTime = body.endTime;
 
+    // Create rounded versions for Booking
+    const roundedStartTime = `${String(start.getHours()).padStart(2, "0")}:00`;
+    const roundedEndTime = `${String(Math.ceil(end.getHours())).padStart(2, "0")}:00`;
+
+    // Double booking check should use rounded hours
     const isBooked = await Booking.isDoubleBooked(
         body.spaceId,
         new Date(body.date),
-        body.startTime,
-        body.endTime
+        roundedStartTime,
+        roundedEndTime
     );
-    if (isBooked) throw new APIError(200, "The selected space is already booked for the specified date and time.");
+    if (isBooked)
+        throw new APIError(200, "The selected space is already booked for the specified date and time.");
 
-    // Validate space
+    // Validate space and package
     const space = await Space.findById(body.spaceId);
     if (!space) throw APIError.NotFound("Space not found");
 
-    // Validate package
     const _package = await Package.findById(body.packageId);
     if (!_package) throw APIError.NotFound("Package not found");
-
-    // const validTag = await Tag.findOne({ name: body.eventType });
-
-    // if (!validTag) {
-    //     throw APIError.BadRequest("Invalid eventType", {
-    //         message: `The provided eventType '${body.eventType}' does not exist in the list of valid tags.`,
-    //         field: "eventType",
-    //         expected: "One of the existing tag names"
-    //     });
-    // }
-
 
     // Ensure customer exists (upsert)
     const customer = await Customer.findOneAndUpdate(
@@ -142,33 +130,31 @@ export const POST = errorHandler(async (request: NextRequest) => {
         { new: true, upsert: true }
     );
 
-
-    // Create event
+    // Create event (keep original times)
     const event = await Event.create({
         title: body.eventTitle,
         description: body.eventDescription,
         customer: customer.id,
-        // type: body.eventType,
         public: body.public,
         date: body.date,
-        time: { start: body.startTime, end: body.endTime },
+        time: { start: eventStartTime, end: eventEndTime },
         status: "pending",
         images: body.imagesUrls,
         location: space.address,
     });
 
-    // Calculate totalPrice round up to nearest whole number
-    const totalPrice = Math.round((space.pricePerHour * hours) + _package.price);
+    // Calculate totalPrice using exact hours (not rounded)
+    const totalPrice = Math.round(space.pricePerHour * exactHours + _package.price);
 
-    // Create booking
+    // Create booking (use rounded hours for schedule management)
     const booking = await Booking.create({
         customer: customer.id,
         space: space.id,
         event: event.id,
         package: _package.id,
         eventDate: new Date(body.date),
-        startTime: body.startTime,
-        endTime: body.endTime,
+        startTime: roundedStartTime,
+        endTime: roundedEndTime,
         status: "pending",
         totalPrice,
     });
@@ -205,8 +191,8 @@ export const POST = errorHandler(async (request: NextRequest) => {
                     price: _package.price,
                 },
                 eventDate: booking.eventDate,
-                startTime: booking.startTime,
-                endTime: booking.endTime,
+                startTime: event.time.start,
+                endTime: event.time.end,
                 status: booking.status,
                 totalPrice: booking.totalPrice,
             }
