@@ -89,6 +89,11 @@ export const POST = errorHandler(async (request: NextRequest) => {
     const minutes = differenceInMinutes(end, start);
     if (minutes <= 0) throw APIError.BadRequest("End time must be after start time");
 
+    // start time cannot be before 8am or after 8pm
+    if (start.getHours() < 8 || start.getHours() > 21) {
+        throw new APIError(200, "Bookings can only be made between 08:00 and 21:00");
+    }
+
     // Compute total hours precisely (for pricing)
     const exactHours = minutes / 60;
 

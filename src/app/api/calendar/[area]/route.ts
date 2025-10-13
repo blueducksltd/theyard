@@ -38,7 +38,7 @@ export const GET = errorHandler<{ params: { area: string } }>(
                 eventDate: { $gte: dayStart, $lte: dayEnd },
             });
 
-            const daySlots = generateSlots("00:00", "23:00"); // baseline slots
+            const daySlots = generateSlots("08:00", "21:00"); // baseline slots
 
             const spacesWithSlots = spaces.map((space: ISpace) => {
                 const spaceBookings = bookings.filter(
