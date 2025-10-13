@@ -4,9 +4,12 @@
 }
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const [openMenu, setOpenMenu] = useState<boolean>(false);
+  const pathname = usePathname();
+
   return (
     <>
       <nav
@@ -22,7 +25,7 @@ const Navbar = () => {
           <Link
             href={"/"}
             onClick={() => setOpenMenu(false)}
-            className="group relative md:border-b-[1px]"
+            className={`group relative w-max ${pathname === "/" ? "border-b-[1px]" : ""}`}
           >
             Home
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
@@ -31,7 +34,7 @@ const Navbar = () => {
           <Link
             href={"/events"}
             onClick={() => setOpenMenu(false)}
-            className="group relative"
+            className={`group relative w-max ${pathname === "/events" ? "border-b-[1px]" : ""}`}
           >
             Events
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
@@ -40,7 +43,7 @@ const Navbar = () => {
           <Link
             href={"/about"}
             onClick={() => setOpenMenu(false)}
-            className="group relative"
+            className={`group relative w-max ${pathname === "/about" ? "border-b-[1px]" : ""}`}
           >
             About us
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
@@ -49,7 +52,7 @@ const Navbar = () => {
           <Link
             href={"/booking"}
             onClick={() => setOpenMenu(false)}
-            className="group relative"
+            className={`group relative w-max ${pathname === "/booking" || "/booking/pending" ? "border-b-[1px]" : ""}`}
           >
             Booking
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
@@ -58,7 +61,7 @@ const Navbar = () => {
           <Link
             href={"/services"}
             onClick={() => setOpenMenu(false)}
-            className="group relative"
+            className={`group relative w-max ${pathname === "/services" ? "border-b-[1px]" : ""}`}
           >
             Services
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
@@ -67,7 +70,7 @@ const Navbar = () => {
           <Link
             href={"/packages"}
             onClick={() => setOpenMenu(false)}
-            className="group relative"
+            className={`group relative w-max ${pathname === "/packages" ? "border-b-[1px]" : ""}`}
           >
             Packages
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
@@ -76,7 +79,7 @@ const Navbar = () => {
           <Link
             href={"/gallery"}
             onClick={() => setOpenMenu(false)}
-            className="group relative"
+            className={`group relative w-max ${pathname === "/gallery" ? "border-b-[1px]" : ""}`}
           >
             Gallery
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>

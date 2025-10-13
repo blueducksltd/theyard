@@ -1,8 +1,12 @@
 /*eslint-disable @next/next/no-img-element*/
 
+import { IBooking } from "@/types/Booking";
 import BookingCalendar from "./Calender";
+import { getBookings } from "@/util";
 
-const Hero = () => {
+const Hero = async () => {
+  const bookingData: IBooking[] = (await getBookings()).data.bookings;
+
   return (
     <>
       <header className="pt-10 md:pt-16 pb-5 px-4 md:px-14 flex justify-center relative">
@@ -25,7 +29,7 @@ const Hero = () => {
         </section>
       </header>
       <section className="w-full flex flex-col md:flex-row items-start h-max gap-10 px-5 md:px-14 mt-10">
-        <div className="md:w-[257px] h-[358px] md:h-[404px] shadow-2xl">
+        <div className="md:w-[307px] h-[358px] md:h-max shadow-2xl">
           <h2 className="w-full bg-yard-primary text-2xl text-yard-lightgreen flex justify-center items-center py-4 px-6 font-playfair font-bold md:text-xl">
             How To Book a Date
           </h2>
@@ -76,7 +80,7 @@ const Hero = () => {
         </div>
 
         {/*Calender*/}
-        <BookingCalendar />
+        <BookingCalendar bookingData={bookingData} />
       </section>
     </>
   );

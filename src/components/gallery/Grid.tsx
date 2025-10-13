@@ -3,20 +3,38 @@
   /*eslint-disable @next/next/no-img-element*/
 }
 import { IGallery } from "@/types/Gallery";
-import { getGallery } from "@/util";
+import { ITag } from "@/types/Tag";
+import { getGallery, getTags } from "@/util";
 import moment from "moment";
 import Link from "next/link";
 import React from "react";
 
 export default function Grid() {
   const [gallery, setGallery] = React.useState<IGallery[]>([]);
-  const handleGallery = async () => {};
+  const [_gallery, setTempGallery] = React.useState<IGallery[]>([]);
+  const [tags, setTags] = React.useState<ITag[]>([]);
+
+  const handleGallery = async (value: string) => {
+    if (value === "all") {
+      setGallery(_gallery);
+    } else {
+      const filteredGallery = _gallery.filter(
+        (image) => image.category.toString() === value,
+      );
+      console.log(filteredGallery);
+      setGallery(filteredGallery);
+    }
+  };
 
   React.useEffect(() => {
     (async () => {
-      const data = await getGallery();
-      console.log(data);
-      setGallery(data.data.gallery);
+      const gallery = await getGallery();
+      console.log(gallery);
+      const tags = await getTags();
+
+      setGallery(gallery.data.gallery);
+      setTempGallery(gallery.data.gallery);
+      setTags(tags.data.tags);
     })();
   }, []);
 
@@ -24,12 +42,15 @@ export default function Grid() {
     <main>
       <div className="flex mx-auto border-[1px] border-[#999999] w-[240px] h-[44px] rounded2px p-3">
         <select
-          onChange={() => handleGallery()}
+          onChange={(e) => handleGallery(e.target.value)}
           className="w-full outline-none text-[#999999] text-sm"
         >
-          <option value="option1">All Filters</option>
-          <option value={"picnics"}>Picnics</option>
-          <option value={"birthdays"}>Birthdays</option>
+          <option value="all">All Filters</option>
+          {tags.map((tag) => (
+            <option key={tag.id} value={tag.name}>
+              {tag.name}
+            </option>
+          ))}
         </select>
       </div>
 

@@ -347,15 +347,15 @@ export default function PackagesContent() {
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label
-                  htmlFor="serviceName"
+                  htmlFor="packageName"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
-                  Enter service name
+                  Enter package name
                 </label>
                 <input
                   type="text"
-                  id="serviceName"
-                  name="serviceName"
+                  id="packageName"
+                  name="packageName"
                   placeholder="Enter package name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
