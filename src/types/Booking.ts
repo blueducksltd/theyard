@@ -40,7 +40,12 @@ export interface IBookingModel extends Model<IBooking, IBookingMethods> {
         startTime: string,
         endTime: string,
     ): Promise<boolean>;
-    filter(filter: Record<string, string>, sort: string, direction: "ASC" | "DESC", admin?: boolean): Promise<IBooking[]>;
+    filter(
+        filter: Record<string, string>,
+        sort: string,
+        direction: "ASC" | "DESC",
+        admin?: boolean,
+    ): Promise<IBooking[]>;
     findByCustomer(customerId: ICustomer["id"]): Promise<IBooking[]>;
     findBySpace(spaceId: ISpace["id"]): Promise<IBooking[]>;
     findByDateRange(start: Date, end?: Date): Promise<IBooking[]>;
@@ -61,7 +66,6 @@ export type SafeBooking = {
     createdAt: Date;
     updatedAt: Date;
 };
-
 
 export function sanitizeBooking(booking: IBooking): SafeBooking {
     return {
@@ -131,52 +135,51 @@ export const CreateBookingDto = z.object({
     // eventType: z.string(),
     eventDescription: z.string(),
     public: z.boolean().optional().default(false),
-    imagesUrls: z.array(z.string().url()).optional()
+    imagesUrls: z.array(z.string().url()).optional(),
 });
 
 export const UpdateBookingDto = z.object({
     firstName: z.string().optional(),
     lastName: z.string().optional(),
-    email: z
-        .string()
-        .email("field `email` must be a valid email").optional(),
+    email: z.string().email("field `email` must be a valid email").optional(),
     phone: z
         .string()
-        .min(10, "field `phone` must be at least 10 characters").optional(),
+        .min(10, "field `phone` must be at least 10 characters")
+        .optional(),
     date: z
         .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, use YYYY-MM-DD").optional(),
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, use YYYY-MM-DD")
+        .optional(),
     startTime: z
         .string()
         .regex(
             /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
             "field `startTime` must be in HH:MM 24-hour format",
-        ).optional(),
+        )
+        .optional(),
     endTime: z
         .string()
         .regex(
             /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
             "field `endTime` must be in HH:MM 24-hour format",
-        ).optional(),
+        )
+        .optional(),
     spaceId: z.string().optional(),
     packageId: z.string().optional(),
     eventTitle: z.string().optional(),
-    eventType: z.enum(
-        ["picnics", "birthdays", "weddings", "corporate", "seasonal"],
-        {
+    eventType: z
+        .enum(["picnics", "birthdays", "weddings", "corporate", "seasonal"], {
             error:
                 "field `eventType` is required and must be one of picnics, birthdays, weddings, corporate, seasonal",
-        },
-    ).optional(),
+        })
+        .optional(),
     eventDescription: z.string().optional(),
     public: z.boolean().optional().default(false).optional(),
-    status: z.enum(
-        ["pending", "confirmed", "cancelled"],
-        {
-            error:
-                "field `status` is required and must be one of pending,",
-        },
-    ).optional(),
+    status: z
+        .enum(["pending", "confirmed", "cancelled"], {
+            error: "field `status` is required and must be one of pending,",
+        })
+        .optional(),
 });
 
 export type CreateBookingInput = z.infer<typeof CreateBookingDto>;

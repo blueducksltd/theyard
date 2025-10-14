@@ -18,7 +18,7 @@ export default function Page() {
       const response = await adminLogin(data);
       if (response.success == true) {
         localStorage.setItem("user", JSON.stringify(response.data.admin));
-        Cookies.set("token", response.data.token);
+        Cookies.set("token", response.data.token, { expires: 1 });
         window.location.href = "/admin/dashboard";
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

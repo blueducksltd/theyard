@@ -1,111 +1,113 @@
 "use client";
-// import Link from "next/link";
-// import Image from "next/image";
-
+import { IBooking } from "@/types/Booking";
 import Image from "next/image";
-import { useState } from "react";
+import { getBookings } from "@/util";
+import { useEffect, useState } from "react";
+import moment from "moment";
 
 export default function BookingContent() {
-  const [bookings, setBookings] = useState([
-    {
-      id: 1,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 2,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 3,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 4,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 5,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 6,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 7,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 8,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-  ]);
+  const [bookings, setBookings] = useState<IBooking[]>([]);
 
-  const toggleSelect = (id: number) => {
+  // const [bookings, setBookings] = useState([
+  //   {
+  //     id: 1,
+  //     name: "Frank Edego",
+  //     space: "Game",
+  //     package: "Picnic Pack...",
+  //     date: "12 Oct 2025",
+  //     price: 10000,
+  //     duration: "2hrs 30mins",
+  //     total: 30000,
+  //     status: "Pending",
+  //     selected: false,
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Frank Edego",
+  //     space: "Game",
+  //     package: "Picnic Pack...",
+  //     date: "12 Oct 2025",
+  //     price: 10000,
+  //     duration: "2hrs 30mins",
+  //     total: 30000,
+  //     status: "Pending",
+  //     selected: false,
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Frank Edego",
+  //     space: "Game",
+  //     package: "Picnic Pack...",
+  //     date: "12 Oct 2025",
+  //     price: 10000,
+  //     duration: "2hrs 30mins",
+  //     total: 30000,
+  //     status: "Pending",
+  //     selected: false,
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "Frank Edego",
+  //     space: "Game",
+  //     package: "Picnic Pack...",
+  //     date: "12 Oct 2025",
+  //     price: 10000,
+  //     duration: "2hrs 30mins",
+  //     total: 30000,
+  //     status: "Pending",
+  //     selected: false,
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "Frank Edego",
+  //     space: "Game",
+  //     package: "Picnic Pack...",
+  //     date: "12 Oct 2025",
+  //     price: 10000,
+  //     duration: "2hrs 30mins",
+  //     total: 30000,
+  //     status: "Pending",
+  //     selected: false,
+  //   },
+  //   {
+  //     id: 6,
+  //     name: "Frank Edego",
+  //     space: "Game",
+  //     package: "Picnic Pack...",
+  //     date: "12 Oct 2025",
+  //     price: 10000,
+  //     duration: "2hrs 30mins",
+  //     total: 30000,
+  //     status: "Pending",
+  //     selected: false,
+  //   },
+  //   {
+  //     id: 7,
+  //     name: "Frank Edego",
+  //     space: "Game",
+  //     package: "Picnic Pack...",
+  //     date: "12 Oct 2025",
+  //     price: 10000,
+  //     duration: "2hrs 30mins",
+  //     total: 30000,
+  //     status: "Pending",
+  //     selected: false,
+  //   },
+  //   {
+  //     id: 8,
+  //     name: "Frank Edego",
+  //     space: "Game",
+  //     package: "Picnic Pack...",
+  //     date: "12 Oct 2025",
+  //     price: 10000,
+  //     duration: "2hrs 30mins",
+  //     total: 30000,
+  //     status: "Pending",
+  //     selected: false,
+  //   },
+  // ]);
+
+  const toggleSelect = (id: string) => {
     setBookings(
       bookings.map((booking) =>
         booking.id === id
@@ -126,15 +128,24 @@ export default function BookingContent() {
     setBookings(bookings.filter((booking) => booking.id !== id));
   };
 
-  const approveBooking = (id: number) => {
+  const approveBooking = (id: string) => {
     setBookings(
       bookings.map((booking) =>
-        booking.id === id ? { ...booking, status: "Approved" } : booking,
+        (booking.id as string) === id
+          ? { ...booking, status: "confirmed" }
+          : booking,
       ),
     );
   };
 
   const allSelected = bookings.length > 0 && bookings.every((b) => b.selected);
+
+  useEffect(() => {
+    (async () => {
+      const [fetchBookings] = await Promise.all([getBookings()]);
+      setBookings(fetchBookings.data.bookings);
+    })();
+  }, [bookings]);
 
   return (
     <main className="flex-1 py-4 md:h-[600px] 2xl:h-[770px] overflow-y-auto">
@@ -263,25 +274,32 @@ export default function BookingContent() {
                         />
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-[#737373]">
-                        {booking.name}
+                        {booking.event.title}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.space}
+                        {booking.space.name}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.package}
+                        {booking.package.name}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.date}
+                        {moment(booking.eventDate).format("d/MM/YYYY")}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.price.toLocaleString()}
+                        {booking.totalPrice.toLocaleString()}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.duration}
+                        {booking.startTime && booking.endTime
+                          ? moment(booking.endTime, "HH:mm").diff(
+                              moment(booking.startTime, "HH:mm"),
+                              "hours",
+                              true,
+                            )
+                          : 0}{" "}
+                        hr(s)
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.total.toLocaleString()}
+                        {booking.totalPrice.toLocaleString()}
                       </td>
                       <td className="px-6 py-4">
                         <span
