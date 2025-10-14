@@ -50,7 +50,7 @@ const Page = async () => {
             Upcoming Events
           </h2>
           <section className="w-full flex flex-wrap items-center my-5 md:my-4 gap-5 md:gap-1">
-            {events.map((event: IEvent) => (
+            {events.toReversed().map((event: IEvent) => (
               <div
                 key={event.id}
                 className="w-[384px] 2xl:w-[500px] h-[260px] 2xl:h-[300px] bg-cover bg-center flex-grow relative overflow-hidden group"

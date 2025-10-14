@@ -8,6 +8,7 @@ import { getPackages } from "@/util";
 import { IPackage } from "@/types/Package";
 import { loadFromLS, saveToLS } from "@/util/helper";
 import { toast } from "react-toastify";
+import moment from "moment";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
@@ -210,14 +211,15 @@ const BookingCalendar: React.FC<CalendarProps> = ({
         return setUnavailableModal(true);
       case "pending":
         // Navigate to pending bookings page with the date and bookings data
-        const dateParam = clickedDate.toISOString().split("T")[0];
-        const bookingIds = dayBookings.map((b) => b._id).join(",");
+        // const dateParam = clickedDate.toLocaleDateString().split("T")[0];
+        // const bookingIds = dayBookings.map((b) => b._id).join(",");
+        saveToLS("booking", { date: clickedDate.toISOString() });
         return router.push(
-          `/booking/pending?date=${dateParam}&bookings=${bookingIds}`,
+          `/booking/pending?date=${moment(clickedDate).format("YYYY-MM-DD")}`,
         );
       default:
-        const data = { date: clickedDate.toISOString() };
-        saveToLS("booking", data);
+        // const data = { date: clickedDate.toISOString() };
+        saveToLS("booking", { date: clickedDate.toISOString() });
         setIsModalOpen(true);
     }
 
@@ -305,7 +307,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
           {days.map((day: number | null, index: number) => {
             const dateKey = getDateKey(day);
             const status = dateKey ? getDateStatus(dateKey) : null;
-            const bookingCount = dateKey ? getBookingCount(dateKey) : 0;
+            // const bookingCount = dateKey ? getBookingCount(dateKey) : 0;
             const todayDate = isToday(day);
             const pastDay = isPastDay(day);
 

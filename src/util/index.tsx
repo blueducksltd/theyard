@@ -76,6 +76,12 @@ export const getBookings = async () => {
   return response.data;
 };
 
+// Get bookings by date
+export const getBookingsByDate = async (date: string) => {
+  const response = await axios.get(`/calendar/days?date=${date}`);
+  return response.data;
+};
+
 // Create bookings
 export const createBookings = async (data: FormData) => {
   const response = await axios.post(`/bookings`, data, {
@@ -84,7 +90,25 @@ export const createBookings = async (data: FormData) => {
   return response.data;
 };
 
+// ============================= API's for admin =============================
 export const adminLogin = async (data: { email: string; password: string }) => {
   const response = await axios.post(`/admin/login`, data);
+  return response.data;
+};
+
+export const getActiveBookings = async () => {
+  const response = await axios.get(`/bookings?status=confirmed`);
+  return response.data;
+};
+
+export const publishOrIgnoreReview = async (data: {
+  id: string;
+  status: string;
+  affect?: string;
+}) => {
+  const response = await axios.put(`/reviews/${data.id}`, {
+    status: data.status,
+    affect: data.affect,
+  });
   return response.data;
 };

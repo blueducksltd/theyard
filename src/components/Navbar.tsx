@@ -52,7 +52,7 @@ const Navbar = () => {
           <Link
             href={"/booking"}
             onClick={() => setOpenMenu(false)}
-            className={`group relative w-max ${pathname === "/booking" || "/booking/pending" ? "border-b-[1px]" : ""}`}
+            className={`group relative w-max ${pathname === "/booking" || pathname === "/booking/pending" ? "border-b-[1px]" : ""}`}
           >
             Booking
             <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>

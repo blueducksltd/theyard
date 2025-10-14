@@ -9,7 +9,6 @@ import { ISpace } from "@/types/Space";
 import { createBookings, getSpaces } from "@/util";
 import { loadFromLS } from "@/util/helper";
 import moment from "moment";
-// import moment from "moment";
 import Link from "next/link";
 import Image from "next/image";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -24,6 +23,7 @@ const Page = () => {
   const [inputs] = useState<Record<string, any>>({});
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
+  const [totalPrice, setTotalPrice] = useState<string>("0");
 
   const handleSubmit = async () => {
     const [hours, minutes] = startTime?.split(":") || ["0", "0"];
@@ -74,10 +74,6 @@ const Page = () => {
       inputs.date = savedBookingDetails.date;
     }
 
-    const toastId = toast.loading("Booking your event, please wait...", {
-      position: "bottom-right",
-    });
-
     inputs.packageId = savedBookingDetails.package.id;
     inputs.startTime = startTime || "";
     inputs.endTime = endTime || "";
@@ -85,9 +81,20 @@ const Page = () => {
     inputs.images = image;
     // inputs.eventType = "weddings";
 
+    if (Object.keys(inputs).length < 13) {
+      toast.error(`Please fill out all fields`, {
+        position: "bottom-right",
+      });
+      return;
+    }
+
     const formdata = new FormData();
     Object.entries(inputs).map(([key, value]) => {
       formdata.append(key, value);
+    });
+
+    const toastId = toast.loading("Booking your event, please wait...", {
+      position: "bottom-right",
     });
 
     // Create Booking
@@ -114,7 +121,38 @@ const Page = () => {
     const _selectedSpace = spaces.find((space) => space.id === e.target.value);
     setSelectedSpace(_selectedSpace || null);
     inputs.spaceId = e.target.value;
+
+    // Update Total Price
+    handleTotalPrice(
+      endTime || "0.00",
+      startTime || "0.00",
+      _selectedSpace?.pricePerHour || 0,
+    );
   };
+
+  const handleTotalPrice = (
+    _endTime: string,
+    _startTime: string,
+    _spacePrice: number,
+  ) => {
+    setTotalPrice(
+      Intl.NumberFormat().format(
+        moment(_endTime, "HH:mm").diff(
+          moment(_startTime, "HH:mm"),
+          "hours",
+          true,
+        ) *
+          (_spacePrice ?? 0) +
+          savedBookingDetails.package.price,
+      ),
+    );
+  };
+
+  useEffect(() => {
+    toast.info("Bookings made today must be made at least 1 hour in advance", {
+      position: "bottom-right",
+    });
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -123,10 +161,6 @@ const Page = () => {
         setSpaces(response.data.spaces);
       }
     })();
-    toast.info("Bookings made today must be made at least 1 hour in advance", {
-      autoClose: false,
-      position: "bottom-right",
-    });
   }, []);
 
   return (
@@ -154,8 +188,8 @@ const Page = () => {
             </div>
           </div>
 
-          <section className="w-full flex flex-col md:flex-row items-start my-5 md:my-4 gap-14 md:gap-20">
-            <form className="w-full md:w-[656px] flex flex-col gap-7">
+          <section className="w-full flex flex-col md:flex-row items-start my-5 md:my-4 gap-14 md:gap-20 flex-1">
+            <form className="w-full md:w-[656px] flex flex-col gap-7 flex-1">
               <div className="form-group flex flex-col md:flex-row items-start gap-6">
                 <div className="input-group w-full flex flex-col gap-3">
                   <label
@@ -172,7 +206,7 @@ const Page = () => {
                       (inputs.firstName = e.target.value)
                     }
                     placeholder="Enter your first name"
-                    className="w-full md:w-[316px] h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                    className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
                 </div>
 
@@ -191,7 +225,7 @@ const Page = () => {
                       (inputs.lastName = e.target.value)
                     }
                     placeholder="Enter your last name"
-                    className="w-full md:w-[316px] h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                    className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
                 </div>
               </div>
@@ -212,7 +246,7 @@ const Page = () => {
                       (inputs.phone = e.target.value)
                     }
                     placeholder="Enter your phone number"
-                    className="w-full md:w-[316px] h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                    className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
                 </div>
 
@@ -231,7 +265,7 @@ const Page = () => {
                       (inputs.email = e.target.value)
                     }
                     placeholder="Enter your email address"
-                    className="w-full md:w-[316px] h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                    className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
                 </div>
               </div>
@@ -255,7 +289,7 @@ const Page = () => {
                       (inputs.date = e.target.value)
                     }
                     placeholder="Select a date"
-                    className="md:w-[316px] md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                    className="md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
                 </div>
 
@@ -271,11 +305,18 @@ const Page = () => {
                       type="time"
                       id="time-from"
                       name="time-from"
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setStartTime(e.target.value)
-                      }
+                      onBlur={() => {
+                        handleTotalPrice(
+                          endTime || "0.00",
+                          startTime || "0.00",
+                          selectedSpace?.pricePerHour || 0,
+                        );
+                      }}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        setStartTime(e.target.value);
+                      }}
                       placeholder="Select time"
-                      className="w-full md:w-[142px] md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                      className="w-full md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                     />
 
                     <p className="text-[#1A1A1A] text-[16px]">to</p>
@@ -284,11 +325,18 @@ const Page = () => {
                       type="time"
                       id="time-to"
                       name="time-to"
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setEndTime(e.target.value)
-                      }
+                      onBlur={() => {
+                        handleTotalPrice(
+                          endTime || "0.00",
+                          startTime || "0.00",
+                          selectedSpace?.pricePerHour || 0,
+                        );
+                      }}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        setEndTime(e.target.value);
+                      }}
                       placeholder="Select time"
-                      className="w-full md:w-[142px] md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                      className="w-full md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                     />
                   </div>
                 </div>
@@ -548,11 +596,9 @@ const Page = () => {
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
                     {startTime && endTime
-                      ? moment(endTime, "HH:mm").diff(
-                          moment(startTime, "HH:mm"),
-                          "hours",
-                          true,
-                        )
+                      ? moment(endTime, "HH:mm")
+                          .diff(moment(startTime, "HH:mm"), "hours", true)
+                          .toFixed(2)
                       : 0}
                   </p>
                 </div>
@@ -562,15 +608,7 @@ const Page = () => {
                     Total
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    {selectedSpace && endTime && startTime
-                      ? Intl.NumberFormat().format(
-                          moment(endTime, "HH:mm").diff(
-                            moment(startTime, "HH:mm"),
-                            "hours",
-                            true,
-                          ) * (selectedSpace?.pricePerHour ?? 0),
-                        )
-                      : 0}
+                    {totalPrice || 0}
                   </p>
                 </div>
                 <button
