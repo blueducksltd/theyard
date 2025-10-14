@@ -21,6 +21,8 @@ export interface IBooking extends Document, IBookingMethods {
     times: string[];
     status: "pending" | "confirmed" | "cancelled";
     totalPrice: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 // Instance methods
@@ -56,6 +58,8 @@ export type SafeBooking = {
     space: SafeSpace | null;
     event: SafeEvent | null;
     package: SafePackage | null;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 
@@ -71,6 +75,8 @@ export function sanitizeBooking(booking: IBooking): SafeBooking {
         space: booking.space ? sanitizeSpace(booking.space) : null,
         event: booking.event ? sanitizeEvent(booking.event) : null,
         package: booking.package ? sanitizePackage(booking.package) : null,
+        createdAt: booking.createdAt,
+        updatedAt: booking.updatedAt,
     };
 }
 

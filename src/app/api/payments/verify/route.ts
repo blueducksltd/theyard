@@ -13,7 +13,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
     await connectDB();
 
     const { reference } = await request.json();
-    if (!reference) throw APIError.BadRequest("Payment reference is required");
+    if (!reference) throw APIError.BadRequest("reference is required");
 
     // Verify payment from Paystack
     const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {

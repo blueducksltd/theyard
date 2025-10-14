@@ -53,7 +53,7 @@ export const GET = errorHandler(
         const recentPackages = packages.slice(0, 4);
 
         // Reviews stats
-        const reviews = await Review.find({ status: "published" }).sort({ createdAt: -1 });
+        const reviews = await Review.find().sort({ createdAt: -1 });
         // Get last 4 reviews
         const lastReview = reviews[0];
 
