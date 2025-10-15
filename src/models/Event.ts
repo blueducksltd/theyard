@@ -43,8 +43,7 @@ EventSchema.statics.filter = async function (filter: Record<string, string>, sor
   else {
     events = this.find({ ...filter, status: { $ne: "cancelled" }, public: true })
       .sort({ [sort]: direction === "ASC" ? 1 : -1 })
-      .populate("customer")
-      .populate("gallery");
+      .populate("customer");
   }
   return events;
 }
