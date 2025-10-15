@@ -3,6 +3,9 @@ import Hero from "@/components/gallery/Hero";
 import Navbar from "@/components/Navbar";
 import Grid from "@/components/gallery/Grid";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function Page() {
   return (
     <main className={"w-full h-max bg-yard-white"}>
