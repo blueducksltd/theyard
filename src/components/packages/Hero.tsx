@@ -2,11 +2,12 @@
   /*eslint-disable @next/next/no-img-element*/
 }
 import { IPackage } from "@/types/Package";
-import { getPackages } from "@/util";
+// import { getPackages } from "@/util";
 import Link from "next/link";
 
 const Hero = async () => {
-  const packages: IPackage[] = (await getPackages()).data.packages;
+  // const packages: IPackage[] = (await getPackages()).data.packages;
+  const packages: IPackage[] = [];
 
   return (
     <>
