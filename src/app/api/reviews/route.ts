@@ -34,13 +34,13 @@ export const POST = errorHandler(
 export const GET = errorHandler(
     async (request: NextRequest) => {
         await connectDB();
-        const authHeader = request.headers.get("authorization");
-        let admin = false;
-        if (authHeader) {
-            const payload = requireAuth(request);
-            // Role is not required, just checking if admin to show all events
-            if (payload) admin = true;
-        }
+        // const authHeader = request.headers.get("authorization");
+        // let admin = false;
+        // if (authHeader) {
+        //     const payload = requireAuth(request);
+        //     // Role is not required, just checking if admin to show all events
+        //     if (payload) admin = true;
+        // }
 
         // check query params
         const { searchParams } = new URL(request.url);
@@ -52,7 +52,8 @@ export const GET = errorHandler(
 
         const filter = {};
         if (status) Object.assign(filter, { status });
-        const reviews = await Review.filter(filter, sort, direction, admin);
+        // const reviews = await Review.filter(filter, sort, direction, admin);
+        const reviews = await Review.filter(filter, sort, direction);
         if (!reviews) throw APIError.NotFound("No reviews found");
 
         // Pagination
