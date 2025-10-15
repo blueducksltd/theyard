@@ -7,6 +7,9 @@ import Navbar from "@/components/Navbar";
 import Testimonials from "@/components/Testimonials";
 import Upcoming from "@/components/Upcoming";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function Home() {
   return (
     <main className={"w-full h-max bg-yard-white"}>
