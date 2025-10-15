@@ -81,12 +81,29 @@ const Page = () => {
     inputs.images = image;
     // inputs.eventType = "weddings";
 
+    if (image == null) {
+      toast.error(`Please upload an image`, {
+        position: "bottom-right",
+      });
+      return;
+    }
+
     if (Object.keys(inputs).length < 13) {
       toast.error(`Please fill out all fields`, {
         position: "bottom-right",
       });
       return;
     }
+
+    Object.values(inputs).map((val) => {
+      console.log(val);
+      if (val == "" || val == null) {
+        toast.error(`Please fill out all fields`, {
+          position: "bottom-right",
+        });
+        return;
+      }
+    });
 
     const formdata = new FormData();
     Object.entries(inputs).map(([key, value]) => {

@@ -1,121 +1,121 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-    themes: light;
+  themes: light;
 }
 
 @layer base {
-    body {
-        @apply font-lato;
-    }
-    .title {
-        font-size: 32px;
-        font-weight: 700;
-        font-style: bold;
-        line-height: 40px;
-        letter-spacing: -0.1px;
-        color: #0f3830;
-        font-family: var(--font-playfair), serif;
-    }
-    .paragraph {
-        font-size: 16px;
-        font-weight: 400;
-        font-style: normal;
-        line-height: 24px;
-        letter-spacing: 0.5px;
-        color: #5a5a53;
-        font-family: var(--font-lato), sans-serif;
-    }
-    .cta-link {
-        font-family: var(--font-sen), sans-serif;
-        font-weight: 500;
-        font-style: medium;
-        font-size: 16px;
-        line-height: 24px;
-        letter-spacing: 0.4px;
-        color: #55544e;
-    }
-    .cta-btn {
-        width: 239px;
-        height: 52px;
-        border-width: 1.5px;
-        border-radius: 2px;
-        padding: 20px 24px;
-        border-color: #0f3830;
-        color: #0f3830;
-        font-family: var(--font-sen), sans-serif;
-        font-weight: 500;
-        font-style: medium;
-        font-size: 16px;
-        line-height: 24px;
-        letter-spacing: 0.4px;
-        align-items: center;
-        display: flex;
-        @apply w-max;
-    }
-    .cta-btn-hover {
-        @apply absolute top-0 left-0 bg-yard-primary-active w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0;
-    }
-    .rounded2px {
-        border-radius: 2px;
-    }
-    .yard-link-line {
-        @apply absolute left-0 -bottom-0.5 h-[1px] w-0 transition-all duration-500 group-hover:w-full;
-    }
-    .yard-modal {
-        grid-column-start: 1;
-        grid-row-start: 1;
-        max-height: 100vh;
-        width: calc(11 / 12 * 100%) /* 91.6667% */;
-        max-width: 32rem /* 512px */;
-        background-color: var(--color-base-100) /* var(--color-base-100) */;
-        padding: calc(0.25rem /* 4px */ * 6) /* 1.5rem = 24px */;
-        transition:
-            translate 0.3s ease-out,
-            scale 0.3s ease-out,
-            opacity 0.2s ease-out 0.05s,
-            box-shadow 0.3s ease-out;
-        border-top-left-radius: var(
-            --modal-tl,
-            var(--radius-box) /* var(--radius-box) */
-        );
-        border-top-right-radius: var(
-            --modal-tr,
-            var(--radius-box) /* var(--radius-box) */
-        );
-        border-bottom-left-radius: var(
-            --modal-bl,
-            var(--radius-box) /* var(--radius-box) */
-        );
-        border-bottom-right-radius: var(
-            --modal-br,
-            var(--radius-box) /* var(--radius-box) */
-        );
-        scale: 95%;
-        opacity: 0;
-        box-shadow: oklch(0% 0 0/ 0.25) 0px 25px 50px -12px;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-        background-color: white;
-    }
+  body {
+    @apply font-lato;
+  }
+  .title {
+    font-size: 32px;
+    font-weight: 700;
+    font-style: bold;
+    line-height: 40px;
+    letter-spacing: -0.1px;
+    color: #0f3830;
+    font-family: var(--font-playfair), serif;
+  }
+  .paragraph {
+    font-size: 16px;
+    font-weight: 400;
+    font-style: normal;
+    line-height: 24px;
+    letter-spacing: 0.5px;
+    color: #5a5a53;
+    font-family: var(--font-lato), sans-serif;
+  }
+  .cta-link {
+    font-family: var(--font-sen), sans-serif;
+    font-weight: 500;
+    font-style: medium;
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0.4px;
+    color: #55544e;
+  }
+  .cta-btn {
+    width: 239px;
+    height: 52px;
+    border-width: 1.5px;
+    border-radius: 2px;
+    padding: 20px 24px;
+    border-color: #0f3830;
+    color: #0f3830;
+    font-family: var(--font-sen), sans-serif;
+    font-weight: 500;
+    font-style: medium;
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0.4px;
+    align-items: center;
+    display: flex;
+    @apply w-max;
+  }
+  .cta-btn-hover {
+    @apply absolute top-0 left-0 bg-yard-primary-active w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0;
+  }
+  .rounded2px {
+    border-radius: 2px;
+  }
+  .yard-link-line {
+    @apply absolute left-0 -bottom-0.5 h-[1px] w-0 transition-all duration-500 group-hover:w-full;
+  }
+  .yard-modal {
+    grid-column-start: 1;
+    grid-row-start: 1;
+    max-height: 100vh;
+    width: calc(11 / 12 * 100%) /* 91.6667% */;
+    max-width: 32rem /* 512px */;
+    background-color: var(--color-base-100) /* var(--color-base-100) */;
+    padding: calc(0.25rem /* 4px */ * 6) /* 1.5rem = 24px */;
+    transition:
+      translate 0.3s ease-out,
+      scale 0.3s ease-out,
+      opacity 0.2s ease-out 0.05s,
+      box-shadow 0.3s ease-out;
+    border-top-left-radius: var(
+      --modal-tl,
+      var(--radius-box) /* var(--radius-box) */
+    );
+    border-top-right-radius: var(
+      --modal-tr,
+      var(--radius-box) /* var(--radius-box) */
+    );
+    border-bottom-left-radius: var(
+      --modal-bl,
+      var(--radius-box) /* var(--radius-box) */
+    );
+    border-bottom-right-radius: var(
+      --modal-br,
+      var(--radius-box) /* var(--radius-box) */
+    );
+    scale: 95%;
+    opacity: 0;
+    box-shadow: oklch(0% 0 0/ 0.25) 0px 25px 50px -12px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background-color: white;
+  }
 }
 
 @theme {
-    --color-yard-white: #fdfbf9;
-    /*--color-yard-primary: #4b6450;*/
-    --color-yard-primary: #0f3830;
-    --color-yard-dark-primary: #2f433f;
-    /*--color-yard-dark-primary: #3c5040;*/
-    --color-yard-primary-active: #c7cfc9;
-    --color-yard-orange: #d4a548;
-    --color-yard-light-orange: #e9d9c0;
-    --color-yard-lighter-orange: #f2e3c6;
-    --color-yard-pinkish-orange: #e9d9c0;
-    --color-yard-text: #5a5a53;
-    --color-yard-milk: #eeeee6;
-    --color-yard-lightgreen: #e4e8e5;
-    --color-yard-hover: #e4e8e5;
-    --color-yard-red: #704646;
-    --font-lato: var(--font-lato), sans-serif;
-    --font-playfair: var(--font-playfair), serif;
-    --font-sen: var(--font-sen), sans-serif;
+  --color-yard-white: #fdfbf9;
+  /*--color-yard-primary: #4b6450;*/
+  --color-yard-primary: #0f3830;
+  --color-yard-dark-primary: #2f433f;
+  /*--color-yard-dark-primary: #3c5040;*/
+  --color-yard-primary-active: #c7cfc9;
+  --color-yard-orange: #d4a548;
+  --color-yard-light-orange: #e9d9c0;
+  --color-yard-lighter-orange: #f2e3c6;
+  --color-yard-pinkish-orange: #e9d9c0;
+  --color-yard-text: #5a5a53;
+  --color-yard-milk: #eeeee6;
+  --color-yard-lightgreen: #e4e8e5;
+  --color-yard-hover: #e4e8e5;
+  --color-yard-red: #704646;
+  --font-lato: var(--font-lato), sans-serif;
+  --font-playfair: var(--font-playfair), serif;
+  --font-sen: var(--font-sen), sans-serif;
 }

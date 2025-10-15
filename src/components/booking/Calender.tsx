@@ -417,7 +417,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             </label>
           ))}
 
-          <label
+          {/*<label
             htmlFor="shutdown"
             className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm"
           >
@@ -434,7 +434,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
               </h2>
               <p className="text-[#8F4546] text-sm">Shut down the Yard!!!</p>
             </div>
-          </label>
+          </label>*/}
 
           <button
             onClick={() => handleProcessPackage()}

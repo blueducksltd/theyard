@@ -1,72 +1,39 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Modal from "../Modal";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { IBooking } from "@/types/Booking";
+import { getPackages } from "@/util";
+import { IPackage } from "@/types/Package";
+import { loadFromLS, saveToLS } from "@/util/helper";
+import { toast } from "react-toastify";
+import moment from "moment";
+import Link from "next/link";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
 
-interface BookingData {
-  [dateKey: string]: BookingStatus;
-}
-
 interface CalendarProps {
   initialDate?: Date;
-  bookingData?: BookingData;
+  bookingData?: IBooking[];
   calenderWidth?: string;
-  onDateClick?: (date: Date) => void;
+  onDateClick?: (date: Date, bookings: IBooking[]) => void;
 }
 
 const AdminCalendar: React.FC<CalendarProps> = ({
   initialDate = new Date(),
-  bookingData,
+  bookingData = [],
   onDateClick,
   calenderWidth = "w-[813px]",
 }) => {
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [unavailableModal, setUnavailableModal] = useState(false);
-  // const [pendingModal, setPendingModal] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [packages, setPackages] = useState<IPackage[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState({});
   const router = useRouter();
-
-  // I will replace this with the actual data
-  const defaultBookingStatus: BookingData = {
-    "2025-8-1": "available",
-    "2025-8-2": "available",
-    "2025-8-3": "available",
-    "2025-8-4": "available",
-    "2025-8-5": "available",
-    "2025-8-6": "unavailable",
-    "2025-8-7": "available",
-    "2025-8-8": "available",
-    "2025-8-9": "available",
-    "2025-8-10": "available",
-    "2025-8-11": "available",
-    "2025-8-12": "unavailable",
-    "2025-8-13": "unavailable",
-    "2025-8-14": "unavailable",
-    "2025-8-15": "unavailable",
-    "2025-8-16": "available",
-    "2025-8-17": "pending",
-    "2025-8-18": "available",
-    "2025-8-19": "pending",
-    "2025-8-20": "available",
-    "2025-8-21": "available",
-    "2025-8-22": "available",
-    "2025-8-23": "available",
-    "2025-8-24": "available",
-    "2025-8-25": "available",
-    "2025-8-26": "available",
-    "2025-8-27": "pending",
-    "2025-8-28": "available",
-    "2025-8-29": "pending",
-    "2025-8-30": "pending",
-    "2025-8-31": "available",
-  };
-
-  const bookingStatus = bookingData || defaultBookingStatus;
 
   const months: string[] = [
     "JANUARY",
@@ -92,6 +59,91 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     "Fri",
     "Sat",
   ];
+
+  // Transform bookingData into a map for quick lookup
+  const bookingsByDate = useMemo(() => {
+    const map: { [key: string]: IBooking[] } = {};
+
+    // Safety check: ensure bookingData is an array
+    if (!Array.isArray(bookingData)) {
+      console.warn("bookingData is not an array:", bookingData);
+      return map;
+    }
+
+    bookingData.forEach((booking) => {
+      const date = new Date(booking.eventDate);
+      const key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+
+      if (!map[key]) {
+        map[key] = [];
+      }
+      map[key].push(booking);
+    });
+
+    return map;
+  }, [bookingData]);
+
+  // Get booking status for a specific date
+  const getDateStatus = (dateKey: string): BookingStatus | null => {
+    const bookings = bookingsByDate[dateKey];
+    if (!bookings || bookings.length === 0) return "available";
+
+    // Check if any booking is cancelled
+    const hasCancelled = bookings.some((b) => b.status === "cancelled");
+
+    // Check if all bookings are confirmed (fully booked)
+    const allConfirmed = bookings.every((b) => b.status === "confirmed");
+
+    // Check if any booking is pending
+    // const hasPending = bookings.some((b) => b.status === "pending");
+    //
+    const hasPending = bookings.length > 0;
+
+    if (allConfirmed && bookings.length >= 3) {
+      // Adjust the number based on your capacity
+      return "unavailable";
+    }
+
+    if (hasPending) {
+      return "pending";
+    }
+
+    return "available";
+  };
+
+  // Get booking count for a specific date
+  const getBookingCount = (dateKey: string): number => {
+    const bookings = bookingsByDate[dateKey];
+    return bookings
+      ? bookings.filter((b) => b.status !== "cancelled").length
+      : 0;
+  };
+
+  // Check if a day is today
+  const isToday = (day: number | null): boolean => {
+    if (!day) return false;
+    const today = new Date();
+    return (
+      day === today.getDate() &&
+      currentDate.getMonth() === today.getMonth() &&
+      currentDate.getFullYear() === today.getFullYear()
+    );
+  };
+
+  // Check if a day is in the past
+  const isPastDay = (day: number | null): boolean => {
+    if (!day) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+
+    const dayDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day,
+    );
+
+    return dayDate < today;
+  };
 
   const navigateMonth = (direction: number): void => {
     setCurrentDate((prev) => {
@@ -131,9 +183,9 @@ const AdminCalendar: React.FC<CalendarProps> = ({
       case "unavailable":
         return "bg-[#CA1919]";
       case "pending":
-        return "bg-yellow-500";
-      default:
         return "bg-[#C2AC02]";
+      default:
+        return "bg-gray-300";
     }
   };
 
@@ -142,42 +194,66 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`;
   };
 
-  const handleDateClick = (day: number, status: BookingStatus): void => {
-    switch (status) {
-      case "unavailable":
-        return setUnavailableModal(true);
-      case "pending":
-        return router.push("/booking/pending");
-      default:
-        setIsModalOpen(true);
-    }
+  const handleDateClick = (day: number, status: BookingStatus | null): void => {
     const clickedDate = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
       day,
     );
-    console.log(clickedDate, status);
+
+    setSelectedDate(clickedDate);
+
+    // Get bookings for this date
+    const dateKey = getDateKey(day);
+    const dayBookings = dateKey ? bookingsByDate[dateKey] || [] : [];
+
+    switch (status) {
+      case "unavailable":
+        return setUnavailableModal(true);
+      case "pending":
+        // Navigate to pending bookings page with the date and bookings data
+        // const dateParam = clickedDate.toLocaleDateString().split("T")[0];
+        // const bookingIds = dayBookings.map((b) => b._id).join(",");
+        saveToLS("booking", { date: clickedDate.toISOString() });
+        return router.push(
+          `/booking/pending?date=${moment(clickedDate).format("YYYY-MM-DD")}`,
+        );
+      default:
+        // const data = { date: clickedDate.toISOString() };
+        saveToLS("booking", { date: clickedDate.toISOString() });
+        setIsModalOpen(true);
+    }
+
     if (onDateClick) {
-      const clickedDate = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        day,
-      );
-      onDateClick(clickedDate);
+      onDateClick(clickedDate, dayBookings);
     }
   };
 
   const days = getDaysInMonth();
 
-  const isToday = (day: number | null): boolean => {
-    if (!day) return false;
-    const today = new Date();
-    return (
-      day === today.getDate() &&
-      currentDate.getMonth() === today.getMonth() &&
-      currentDate.getFullYear() === today.getFullYear()
-    );
+  const handleProcessPackage = () => {
+    if (Object.entries(selectedPackage).length === 0) {
+      toast.warning("Please select a package", { position: "bottom-right" });
+      return;
+    }
+
+    const savedBookingDetails = loadFromLS("booking");
+    savedBookingDetails["package"] = selectedPackage;
+    console.log(savedBookingDetails);
+    // return;
+    saveToLS("booking", savedBookingDetails);
+    router.push(`/booking/checkout`);
   };
+
+  // Get packages
+  useEffect(() => {
+    (async () => {
+      const response = await getPackages();
+      if (response.success == true) {
+        setPackages(response.data.packages);
+      }
+    })();
+  }, []);
 
   return (
     <main className="flex-1 py-4 flex justify-center">
@@ -233,8 +309,10 @@ const AdminCalendar: React.FC<CalendarProps> = ({
         <div className="grid grid-cols-7 gap-1">
           {days.map((day: number | null, index: number) => {
             const dateKey = getDateKey(day);
-            const status = dateKey ? bookingStatus[dateKey] : null;
+            const status = dateKey ? getDateStatus(dateKey) : null;
+            const bookingCount = dateKey ? getBookingCount(dateKey) : 0;
             const todayDate = isToday(day);
+            const pastDay = isPastDay(day);
 
             return (
               <div
@@ -251,9 +329,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                       >
                         {day}
                       </button>
-                      <small className="text-yard-primary text-[10px] leading-[100%] tracking-[0.5px] italic font-medium z-40">
-                        12 bookings
-                      </small>
+                      {bookingCount > 0 && !pastDay && (
+                        <small className="text-yard-primary text-[10px] leading-[100%] tracking-[0.5px] italic font-medium z-40">
+                          {bookingCount} booking{bookingCount !== 1 ? "s" : ""}
+                        </small>
+                      )}
                       <div className="absolute top-0 -left-0 bg-[#E4E8E5] group-hover:w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
                     </div>
                   </>
@@ -386,35 +466,35 @@ const AdminCalendar: React.FC<CalendarProps> = ({
       </Modal>
 
       {/*<Modal isOpen={pendingModal}>
-        <section className="w-full">
-          <div className="w-full flex items-center justify-between">
-            <div className="title flex flex-col items-end">
-              <h1 className="font-playfair text-xl md:text-[28px] text-yard-red font-bold leading-9 tracking-[-0.1px]">
-                Pending
-              </h1>
-              <img
-                src={"/about-line.svg"}
-                alt="Line"
-                className="-mt-3 w-20 md:mr-0 md:w-28"
-              />
+            <section className="w-full">
+              <div className="w-full flex items-center justify-between">
+                <div className="title flex flex-col items-end">
+                  <h1 className="font-playfair text-xl md:text-[28px] text-yard-red font-bold leading-9 tracking-[-0.1px]">
+                    Pending
+                  </h1>
+                  <img
+                    src={"/about-line.svg"}
+                    alt="Line"
+                    className="-mt-3 w-20 md:mr-0 md:w-28"
+                  />
+                </div>
+                <div
+                  className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
+                  onClick={() => setPendingModal(false)}
+                >
+                  <img
+                    src={"/icons/cancel.svg"}
+                    alt="Close Icon"
+                    className="z-40"
+                  />
+                  <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+                </div>
+              </div>
+            </section>
+            <div className="w-full flex flex-col items-center mt-5 md:my-5 md:ml-10 gap-5">
+              <p>...</p>
             </div>
-            <div
-              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-              onClick={() => setPendingModal(false)}
-            >
-              <img
-                src={"/icons/cancel.svg"}
-                alt="Close Icon"
-                className="z-40"
-              />
-              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
-            </div>
-          </div>
-        </section>
-        <div className="w-full flex flex-col items-center mt-5 md:my-5 md:ml-10 gap-5">
-          <p>...</p>
-        </div>
-      </Modal>*/}
+          </Modal>*/}
     </main>
   );
 };

@@ -64,7 +64,7 @@ const Hero = async () => {
               </div>
 
               <div className="w-max  bg-yard-primary-active font-playfair text-yard-dark-primary text-lg px-1.5 rounded-[2px]">
-                Starting at <b>N{pk.price}</b>
+                Starting at <b>N{Intl.NumberFormat().format(pk.price)}</b>
               </div>
             </div>
             <p className="text-[16px] italic leading-6 tracking-[0.5px] text-[#717068]">

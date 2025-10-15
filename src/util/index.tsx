@@ -6,6 +6,14 @@ export const getServices = async () => {
   return response.data;
 };
 
+// Create services
+export const createServices = async (data: FormData) => {
+  const response = await axios.post(`/services`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
 // Get events
 export const getEvents = async () => {
   const response = await axios.get(`/events`);
@@ -52,6 +60,14 @@ export const getPackages = async () => {
   return response.data;
 };
 
+// Create packages
+export const createPackages = async (data: FormData) => {
+  const response = await axios.post(`/packages`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
 // Subscribe to newsletter
 export const subscribeToNewsletter = async (email: string) => {
   const response = await axios.post(`/customers/subscribe`, { email });
@@ -86,6 +102,17 @@ export const getBookingsByDate = async (date: string) => {
 export const createBookings = async (data: FormData) => {
   const response = await axios.post(`/bookings`, data, {
     headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Confirm bookings
+export const confirmOrCancelBookings = async (data: {
+  status: string;
+  id: string;
+}) => {
+  const response = await axios.put(`/bookings/${data.id}`, {
+    status: data.status,
   });
   return response.data;
 };

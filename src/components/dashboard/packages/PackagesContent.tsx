@@ -1,15 +1,156 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Modal from "@/components/Modal";
-// import Link from "next/link";
-// import Image from "next/image";
-
+import { IPackage } from "@/types/Package";
+import { IService } from "@/types/Service";
+import {
+  createPackages,
+  createServices,
+  getPackages,
+  getServices,
+} from "@/util";
 import Image from "next/image";
-import React from "react";
+import React, { DragEvent, FormEvent, useEffect } from "react";
+import { toast } from "react-toastify";
 
 export default function PackagesContent() {
   const [section, setSection] = React.useState<string>("services");
   const [addServiceModal, setAddServiceModal] = React.useState<boolean>(false);
   const [addPackageModal, setAddPackageModal] = React.useState<boolean>(false);
+  const [preview, setPreview] = React.useState<File | undefined>(undefined);
+  const [inputs, setInputs] = React.useState<Record<string, any>>({});
+  const [packages, setPackages] = React.useState<IPackage[]>([]);
+  const [services, setServices] = React.useState<IService[]>([]);
+
+  const handleDrop = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      setPreview(file);
+    }
+  };
+
+  const handleDragOver = (e: DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const clearInputs = () => {
+    setInputs({});
+    // setPreview(undefined);
+  };
+
+  const handleSubmit = async (
+    e: FormEvent<HTMLFormElement>,
+    _section: string,
+  ) => {
+    e.preventDefault();
+    const formElement = e.currentTarget;
+
+    const toastId = toast.loading("Adding, please wait...", {
+      position: "bottom-right",
+    });
+
+    if (preview == null) {
+      toast.update(toastId, {
+        render: "Please upload an image!",
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+      return;
+    }
+    inputs.image = preview || "null";
+
+    if (
+      section == "services"
+        ? Object.keys(inputs).length < 3
+        : Object.keys(inputs).length < 5
+    ) {
+      toast.update(toastId, {
+        render: "All inputs are needed!",
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+      return;
+    }
+
+    Object.values(inputs).map((val) => {
+      console.log(val);
+      if (val == "" || val == null) {
+        toast.update(toastId, {
+          render: "All inputs are needed!",
+          type: "error",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
+    });
+
+    const formData = new FormData();
+    Object.entries(inputs).map(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    try {
+      const response =
+        section == "services"
+          ? await createServices(formData)
+          : await createPackages(formData);
+      if (response.success == true) {
+        formElement.reset();
+        // Handle success
+        toast.update(toastId, {
+          render: `${response.message}`,
+          type: "success",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        await fetchData();
+        setAddServiceModal(false);
+        setAddPackageModal(false);
+        clearInputs();
+        return;
+      } else {
+        toast.update(toastId, {
+          render: `${response.message}`,
+          type: "warning",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
+    } catch (error) {
+      toast.update(toastId, {
+        render: `An error occurred. Please try again later. (${error})`,
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+    }
+  };
+
+  const fetchData = async () => {
+    const [packages, services] = await Promise.all([
+      getPackages(),
+      getServices(),
+    ]);
+
+    setPackages(packages.data.packages);
+    setServices(services.data.services);
+  };
+
+  useEffect(() => {
+    const toastId = toast.loading("Loading data....");
+    (async () => {
+      await fetchData();
+      toast.dismiss(toastId);
+    })();
+  }, []);
 
   return (
     <main className="flex-1 py-4 md:h-[600px] 2xl:h-[770px] overflow-y-auto">
@@ -19,12 +160,12 @@ export default function PackagesContent() {
           <div className="w-[745px] flex gap-5">
             {/*Single Container*/}
             <div
-              className={`w-full px-4 py-5 rounded-sm border-[1px] border-[#C7CFC9] ${section == "services" ? "bg-[#E4E8E5]" : "bg-[#FFFFFF]"} flex flex-col gap-4 cursor-pointer`}
+              className={`w-full px-4 py-5 rounded-sm border-[1px] border-[#C7CFC9] ${section == "services" ? "bg-[#E4E8E5]" : "bg-[#FFFFFF]"} flex flex-col gap-4 cursor-pointer duration-700 hover:scale-105 hover:shadow-lg`}
               onClick={() => setSection("services")}
             >
               <div className="flex justify-between items-center">
                 <h2 className="font-bold text-[52px] leading-9 text-[#66655E]">
-                  4
+                  {services.length}
                 </h2>
               </div>
               <p className="font-medium leading-[22px] tracking-[0.5px] text-[#737373]">
@@ -34,12 +175,12 @@ export default function PackagesContent() {
 
             {/*Single Container*/}
             <div
-              className={`w-full px-4 py-5 rounded-sm border-[1px] border-[#C7CFC9] ${section == "packages" ? "bg-[#E4E8E5]" : "bg-[#FFFFFF]"} flex flex-col gap-4 cursor-pointer`}
+              className={`w-full px-4 py-5 rounded-sm border-[1px] border-[#C7CFC9] ${section == "packages" ? "bg-[#E4E8E5]" : "bg-[#FFFFFF]"} flex flex-col gap-4 cursor-pointer duration-700 hover:scale-105 hover:shadow-lg`}
               onClick={() => setSection("packages")}
             >
               <div className="flex justify-between items-center">
                 <h2 className="font-bold text-[52px] leading-9 text-[#66655E]">
-                  4
+                  {packages.length}
                 </h2>
               </div>
               <p className="font-medium leading-[22px] tracking-[0.5px] text-[#737373]">
@@ -72,13 +213,19 @@ export default function PackagesContent() {
             >
               <li
                 className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
-                onClick={() => setAddServiceModal(true)}
+                onClick={() => {
+                  setSection("services");
+                  setAddServiceModal(true);
+                }}
               >
                 <button>Services</button>
               </li>
               <li
                 className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
-                onClick={() => setAddPackageModal(true)}
+                onClick={() => {
+                  setSection("packages");
+                  setAddPackageModal(true);
+                }}
               >
                 <button>Packages</button>
               </li>
@@ -94,46 +241,25 @@ export default function PackagesContent() {
               All services
             </h2>
             <p className="text-[#999999] font-medium leading-[22px] tracking-[0.5px]">
-              4 available
+              {services.length} available
             </p>
           </div>
 
           <div className="grid grid-cols-3 mt-5 gap-5">
-            <div className="flex flex-col gap-3">
-              <div className="w-full h-[224px] bg-[url('/gallery/gallery.svg')] bg-cover bg-center rounded2px"></div>
-              <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
-                Picnic Spaces gatherings
-              </h3>
-              <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
-                Relax in nature with our charming picnic setups. We offer an
-                organized ranquil outdoor settings for lounging, reading, or
-                informal.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="w-full h-[224px] bg-[url('/gallery/gallery.svg')] bg-cover bg-center rounded2px"></div>
-              <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
-                Picnic Spaces gatherings
-              </h3>
-              <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
-                Relax in nature with our charming picnic setups. We offer an
-                organized ranquil outdoor settings for lounging, reading, or
-                informal.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="w-full h-[224px] bg-[url('/gallery/gallery.svg')] bg-cover bg-center rounded2px"></div>
-              <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
-                Picnic Spaces gatherings
-              </h3>
-              <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
-                Relax in nature with our charming picnic setups. We offer an
-                organized ranquil outdoor settings for lounging, reading, or
-                informal.
-              </p>
-            </div>
+            {services.toReversed().map((service) => (
+              <div key={service.id as string} className="flex flex-col gap-3">
+                <div
+                  className="w-full h-[224px] bg-cover bg-center rounded2px"
+                  style={{ backgroundImage: `url(${service.imageUrl})` }}
+                ></div>
+                <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
+                  {service.name}
+                </h3>
+                <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
+                  {service.description}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
       ) : (
@@ -143,46 +269,25 @@ export default function PackagesContent() {
               All packages
             </h2>
             <p className="text-[#999999] font-medium leading-[22px] tracking-[0.5px]">
-              3 available
+              {packages.length} available
             </p>
           </div>
 
           <div className="grid grid-cols-3 mt-5 gap-5">
-            <div className="flex flex-col gap-3">
-              <div className="w-full h-[224px] bg-[url('/gallery/gallery.svg')] bg-cover bg-center rounded2px"></div>
-              <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
-                Picnic Package
-              </h3>
-              <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
-                Relax in nature with our charming picnic setups. We offer an
-                organized ranquil outdoor settings for lounging, reading, or
-                informal.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="w-full h-[224px] bg-[url('/gallery/gallery.svg')] bg-cover bg-center rounded2px"></div>
-              <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
-                Intimate Event Package
-              </h3>
-              <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
-                Relax in nature with our charming picnic setups. We offer an
-                organized ranquil outdoor settings for lounging, reading, or
-                informal.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="w-full h-[224px] bg-[url('/gallery/gallery.svg')] bg-cover bg-center rounded2px"></div>
-              <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
-                Full Party Package
-              </h3>
-              <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
-                Relax in nature with our charming picnic setups. We offer an
-                organized ranquil outdoor settings for lounging, reading, or
-                informal.
-              </p>
-            </div>
+            {packages.toReversed().map((pck) => (
+              <div key={pck.id as string} className="flex flex-col gap-3">
+                <div
+                  className="w-full h-[224px] bg-cover bg-center rounded2px"
+                  style={{ backgroundImage: `url(${pck.imageUrl})` }}
+                ></div>
+                <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
+                  {pck.name}
+                </h3>
+                <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
+                  {pck.description}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
       )}
@@ -196,7 +301,10 @@ export default function PackagesContent() {
             </h2>
             <div
               className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-              onClick={() => setAddServiceModal(false)}
+              onClick={() => {
+                clearInputs();
+                setAddServiceModal(false);
+              }}
             >
               <Image
                 src={"/icons/cancel.svg"}
@@ -212,26 +320,44 @@ export default function PackagesContent() {
 
         <div className="w-full flex items-start my-4 2xl:my-8 gap-10">
           {/*Form*/}
-          <form className="w-full flex flex-col gap-5">
-            <label htmlFor="media">
+          <form
+            className="w-full flex flex-col gap-5"
+            onSubmit={(e: FormEvent<HTMLFormElement>) =>
+              handleSubmit(e, "service")
+            }
+          >
+            <label
+              htmlFor="media"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className="bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${preview ? URL.createObjectURL(preview) : null})`,
+              }}
+            >
               <div className="flex flex-col h-[200px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
-                <Image
-                  src={"/icons/upload.svg"}
-                  width={18}
-                  height={18}
-                  alt="Upload Icon"
-                />
-                <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
-                  Choose an image or drag &amp; drop them here
-                </p>
+                {preview == undefined ? (
+                  <>
+                    <Image
+                      src={"/icons/upload.svg"}
+                      width={18}
+                      height={18}
+                      alt="Upload Icon"
+                    />
+                    <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
+                      Choose an image or drag &amp; drop them here
+                    </p>
 
-                <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
-                  JPEG &amp; PNG up to 10mb
-                </p>
+                    <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
+                      JPEG &amp; PNG up to 10mb
+                    </p>
+                  </>
+                ) : null}
               </div>
               <input
                 type="file"
                 accept="image/*,video/*"
+                onChange={(e) => setPreview(e.target.files?.[0])}
                 id="media"
                 className="hidden"
               />
@@ -249,6 +375,7 @@ export default function PackagesContent() {
                   type="text"
                   id="serviceName"
                   name="serviceName"
+                  onChange={(e) => (inputs.name = e.target.value)}
                   placeholder="Enter service name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -266,6 +393,7 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
+                  onChange={(e) => (inputs.description = e.target.value)}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -276,7 +404,10 @@ export default function PackagesContent() {
               <button
                 type="button"
                 className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
-                onClick={() => setAddServiceModal(false)}
+                onClick={() => {
+                  clearInputs();
+                  setAddServiceModal(false);
+                }}
               >
                 <span className="z-40 font-sen">Cancel</span>
                 <div className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
@@ -303,7 +434,10 @@ export default function PackagesContent() {
             </h2>
             <div
               className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-              onClick={() => setAddPackageModal(false)}
+              onClick={() => {
+                clearInputs();
+                setAddPackageModal(false);
+              }}
             >
               <Image
                 src={"/icons/cancel.svg"}
@@ -319,26 +453,44 @@ export default function PackagesContent() {
 
         <div className="w-full flex items-start my-4 2xl:my-8 gap-10">
           {/*Form*/}
-          <form className="w-full flex flex-col gap-5 h-[555px] overflow-y-scroll">
-            <label htmlFor="media">
+          <form
+            className="w-full flex flex-col gap-5 h-[555px] overflow-y-scroll"
+            onSubmit={(e: FormEvent<HTMLFormElement>) =>
+              handleSubmit(e, "packages")
+            }
+          >
+            <label
+              htmlFor="media"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className="bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${preview ? URL.createObjectURL(preview) : null})`,
+              }}
+            >
               <div className="flex flex-col h-[200px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
-                <Image
-                  src={"/icons/upload.svg"}
-                  width={18}
-                  height={18}
-                  alt="Upload Icon"
-                />
-                <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
-                  Choose an image or drag &amp; drop them here
-                </p>
+                {preview == undefined ? (
+                  <>
+                    <Image
+                      src={"/icons/upload.svg"}
+                      width={18}
+                      height={18}
+                      alt="Upload Icon"
+                    />
+                    <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
+                      Choose an image or drag &amp; drop them here
+                    </p>
 
-                <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
-                  JPEG &amp; PNG up to 10mb
-                </p>
+                    <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
+                      JPEG &amp; PNG up to 10mb
+                    </p>
+                  </>
+                ) : null}
               </div>
               <input
                 type="file"
                 accept="image/*,video/*"
+                onChange={(e) => setPreview(e.target.files?.[0])}
                 id="media"
                 className="hidden"
               />
@@ -356,6 +508,7 @@ export default function PackagesContent() {
                   type="text"
                   id="packageName"
                   name="packageName"
+                  onChange={(e) => (inputs.name = e.target.value)}
                   placeholder="Enter package name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -373,6 +526,7 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
+                  onChange={(e) => (inputs.description = e.target.value)}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -391,7 +545,30 @@ export default function PackagesContent() {
                   type="text"
                   id="packagePrice"
                   name="packagePrice"
+                  onChange={(e) => (inputs.price = e.target.value)}
                   placeholder="Package price"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="packageSpecs"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter package specs{" "}
+                  <small className="italic">
+                    (Add a comma to seperate specs)
+                  </small>
+                </label>
+                <input
+                  type="text"
+                  id="packageSpecs"
+                  name="packageSpecs"
+                  onChange={(e) => (inputs.specs = e.target.value)}
+                  placeholder="games and dates, Game hall special, Game hall special"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -401,7 +578,10 @@ export default function PackagesContent() {
               <button
                 type="button"
                 className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
-                onClick={() => setAddPackageModal(false)}
+                onClick={() => {
+                  clearInputs();
+                  setAddPackageModal(false);
+                }}
               >
                 <span className="z-40 font-sen">Cancel</span>
                 <div className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
