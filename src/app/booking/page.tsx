@@ -2,6 +2,9 @@ import Hero from "@/components/booking/Hero";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const Page = () => {
   return (
     <main className={"w-full h-max bg-yard-white"}>
