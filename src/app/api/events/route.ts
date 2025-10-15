@@ -10,13 +10,13 @@ import { NextRequest } from "next/server";
 export const GET = errorHandler(
     async (request: NextRequest) => {
         await connectDB();
-        const authHeader = request.headers.get("authorization");
-        let admin = false;
-        if (authHeader) {
-            const payload = requireAuth(request);
-            // Role is not required, just checking if admin to show all events
-            if (payload) admin = true;
-        }
+        // const authHeader = request.headers.get("authorization");
+        // let admin = false;
+        // if (authHeader) {
+        //     const payload = requireAuth(request);
+        //     // Role is not required, just checking if admin to show all events
+        //     if (payload) admin = true;
+        // }
 
         // check query params
         const { searchParams } = new URL(request.url);
@@ -31,7 +31,8 @@ export const GET = errorHandler(
         if (type) Object.assign(filter, { type });
         if (status) Object.assign(filter, { status });
 
-        const events = await Event.filter(filter, sort, direction, admin);
+        // const events = await Event.filter(filter, sort, direction, admin);
+        const events = await Event.filter(filter, sort, direction);
         if (!events) throw APIError.NotFound("No events found");
         // Pagination
         const startIndex = (page - 1) * limit;

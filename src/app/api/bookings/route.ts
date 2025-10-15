@@ -210,13 +210,13 @@ export const POST = errorHandler(async (request: NextRequest) => {
 export const GET = errorHandler(
     async (request: NextRequest) => {
         await connectDB();
-        const authHeader = request.headers.get("authorization");
-        let admin = false;
-        if (authHeader) {
-            const payload = requireAuth(request);
-            // Role is not required, just checking if admin to show all bookings
-            if (payload) admin = true;
-        }
+        // const authHeader = request.headers.get("authorization");
+        // let admin = false;
+        // if (authHeader) {
+        //     const payload = requireAuth(request);
+        //     // Role is not required, just checking if admin to show all bookings
+        //     if (payload) admin = true;
+        // }
 
 
         // check query params
@@ -257,7 +257,8 @@ export const GET = errorHandler(
             });
         }
 
-        const bookings = await Booking.filter(filter, sort, direction, admin);
+        // const bookings = await Booking.filter(filter, sort, direction, admin);
+        const bookings = await Booking.filter(filter, sort, direction);
         if (!bookings) throw APIError.NotFound("No bookings found");
         // Pagination
         const startIndex = (page - 1) * limit;
