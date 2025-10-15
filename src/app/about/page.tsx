@@ -4,6 +4,9 @@ import Navbar from "@/components/Navbar";
 import Vision from "@/components/about/Vision";
 import Space from "@/components/about/Space";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const Page = () => {
   return (
     <main className={"w-full h-max bg-yard-white"}>
