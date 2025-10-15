@@ -1,9 +1,10 @@
 import { IService } from "@/types/Service";
-import { getServices } from "@/util";
+// import { getServices } from "@/util";
 import Link from "next/link";
 
 export default async function Services() {
-  const services: IService[] = (await getServices()).data.services;
+  // const services: IService[] = (await getServices()).data.services;
+  const services: IService[] = [];
 
   return (
     <main className="flex flex-col gap-[60px] md:justify-center items-center mt-10">
