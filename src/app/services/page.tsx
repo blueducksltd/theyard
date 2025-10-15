@@ -3,6 +3,9 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/services/Hero";
 import Services from "@/components/services/Services";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function Page() {
   return (
     <main className={"w-full h-max bg-yard-white"}>
