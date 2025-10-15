@@ -5,13 +5,13 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { IEvent } from "@/types/Event";
-import { getEvents } from "@/util";
+// import { getEvents } from "@/util";
 import moment from "moment";
 import Link from "next/link";
 
 const Page = async () => {
-  const events: IEvent[] = (await getEvents()).data.events;
-  console.log(events);
+  // const events: IEvent[] = (await getEvents()).data.events;
+  const events: IEvent[] = [];
 
   return (
     <main className={"w-full h-max bg-yard-white"}>
