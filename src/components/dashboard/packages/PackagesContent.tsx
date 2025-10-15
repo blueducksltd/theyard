@@ -42,10 +42,7 @@ export default function PackagesContent() {
     // setPreview(undefined);
   };
 
-  const handleSubmit = async (
-    e: FormEvent<HTMLFormElement>,
-    _section: string,
-  ) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formElement = e.currentTarget;
 
@@ -322,9 +319,7 @@ export default function PackagesContent() {
           {/*Form*/}
           <form
             className="w-full flex flex-col gap-5"
-            onSubmit={(e: FormEvent<HTMLFormElement>) =>
-              handleSubmit(e, "service")
-            }
+            onSubmit={(e: FormEvent<HTMLFormElement>) => handleSubmit(e)}
           >
             <label
               htmlFor="media"
@@ -455,9 +450,7 @@ export default function PackagesContent() {
           {/*Form*/}
           <form
             className="w-full flex flex-col gap-5 h-[555px] overflow-y-scroll"
-            onSubmit={(e: FormEvent<HTMLFormElement>) =>
-              handleSubmit(e, "packages")
-            }
+            onSubmit={(e: FormEvent<HTMLFormElement>) => handleSubmit(e)}
           >
             <label
               htmlFor="media"
