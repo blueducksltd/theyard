@@ -2,12 +2,14 @@
   /*eslint-disable @next/next/no-img-element*/
 }
 import { IPackage } from "@/types/Package";
-// import { getPackages } from "@/util";
+import { getPackages } from "@/util";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const Hero = async () => {
-  // const packages: IPackage[] = (await getPackages()).data.packages;
-  const packages: IPackage[] = [];
+  const packages: IPackage[] = (await getPackages()).data.packages;
 
   return (
     <>

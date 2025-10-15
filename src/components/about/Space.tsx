@@ -6,6 +6,9 @@ import { getSpaces } from "@/util";
 import moment from "moment";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const Space = async () => {
   const spaces: ISpace[] = (await getSpaces()).data.spaces;
 

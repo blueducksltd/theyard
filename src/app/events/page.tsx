@@ -5,13 +5,15 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { IEvent } from "@/types/Event";
-// import { getEvents } from "@/util";
+import { getEvents } from "@/util";
 import moment from "moment";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const Page = async () => {
-  // const events: IEvent[] = (await getEvents()).data.events;
-  const events: IEvent[] = [];
+  const events: IEvent[] = (await getEvents()).data.events;
 
   return (
     <main className={"w-full h-max bg-yard-white"}>

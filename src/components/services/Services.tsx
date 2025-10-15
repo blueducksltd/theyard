@@ -1,10 +1,12 @@
 import { IService } from "@/types/Service";
-// import { getServices } from "@/util";
+import { getServices } from "@/util";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function Services() {
-  // const services: IService[] = (await getServices()).data.services;
-  const services: IService[] = [];
+  const services: IService[] = (await getServices()).data.services;
 
   return (
     <main className="flex flex-col gap-[60px] md:justify-center items-center mt-10">
