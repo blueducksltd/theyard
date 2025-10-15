@@ -19,7 +19,8 @@ const Page = () => {
   const [selectedSpace, setSelectedSpace] = useState<ISpace | null>(null);
   const [isPublishing, setIsPublishing] = useState<boolean>(true);
   const [image, setImage] = useState<File | undefined>();
-  const savedBookingDetails = loadFromLS("booking");
+  const savedBookingDetails =
+    typeof window !== "undefined" ? loadFromLS("booking") : null;
   const [inputs] = useState<Record<string, any>>({});
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
