@@ -70,21 +70,14 @@ BookingSchema.statics.findByDateRange = async function (start: Date, end?: Date)
 BookingSchema.statics.filter = async function (
   filter: Record<string, string>,
   sort: string,
-  direction: "ASC" | "DESC",
-  admin?: boolean
+  direction: "ASC" | "DESC"
 ) {
   const sortDirection = direction.toUpperCase() === "ASC" ? 1 : -1;
-  return admin
-    ? this.find(filter).sort({ [sort]: sortDirection })
-      .populate("customer")
-      .populate("space")
-      .populate("event")
-      .populate("package")
-    : this.find({ status: "confirmed", ...filter }).sort({ [sort]: sortDirection })
-      .populate("customer")
-      .populate("space")
-      .populate("event")
-      .populate("package");
+  return this.find(filter).sort({ [sort]: sortDirection })
+    .populate("customer")
+    .populate("space")
+    .populate("event")
+    .populate("package")
 }
 
 

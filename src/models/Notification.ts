@@ -21,14 +21,11 @@ const NotificationSchema = new Schema<INotification, INotificationModel, INotifi
 NotificationSchema.statics.filter = async function (
     filter: Record<string, string>,
     sort: string,
-    direction: "ASC" | "DESC",
-    admin?: boolean
+    direction: "ASC" | "DESC"
 ) {
     const sortDirection = direction.toUpperCase() === "ASC" ? 1 : -1;
 
-    return admin
-        ? this.find(filter).sort({ [sort]: sortDirection })
-        : this.find({ status: "published" }).sort({ [sort]: sortDirection });
+    return this.find(filter).sort({ [sort]: sortDirection });
 };
 
 NotificationSchema.methods.markAsRead = async function (adminId: IAdmin["id"]) {
