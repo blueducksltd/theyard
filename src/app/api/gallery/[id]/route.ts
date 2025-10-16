@@ -46,11 +46,11 @@ export const PUT = errorHandler<{ params: { id: string } }>(
             throw APIError.NotFound(`No galleries found with title: ${gallery.title}`);
 
         // Update all related galleries with the new data
-        await Gallery.updateMany({ title: gallery.title }, { $set: data });
+        await Gallery.updateMany({ title: gallery.title, mediaDate: gallery.mediaDate }, { $set: data });
 
         // Fetch the updated ones to return
-        const title = data.title || gallery.title;
-        const updatedGalleries = await Gallery.find({ title });
+        const title = gallery.title;
+        const updatedGalleries = await Gallery.find({ title: data.title }).populate("event");
         const sanitizedGallery = updatedGalleries.map((image: IGallery) => sanitizeGallery(image));
 
         return APIResponse.success(
