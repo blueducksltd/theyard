@@ -28,9 +28,7 @@ ReviewSchema.statics.filter = async function (
 ) {
     const sortDirection = direction.toUpperCase() === "ASC" ? 1 : -1;
 
-    return admin
-        ? this.find(filter).sort({ [sort]: sortDirection })
-        : this.find({ status: "published" }).sort({ [sort]: sortDirection });
+    return this.find(filter).sort({ [sort]: sortDirection });
 };
 
 

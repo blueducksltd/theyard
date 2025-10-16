@@ -33,19 +33,11 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
   { timestamps: true }
 );
 
-EventSchema.statics.filter = async function (filter: Record<string, string>, sort: string, direction: "ASC" | "DESC", admin?: boolean) {
-  let events;
-  if (admin) {
-    events = this.find(filter)
-      .sort({ [sort]: direction === "ASC" ? 1 : -1 })
-      .populate("customer");
-  }
-  else {
-    events = this.find({ ...filter, status: { $ne: "cancelled" }, public: true })
-      .sort({ [sort]: direction === "ASC" ? 1 : -1 })
-      .populate("customer");
-  }
-  return events;
+EventSchema.statics.filter = async function (filter: Record<string, string>, sort: string, direction: "ASC" | "DESC") {
+
+  return this.find(filter)
+    .sort({ [sort]: direction === "ASC" ? 1 : -1 })
+    .populate("customer");
 }
 
 // Export model
