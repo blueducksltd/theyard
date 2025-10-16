@@ -118,7 +118,7 @@ export const GET = errorHandler(async (request: NextRequest) => {
     const limit = limitParam ? parseInt(limitParam, 10) : null;
 
     // --- Build filter ---
-    const filter: Record<string, any> = {};
+    const filter: Record<string, string> = {};
     if (category) filter.category = category;
     if (mediaDate) filter.mediaDate = mediaDate;
 

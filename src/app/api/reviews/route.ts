@@ -1,6 +1,5 @@
 import APIResponse from "@/lib/APIResponse";
 import { connectDB } from "@/lib/db";
-import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import { sendNotification } from "@/lib/notification";
 import Review from "@/models/Review";
@@ -46,8 +45,8 @@ export const GET = errorHandler(async (request: NextRequest) => {
     const limit = limitParam ? parseInt(limitParam, 10) : null;
 
     // --- Filtering ---
-    const filter: Record<string, any> = {};
-    if (status) filter.status = status;
+    const filter = {};
+    if (status) Object.assign(filter, { status });
 
     // --- Fetch Reviews ---
     const reviews = await Review.filter(filter, sort, direction);

@@ -1,5 +1,4 @@
 import APIResponse from "@/lib/APIResponse";
-import { requireAuth } from "@/lib/auth";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
@@ -222,7 +221,7 @@ export const GET = errorHandler(async (request: NextRequest) => {
     const limit = limitParam ? parseInt(limitParam, 10) : null;
 
     // --- Filter logic ---
-    const filter: Record<string, any> = {};
+    const filter: Record<string, string> = {};
 
     if (status && status !== "past") {
         filter.status = status;

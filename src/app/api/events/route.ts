@@ -1,6 +1,5 @@
 import APIResponse from "@/lib/APIResponse";
 import { connectDB } from "@/lib/db";
-import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Event from "@/models/Event";
 import { sanitizeEvent } from "@/types/Event";
@@ -22,9 +21,10 @@ export const GET = errorHandler(async (request: NextRequest) => {
     const limit = limitParam ? parseInt(limitParam, 10) : null;
 
     // --- Filter logic ---
-    const filter: Record<string, any> = {};
-    if (type) filter.type = type;
-    if (status) filter.status = status;
+
+    const filter = {};
+    if (type) Object.assign(filter, { type });
+    if (status) Object.assign(filter, { status });
 
     // --- Fetch events ---
     const events = await Event.filter(filter, sort, direction);
