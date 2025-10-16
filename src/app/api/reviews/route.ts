@@ -1,5 +1,4 @@
 import APIResponse from "@/lib/APIResponse";
-import { requireAuth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
@@ -18,6 +17,7 @@ export const POST = errorHandler(
         const newReview = await Review.create(data);
 
         if (!newReview) throw new Error("Failed to create review");
+        const sanitizedReview = sanitizeReview(newReview);
 
         await sendNotification({
             type: "review",
@@ -27,52 +27,57 @@ export const POST = errorHandler(
             meta: { review: newReview }
         });
 
-        return APIResponse.success("Review created successfully", { review: newReview }, 201);
+        return APIResponse.success("Review created successfully", { review: sanitizedReview }, 201);
     }
 );
 
-export const GET = errorHandler(
-    async (request: NextRequest) => {
-        await connectDB();
-        // const authHeader = request.headers.get("authorization");
-        // let admin = false;
-        // if (authHeader) {
-        //     const payload = requireAuth(request);
-        //     // Role is not required, just checking if admin to show all events
-        //     if (payload) admin = true;
-        // }
+export const GET = errorHandler(async (request: NextRequest) => {
+    await connectDB();
 
-        // check query params
-        const { searchParams } = new URL(request.url);
-        const status = searchParams.get("status");
-        const sort = searchParams.get("sort") || "createdAt";
-        const direction = (searchParams.get("direction") as "ASC" | "DESC") || "ASC";
-        const page = parseInt(searchParams.get("page") || "1");
-        const limit = parseInt(searchParams.get("limit") || "10");
+    // --- Query Params ---
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+    const sort = searchParams.get("sort") || "createdAt";
+    const direction = (searchParams.get("direction") as "ASC" | "DESC") || "ASC";
+    const page = parseInt(searchParams.get("page") || "1", 10);
 
-        const filter = {};
-        if (status) Object.assign(filter, { status });
-        // const reviews = await Review.filter(filter, sort, direction, admin);
-        const reviews = await Review.filter(filter, sort, direction);
-        if (!reviews) throw APIError.NotFound("No reviews found");
+    // Handle limit: if not provided, return all results (no pagination)
+    const limitParam = searchParams.get("limit");
+    const limit = limitParam ? parseInt(limitParam, 10) : null;
 
-        // Pagination
+    // --- Filtering ---
+    const filter: Record<string, any> = {};
+    if (status) filter.status = status;
+
+    // --- Fetch Reviews ---
+    const reviews = await Review.filter(filter, sort, direction);
+    if (!reviews || reviews.length === 0)
+        return APIResponse.success("No reviews found", { reviews: [] });
+
+    // --- Pagination Logic ---
+    let paginatedReviews = reviews;
+    let pagination = undefined;
+
+    if (limit) {
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
-        const paginatedReviews = reviews.slice(startIndex, endIndex);
-        if (paginatedReviews.length === 0) return APIResponse.success("No reviews found", { reviews: [] });
+        paginatedReviews = reviews.slice(startIndex, endIndex);
 
-        const sanitizedReviews = paginatedReviews.map(review => sanitizeReview(review));
-
-        const pagination = {
+        pagination = {
             currentPage: page,
             totalPages: Math.ceil(reviews.length / limit),
             pageSize: limit,
             totalItems: reviews.length,
             nextPage: endIndex < reviews.length ? page + 1 : null,
-            prevPage: startIndex > 0 ? page - 1 : null
-        }
-
-        return APIResponse.success("Reviews retrieved successfully", { reviews: sanitizedReviews, pagination });
+            prevPage: startIndex > 0 ? page - 1 : null,
+        };
     }
-);
+
+    // --- Sanitize & Respond ---
+    const sanitizedReviews = paginatedReviews.map((review) => sanitizeReview(review));
+
+    return APIResponse.success("Reviews retrieved successfully", {
+        reviews: sanitizedReviews,
+        pagination,
+    });
+});

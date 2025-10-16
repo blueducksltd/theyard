@@ -207,86 +207,85 @@ export const POST = errorHandler(async (request: NextRequest) => {
 });
 
 
-export const GET = errorHandler(
-    async (request: NextRequest) => {
-        await connectDB();
-        // const authHeader = request.headers.get("authorization");
-        // let admin = false;
-        // if (authHeader) {
-        //     const payload = requireAuth(request);
-        //     // Role is not required, just checking if admin to show all bookings
-        //     if (payload) admin = true;
-        // }
+export const GET = errorHandler(async (request: NextRequest) => {
+    await connectDB();
 
+    // --- Query params ---
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+    const sort = searchParams.get("sort") || "date";
+    const direction = (searchParams.get("direction") as "ASC" | "DESC") || "ASC";
+    const page = parseInt(searchParams.get("page") || "1", 10);
 
-        // check query params
-        const { searchParams } = new URL(request.url);
-        const status = searchParams.get("status");
-        const sort = searchParams.get("sort") || "date";
-        const direction = (searchParams.get("direction") as "ASC" | "DESC") || "ASC";
-        const page = parseInt(searchParams.get("page") || "1");
-        const limit = parseInt(searchParams.get("limit") || "10");
+    // Handle limit (if not provided → no pagination)
+    const limitParam = searchParams.get("limit");
+    const limit = limitParam ? parseInt(limitParam, 10) : null;
 
-        const filter: Record<string, string> = {};
-        if (status && status !== "past") {
-            Object.assign(filter, { status });
-        }
+    // --- Filter logic ---
+    const filter: Record<string, any> = {};
 
-        if (status === "past") {
-            const now = new Date();
+    if (status && status !== "past") {
+        filter.status = status;
+    }
 
-            // cutoff time is "now minus 1 hour", formatted as "HH:mm", e.g. "09:00"
-            const cutoffHour = now.getHours() - 1;
-            const cutoffTimeStr = `${String(cutoffHour).padStart(2, "0")}:00`;
+    if (status === "past") {
+        const now = new Date();
+        const cutoffHour = now.getHours() - 1;
+        const cutoffTimeStr = `${String(cutoffHour).padStart(2, "0")}:00`;
 
-            Object.assign(filter, {
-                status: "confirmed",
-                $or: [
-                    // Bookings from previous days
-                    { eventDate: { $lt: startOfToday() } },
-
-                    // Bookings from today but whose startTime is <= cutoff hour
-                    {
-                        eventDate: {
-                            $gte: startOfToday(),
-                            $lt: addDays(startOfToday(), 1),
-                        },
-                        startTime: { $lte: cutoffTimeStr },
+        Object.assign(filter, {
+            status: "confirmed",
+            $or: [
+                // Bookings from previous days
+                { eventDate: { $lt: startOfToday() } },
+                // Bookings from today but whose startTime is <= cutoff hour
+                {
+                    eventDate: {
+                        $gte: startOfToday(),
+                        $lt: addDays(startOfToday(), 1),
                     },
-                ],
-            });
-        }
+                    startTime: { $lte: cutoffTimeStr },
+                },
+            ],
+        });
+    }
 
-        // const bookings = await Booking.filter(filter, sort, direction, admin);
-        const bookings = await Booking.filter(filter, sort, direction);
-        if (!bookings) throw APIError.NotFound("No bookings found");
-        // Pagination
+    // --- Fetch bookings ---
+    const bookings = await Booking.filter(filter, sort, direction);
+    if (!bookings || bookings.length === 0)
+        return APIResponse.success("No bookings found", { bookings: [] });
+
+    // --- Pagination ---
+    let paginatedBookings = bookings;
+    let pagination = undefined;
+
+    if (limit) {
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
-        const paginatedBookings = bookings.slice(startIndex, endIndex);
+        paginatedBookings = bookings.slice(startIndex, endIndex);
 
-        if (paginatedBookings.length === 0) return APIResponse.success("No bookings found", { bookings: [] });
-
-        const sanitizedBookings = paginatedBookings.map(event => sanitizeBooking(event));
-        sanitizedBookings.forEach((booking) => {
-            if (booking.event && 'customer' in booking.event) {
-                delete booking.event.customer;
-            }
-        });
-
-        const pagination = {
+        pagination = {
             currentPage: page,
             totalPages: Math.ceil(bookings.length / limit),
             pageSize: limit,
             totalItems: bookings.length,
             nextPage: endIndex < bookings.length ? page + 1 : null,
-            prevPage: startIndex > 0 ? page - 1 : null
-        }
-
-        return APIResponse.success(
-            "Fetched all bookings",
-            { bookings: sanitizedBookings, pagination },
-            200
-        );
+            prevPage: startIndex > 0 ? page - 1 : null,
+        };
     }
-);
+
+    // --- Sanitize ---
+    const sanitizedBookings = paginatedBookings.map((event) => sanitizeBooking(event));
+    sanitizedBookings.forEach((booking) => {
+        if (booking.event && "customer" in booking.event) {
+            delete booking.event.customer;
+        }
+    });
+
+    // --- Response ---
+    return APIResponse.success(
+        "Fetched all bookings",
+        { bookings: sanitizedBookings, pagination },
+        200
+    );
+});

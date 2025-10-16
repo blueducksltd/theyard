@@ -23,12 +23,11 @@ const ReviewSchema = new Schema<IReview, IReviewModel, IReviewMethods>(
 ReviewSchema.statics.filter = async function (
     filter: Record<string, string>,
     sort: string,
-    direction: "ASC" | "DESC",
-    admin?: boolean
+    direction: "ASC" | "DESC"
 ) {
     const sortDirection = direction.toUpperCase() === "ASC" ? 1 : -1;
 
-    return this.find(filter).sort({ [sort]: sortDirection });
+    return this.find({ filter }).sort({ [sort]: sortDirection });
 };
 
 

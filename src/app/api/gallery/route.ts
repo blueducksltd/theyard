@@ -105,38 +105,52 @@ export const POST = errorHandler(async (request: NextRequest) => {
 export const GET = errorHandler(async (request: NextRequest) => {
     await connectDB();
 
+    // --- Query params ---
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
     const mediaDate = searchParams.get("mediadate");
     const sort = searchParams.get("sort") ?? "createdAt";
     const direction = (searchParams.get("direction") as "ASC" | "DESC") ?? "ASC";
     const page = parseInt(searchParams.get("page") ?? "1", 10);
-    const limit = parseInt(searchParams.get("limit") ?? "10", 10);
 
-    const filter: Record<string, string> = {};
+    // Handle limit (optional)
+    const limitParam = searchParams.get("limit");
+    const limit = limitParam ? parseInt(limitParam, 10) : null;
+
+    // --- Build filter ---
+    const filter: Record<string, any> = {};
     if (category) filter.category = category;
     if (mediaDate) filter.mediaDate = mediaDate;
 
+    // --- Fetch gallery items ---
     const gallery = await Gallery.filter(filter, sort, direction);
     if (!gallery || gallery.length === 0) {
         return APIResponse.success("No gallery found", { gallery: [] }, 200);
     }
 
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = page * limit;
-    const paginatedGallery = gallery.slice(startIndex, endIndex);
-    const sanitizedGallery = paginatedGallery.map(image => sanitizeGallery(image));
+    // --- Pagination ---
+    let paginatedGallery = gallery;
+    let pagination = undefined;
 
-    const pagination = {
-        currentPage: page,
-        totalPages: Math.ceil(gallery.length / limit),
-        pageSize: limit,
-        totalItems: gallery.length,
-        nextPage: endIndex < gallery.length ? page + 1 : null,
-        prevPage: startIndex > 0 ? page - 1 : null,
-    };
+    if (limit) {
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        paginatedGallery = gallery.slice(startIndex, endIndex);
 
+        pagination = {
+            currentPage: page,
+            totalPages: Math.ceil(gallery.length / limit),
+            pageSize: limit,
+            totalItems: gallery.length,
+            nextPage: endIndex < gallery.length ? page + 1 : null,
+            prevPage: startIndex > 0 ? page - 1 : null,
+        };
+    }
+
+    // --- Sanitize ---
+    const sanitizedGallery = paginatedGallery.map((image) => sanitizeGallery(image));
+
+    // --- Respond ---
     return APIResponse.success(
         "Gallery retrieved successfully",
         { gallery: sanitizedGallery, pagination },
