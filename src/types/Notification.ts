@@ -38,15 +38,18 @@ export type SafeNotification = {
     message: string;
     type: INotification["type"];
     meta?: Record<string, unknown>;
+    read: boolean;
 };
 
-export function sanitizeNotification(Notification: INotification): SafeNotification {
+export function sanitizeNotification(Notification: INotification, admin: IAdmin["id"]): SafeNotification {
+    const read = Notification.readBy.includes(admin);
     return {
         id: Notification.id,
         title: Notification.title,
         message: Notification.message,
         type: Notification.type,
-        meta: Notification.meta
+        meta: Notification.meta,
+        read
     };
 }
 

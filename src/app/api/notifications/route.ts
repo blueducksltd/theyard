@@ -16,7 +16,7 @@ export const GET = errorHandler(async (request) => {
     const notifications = await Notification.find({
         permission: { $in: admin.permissions }
     });
-    const sanitized = notifications.map(sanitizeNotification);
+    const sanitized = notifications.map(notification => sanitizeNotification(notification, admin.id));
     return Response.json({ notifications: sanitized });
 });
 
