@@ -1,16 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "@/util/axios";
 
 // Get services
 export const getServices = async () => {
   const response = await axios.get(`/services`);
-  return response.data;
-};
-
-// Create services
-export const createServices = async (data: FormData) => {
-  const response = await axios.post(`/services`, data, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
   return response.data;
 };
 
@@ -60,14 +53,6 @@ export const getPackages = async () => {
   return response.data;
 };
 
-// Create packages
-export const createPackages = async (data: FormData) => {
-  const response = await axios.post(`/packages`, data, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
-  return response.data;
-};
-
 // Subscribe to newsletter
 export const subscribeToNewsletter = async (email: string) => {
   const response = await axios.post(`/customers/subscribe`, { email });
@@ -106,17 +91,6 @@ export const createBookings = async (data: FormData) => {
   return response.data;
 };
 
-// Confirm bookings
-export const confirmOrCancelBookings = async (data: {
-  status: string;
-  id: string;
-}) => {
-  const response = await axios.put(`/bookings/${data.id}`, {
-    status: data.status,
-  });
-  return response.data;
-};
-
 // ============================= API's for admin =============================
 export const adminLogin = async (data: { email: string; password: string }) => {
   const response = await axios.post(`/admin/login`, data);
@@ -129,13 +103,137 @@ export const getActiveBookings = async () => {
 };
 
 export const publishOrIgnoreReview = async (data: {
-  id: string;
+  id?: string;
   status: string;
   affect?: string;
 }) => {
-  const response = await axios.put(`/reviews/${data.id}`, {
-    status: data.status,
-    affect: data.affect,
+  const response = await axios.put(
+    `${data.id ? `/reviews/${data.id}` : `/reviews/all`}`,
+    {
+      status: data.status,
+      affect: data.affect,
+    },
+  );
+  return response.data;
+};
+
+// Create services
+export const createServices = async (data: FormData) => {
+  const response = await axios.post(`/services`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
+  return response.data;
+};
+
+// Create packages
+export const createPackages = async (data: FormData) => {
+  const response = await axios.post(`/packages`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Confirm bookings
+export const confirmOrCancelBookings = async (data: {
+  status: string;
+  id: string;
+}) => {
+  const response = await axios.put(`/bookings/${data.id}`, {
+    status: data.status,
+  });
+  return response.data;
+};
+
+// Create tag
+export const createTag = async (name: string) => {
+  const response = await axios.post(`/tags`, { name });
+  return response.data;
+};
+
+// Create gallery
+export const createGallery = async (data: FormData) => {
+  const response = await axios.post(`/gallery`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Create gallery
+export const updateGallery = async (id: string, data: any) => {
+  const response = await axios.put(`/gallery/${id}`, data);
+  return response.data;
+};
+
+// Delete Gallery
+export const deleteGallery = async (data: { id: string }) => {
+  const response = await axios.delete(`/gallery/${data.id}`);
+  return response.data;
+};
+
+// Get customers
+export const getCustomers = async () => {
+  const response = await axios.get(`/customers`);
+  return response.data;
+};
+
+// Send mail to customer(s)
+export const sendMail = async (data: {
+  subject: string;
+  message: string;
+  customers?: string[];
+}) => {
+  const response = await axios.post(`/customers/send-mail`, data);
+  return response.data;
+};
+
+// Get admins
+export const getAdmins = async () => {
+  const response = await axios.get(`/admin`);
+  return response.data;
+};
+
+// Create admin
+export const createAdmin = async (data: {
+  name: string;
+  email: string;
+  role: string;
+}) => {
+  const response = await axios.post(`/admin`, data);
+  return response.data;
+};
+
+// Make admin
+export const makeAdmin = async (id: string) => {
+  const response = await axios.put(`/admin/${id}`, { role: "admin" });
+  return response.data;
+};
+
+// Delete admin
+export const deleteAdmin = async (id: string) => {
+  const response = await axios.delete(`/admin/${id}`);
+  return response.data;
+};
+
+// Get admin information
+export const getMyInfo = async () => {
+  const response = await axios.get(`/admin/me`);
+  return response.data;
+};
+
+// Update admin profile
+export const updateAdminInfo = async (data: FormData) => {
+  const response = await axios.put(`/admin/me`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Admin Logout
+export const adminLogout = async (data: {
+  name: string;
+  email: string;
+  password: string;
+}) => {
+  const response = await axios.post(`/admin/logout`, data);
   return response.data;
 };

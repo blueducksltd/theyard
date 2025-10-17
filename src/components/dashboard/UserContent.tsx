@@ -1,142 +1,225 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import Image from "next/image";
 import React, { useState } from "react";
 import Modal from "../Modal";
+import { toast } from "react-toastify";
+import { createAdmin, deleteAdmin, getAdmins, makeAdmin } from "@/util";
+
+interface IAdminPage {
+  id: string;
+  name: string;
+  email: string;
+  password: string; // hashed
+  role: "admin" | "manager";
+  permissions: number[];
+  status: "active" | "inactive";
+  phone: string;
+  imageUrl: string;
+  emailVerificationCode: string | null;
+  emailVerificationExpires: Date | null;
+  emailVerificationLastSent: Date | null;
+  emailVerifiedAt: Date | null;
+  selected: boolean;
+}
 
 export default function UserContent() {
   const [inviteModal, setInviteModal] = React.useState<boolean>(false);
   const [sentModal, setSentModal] = React.useState<boolean>(false);
+  const [admins, setAdmins] = useState<IAdminPage[]>([]);
+  const [inputs, setInputs] = React.useState<Record<string, any>>({});
+  const allSelected =
+    admins.length > 0 && admins.every((admin) => admin.selected);
 
-  const [bookings, setBookings] = useState([
-    {
-      id: 1,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 2,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 3,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 4,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 5,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 6,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 7,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-    {
-      id: 8,
-      name: "Frank Edego",
-      space: "Game",
-      package: "Picnic Pack...",
-      date: "12 Oct 2025",
-      price: 10000,
-      duration: "2hrs 30mins",
-      total: 30000,
-      status: "Pending",
-      selected: false,
-    },
-  ]);
+  const handleCreateAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formEl = e.currentTarget;
 
-  const toggleSelect = (id: number) => {
-    setBookings(
-      bookings.map((booking) =>
-        booking.id === id
-          ? { ...booking, selected: !booking.selected }
-          : booking,
+    const toastId = toast.loading(`Sending invite to ${inputs.email}...`, {
+      position: "bottom-right",
+    });
+
+    if (Object.keys(inputs).length === 0) {
+      toast.update(toastId, {
+        render: "Please fill in all fields",
+        position: "bottom-right",
+        type: "error",
+        autoClose: 6000,
+        isLoading: false,
+      });
+      return;
+    }
+
+    Object.values(inputs).map((val) => {
+      if (val === "" || val === null) {
+        return toast.update(toastId, {
+          render: "All inputs are needed!",
+          type: "error",
+          isLoading: false,
+          autoClose: 6000,
+        });
+      }
+    });
+
+    if (!inputs.role) {
+      inputs.role = "manager";
+    }
+
+    const data = {
+      ...inputs,
+    } as { name: string; email: string; role: string };
+
+    try {
+      const response = await createAdmin(data);
+      if (response.success == true) {
+        toast.update(toastId, {
+          render: `New admin invited successfully!`,
+          position: "bottom-right",
+          type: "success",
+          autoClose: 6000,
+          isLoading: false,
+        });
+        const newAdmin = response.data.admin;
+        admins.push(newAdmin);
+
+        setSentModal(true);
+        setInviteModal(false);
+        setInputs({});
+        formEl?.reset();
+      } else {
+        toast.update(toastId, {
+          render: `${response.message}`,
+          position: "bottom-right",
+          type: "error",
+          autoClose: 6000,
+          isLoading: false,
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.update(toastId, {
+        render: "Failed to invite admin",
+        position: "bottom-right",
+        type: "error",
+        autoClose: 6000,
+        isLoading: false,
+      });
+    }
+  };
+
+  const handleMakeAdmin = async (id: string) => {
+    const toastId = toast.loading("Making admin...", {
+      position: "bottom-right",
+    });
+
+    try {
+      const response = await makeAdmin(id);
+      if (response.success) {
+        toast.update(toastId, {
+          render: `${response.message}`,
+          position: "bottom-right",
+          type: "success",
+          autoClose: 6000,
+          isLoading: false,
+        });
+        setAdmins(
+          admins.map((admin) =>
+            admin.id === id ? { ...admin, role: "admin" } : admin,
+          ),
+        );
+      } else {
+        toast.update(toastId, {
+          render: `${response.message}`,
+          position: "bottom-right",
+          type: "error",
+          autoClose: 6000,
+          isLoading: false,
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.update(toastId, {
+        render: "Failed to make admin",
+        position: "bottom-right",
+        type: "error",
+        autoClose: 6000,
+        isLoading: false,
+      });
+    }
+  };
+
+  const handleRemoveAdmin = async (id: string) => {
+    const toastId = toast.loading("Removing admin...", {
+      position: "bottom-right",
+    });
+    try {
+      const response = await deleteAdmin(id);
+      if (response.success) {
+        toast.update(toastId, {
+          render: `${response.message}`,
+          position: "bottom-right",
+          type: "success",
+          autoClose: 6000,
+          isLoading: false,
+        });
+        setAdmins(admins.filter((admin) => admin.id !== id));
+      } else {
+        toast.update(toastId, {
+          render: `${response.message}`,
+          position: "bottom-right",
+          type: "error",
+          autoClose: 6000,
+          isLoading: false,
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.update(toastId, {
+        render: "Failed to remove admin",
+        position: "bottom-right",
+        type: "error",
+        autoClose: 6000,
+        isLoading: false,
+      });
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setAdmins(
+      admins.map((admin) =>
+        admin.id === id ? { ...admin, selected: !admin.selected } : admin,
       ),
     );
   };
 
   const toggleSelectAll = () => {
-    const allSelected = bookings.every((b) => b.selected);
-    setBookings(
-      bookings.map((booking) => ({ ...booking, selected: !allSelected })),
-    );
+    const allSelected = admins.every((u) => u.selected);
+    setAdmins(admins.map((admin) => ({ ...admin, selected: !allSelected })));
   };
 
-  const deleteBooking = (id: number) => {
-    setBookings(bookings.filter((booking) => booking.id !== id));
-  };
-
-  const approveBooking = (id: number) => {
-    setBookings(
-      bookings.map((booking) =>
-        booking.id === id ? { ...booking, status: "Approved" } : booking,
-      ),
-    );
-  };
-
-  const allSelected = bookings.length > 0 && bookings.every((b) => b.selected);
+  React.useEffect(() => {
+    const toastId = toast.loading("Loading admins...", {
+      position: "bottom-right",
+    });
+    const fetchComments = async () => {
+      try {
+        const response = await getAdmins();
+        const admins: IAdminPage[] = response.data.admins;
+        setAdmins(admins);
+        toast.dismiss(toastId);
+      } catch (error) {
+        console.error(error);
+        toast.update(toastId, {
+          render: "Failed to load admins!",
+          type: "error",
+          position: "bottom-right",
+          isLoading: false,
+        });
+      }
+    };
+    fetchComments();
+  }, []);
 
   return (
     <main className="flex-1 py-4 px-5 md:h-[600px] 2xl:h-[770px] overflow-y-auto">
@@ -168,9 +251,9 @@ export default function UserContent() {
       </section>
 
       <div className="w-full min-h-screen bg-gray-50 pt-5">
-        <div className="max-w-7xl mx-auto">
+        <div className="mx-auto">
           <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-scroll">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200">
@@ -200,9 +283,9 @@ export default function UserContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map((booking, index) => (
+                  {admins.map((admin, index) => (
                     <tr
-                      key={booking.id}
+                      key={admin.id}
                       className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
                         index % 2 === 0 ? "bg-white" : "bg-gray-50"
                       }`}
@@ -210,29 +293,29 @@ export default function UserContent() {
                       <td className="px-6 py-4">
                         <input
                           type="checkbox"
-                          checked={booking.selected}
-                          onChange={() => toggleSelect(booking.id)}
+                          checked={admin.selected}
+                          onChange={() => toggleSelect(admin.id)}
                           className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                         />
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-[#737373]">
-                        Mrs The Yard
+                        {admin.name}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        mrsdyard@gmail.com
+                        {admin.email}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        Admin
+                        {admin.role}
                       </td>
                       <td className="px-6 py-4">
                         <span
                           className={`p-1.5 rounded-md text-sm border ${
-                            booking.status === "Pending"
+                            admin.status === "inactive"
                               ? "border-[1px] border-[#8C8273] text-[#8C8273] rounded-sm italic leading-[22px] tracking-[0.5px] font-semibold"
                               : "bg-green-50 border-[1px] border-green-400 text-green-700"
                           }`}
                         >
-                          {booking.status}
+                          {admin.status}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -254,12 +337,18 @@ export default function UserContent() {
                           {/*Dropdown content*/}
                           <ul
                             tabIndex={0}
-                            className="dropdown-content menu bg-white rounded-lg z-1 w-32 p-2 shadow-sm mt-2"
+                            className="dropdown-content menu bg-white rounded-lg z-40 w-32 p-2 shadow-sm mt-2"
                           >
-                            <li className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded">
+                            <li
+                              className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
+                              onClick={() => handleMakeAdmin(admin.id)}
+                            >
                               <button>Make admin</button>
                             </li>
-                            <li className="text-[#A44B4B] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded">
+                            <li
+                              className="text-[#A44B4B] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
+                              onClick={() => handleRemoveAdmin(admin.id)}
+                            >
                               <button>Remove</button>
                             </li>
                           </ul>
@@ -297,7 +386,10 @@ export default function UserContent() {
         <hr className="w-full h-2 text-gray-200 my-5" />
 
         {/*Form*/}
-        <form className="w-full flex flex-col gap-5">
+        <form
+          className="w-full flex flex-col gap-5"
+          onSubmit={handleCreateAdmin}
+        >
           <div className="form-group flex flex-col md:flex-row items-start gap-6">
             <div className="w-full input-group flex flex-col gap-3">
               <label
@@ -310,6 +402,7 @@ export default function UserContent() {
                 type="text"
                 id="fullname"
                 name="fullname"
+                onChange={(e) => (inputs.name = e.target.value)}
                 placeholder="Enter first and last name"
                 className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
               />
@@ -322,13 +415,34 @@ export default function UserContent() {
                 htmlFor="email"
                 className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
               >
-                Enter your email address
+                Enter email address
               </label>
               <input
                 type="email"
                 id="email"
                 name="email"
-                placeholder="Enter your email address"
+                required
+                onChange={(e) => (inputs.email = e.target.value)}
+                placeholder="Enter email address"
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
+            </div>
+          </div>
+
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full input-group flex flex-col gap-3">
+              <label
+                htmlFor="password"
+                className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+              >
+                Enter password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                onChange={(e) => (inputs.password = e.target.value)}
+                placeholder="Enter password"
                 className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
               />
             </div>
@@ -350,6 +464,9 @@ export default function UserContent() {
                   type="radio"
                   id="manager"
                   value={"manager"}
+                  onChange={(e) =>
+                    e.target.checked && (inputs.role = "manager")
+                  }
                   defaultChecked={true}
                   name="role"
                   className="mt-3 radio radio-sm peer border-2 border-yard-primary checked:border-yard-dark-primary checked:text-yard-dark-primary"
@@ -371,6 +488,7 @@ export default function UserContent() {
                   type="radio"
                   id="admin"
                   value={"admin"}
+                  onChange={(e) => e.target.checked && (inputs.role = "admin")}
                   name="role"
                   className="mt-3 radio radio-sm peer border-2 border-yard-primary checked:border-yard-dark-primary checked:text-yard-dark-primary"
                 />
@@ -388,7 +506,7 @@ export default function UserContent() {
 
           <button
             type="submit"
-            className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3"
+            className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3 cursor-pointer"
           >
             <span className="z-40">Send invitation</span>
             <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
@@ -415,7 +533,7 @@ export default function UserContent() {
         </div>
 
         <button
-          className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3"
+          className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3 cursor-pointer"
           onClick={() => setSentModal(false)}
         >
           <span className="z-40">Okay</span>

@@ -202,6 +202,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     );
 
     setSelectedDate(clickedDate);
+    return;
 
     // Get bookings for this date
     const dateKey = getDateKey(day);
@@ -211,15 +212,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
       case "unavailable":
         return setUnavailableModal(true);
       case "pending":
-        // Navigate to pending bookings page with the date and bookings data
-        // const dateParam = clickedDate.toLocaleDateString().split("T")[0];
-        // const bookingIds = dayBookings.map((b) => b._id).join(",");
         saveToLS("booking", { date: clickedDate.toISOString() });
         return router.push(
           `/booking/pending?date=${moment(clickedDate).format("YYYY-MM-DD")}`,
         );
       default:
-        // const data = { date: clickedDate.toISOString() };
         saveToLS("booking", { date: clickedDate.toISOString() });
         setIsModalOpen(true);
     }
@@ -329,7 +326,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                       >
                         {day}
                       </button>
-                      {bookingCount > 0 && !pastDay && (
+                      {bookingCount > 0 && (
                         <small className="text-yard-primary text-[10px] leading-[100%] tracking-[0.5px] italic font-medium z-40">
                           {bookingCount} booking{bookingCount !== 1 ? "s" : ""}
                         </small>
@@ -343,7 +340,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           })}
         </div>
       </div>
-      <Modal isOpen={isModalOpen}>
+      {/*<Modal isOpen={isModalOpen}>
         <section className="w-full">
           <div className="w-full flex items-center justify-between">
             <div className="title flex flex-col items-end">
@@ -463,7 +460,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             Please select another day
           </button>
         </div>
-      </Modal>
+      </Modal>*/}
 
       {/*<Modal isOpen={pendingModal}>
             <section className="w-full">

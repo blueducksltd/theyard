@@ -26,5 +26,5 @@ export function middleware(request: NextRequest) {
 
 // Specify which routes to protect
 export const config = {
-  matcher: ["/admin/dashboard/:path*"],
+  matcher: ["/admin/:path*"],
 };

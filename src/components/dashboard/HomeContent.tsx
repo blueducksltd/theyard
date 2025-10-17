@@ -315,7 +315,7 @@ export default function HomeContent() {
                       {review.name}, {review.location}
                     </h2>
                     <p className="text-[#5A5A53] text-sm leading-5 tracking-[0.5px]">
-                      30 Sept, 2025
+                      {moment(review.createdAt).format("DD MMM, YYYY")}
                     </p>
                   </div>
                   <p className="text-xs text-[#737373] leading-5 tracking-[0.5px] mt-3">
