@@ -92,7 +92,7 @@ export const LoginAdminDto = z.object({
 });
 
 export const UpdatePasswordDTO = z.object({
-  currentPassword: z.string().min(6, "Current password is required"),
+  currentPassword: z.string(),
   newPassword: z.string().min(6, "New password must be at least 6 characters"),
 });
 

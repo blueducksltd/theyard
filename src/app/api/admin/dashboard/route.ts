@@ -23,12 +23,14 @@ export const GET = errorHandler(
         //  Bookings stats
         const activeBookings = await Booking.find({ status: "confirmed" }).sort({ createdAt: -1 })
             .populate("event")
+            .populate("space")
             .populate("customer");
         const activeCount = activeBookings.length;
         // Get last 2 active bookings
         const bookings = activeBookings.slice(0, 2);
         const _bookings = bookings.map(booking => ({
             id: booking.id,
+            space: booking.space.name,
             name: booking.customer ? `${booking.customer.firstname} ${booking.customer.lastname}` : "N/A",
             date: booking.eventDate,
             time: `${booking.event.time.start} - ${booking.event.time.end}`,
@@ -41,6 +43,7 @@ export const GET = errorHandler(
         const events = upcomingEvents.slice(0, 4);
         const cleanedEvents = events.map(event => ({
             id: event.id,
+            title: event.title,
             name: event.customer ? `${event.customer.firstname} ${event.customer.lastname}` : "N/A",
             date: event.date,
             duration: getDuration(event.time.start, event.time.end)
