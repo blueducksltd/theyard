@@ -1,15 +1,12 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
 import React, { useState, useMemo, useEffect } from "react";
-import Modal from "../Modal";
 import { useRouter } from "next/navigation";
 import { IBooking } from "@/types/Booking";
 import { getPackages } from "@/util";
 import { IPackage } from "@/types/Package";
-import { loadFromLS, saveToLS } from "@/util/helper";
-import { toast } from "react-toastify";
+import { saveToLS } from "@/util/helper";
 import moment from "moment";
-import Link from "next/link";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
@@ -89,7 +86,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     if (!bookings || bookings.length === 0) return "available";
 
     // Check if any booking is cancelled
-    const hasCancelled = bookings.some((b) => b.status === "cancelled");
+    // const hasCancelled = bookings.some((b) => b.status === "cancelled");
 
     // Check if all bookings are confirmed (fully booked)
     const allConfirmed = bookings.every((b) => b.status === "confirmed");
@@ -211,15 +208,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
       case "unavailable":
         return setUnavailableModal(true);
       case "pending":
-        // Navigate to pending bookings page with the date and bookings data
-        // const dateParam = clickedDate.toLocaleDateString().split("T")[0];
-        // const bookingIds = dayBookings.map((b) => b._id).join(",");
         saveToLS("booking", { date: clickedDate.toISOString() });
         return router.push(
           `/booking/pending?date=${moment(clickedDate).format("YYYY-MM-DD")}`,
         );
       default:
-        // const data = { date: clickedDate.toISOString() };
         saveToLS("booking", { date: clickedDate.toISOString() });
         setIsModalOpen(true);
     }
@@ -231,19 +224,19 @@ const AdminCalendar: React.FC<CalendarProps> = ({
 
   const days = getDaysInMonth();
 
-  const handleProcessPackage = () => {
-    if (Object.entries(selectedPackage).length === 0) {
-      toast.warning("Please select a package", { position: "bottom-right" });
-      return;
-    }
+  // const handleProcessPackage = () => {
+  //   if (Object.entries(selectedPackage).length === 0) {
+  //     toast.warning("Please select a package", { position: "bottom-right" });
+  //     return;
+  //   }
 
-    const savedBookingDetails = loadFromLS("booking");
-    savedBookingDetails["package"] = selectedPackage;
-    console.log(savedBookingDetails);
-    // return;
-    saveToLS("booking", savedBookingDetails);
-    router.push(`/booking/checkout`);
-  };
+  //   const savedBookingDetails = loadFromLS("booking");
+  //   savedBookingDetails["package"] = selectedPackage;
+  //   console.log(savedBookingDetails);
+  //   // return;
+  //   saveToLS("booking", savedBookingDetails);
+  //   router.push(`/booking/checkout`);
+  // };
 
   // Get packages
   useEffect(() => {
@@ -329,7 +322,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                       >
                         {day}
                       </button>
-                      {bookingCount > 0 && !pastDay && (
+                      {bookingCount > 0 && (
                         <small className="text-yard-primary text-[10px] leading-[100%] tracking-[0.5px] italic font-medium z-40">
                           {bookingCount} booking{bookingCount !== 1 ? "s" : ""}
                         </small>
@@ -343,7 +336,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           })}
         </div>
       </div>
-      <Modal isOpen={isModalOpen}>
+      {/*<Modal isOpen={isModalOpen}>
         <section className="w-full">
           <div className="w-full flex items-center justify-between">
             <div className="title flex flex-col items-end">
@@ -463,7 +456,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             Please select another day
           </button>
         </div>
-      </Modal>
+      </Modal>*/}
 
       {/*<Modal isOpen={pendingModal}>
             <section className="w-full">

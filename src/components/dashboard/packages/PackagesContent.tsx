@@ -147,6 +147,13 @@ export default function PackagesContent() {
       await fetchData();
       toast.dismiss(toastId);
     })();
+
+    //clean up
+    return () => {
+      if (toastId) {
+        toast.dismiss(toastId);
+      }
+    };
   }, []);
 
   return (

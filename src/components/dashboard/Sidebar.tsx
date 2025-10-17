@@ -1,9 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import Modal from "../Modal";
 import { usePathname } from "next/navigation";
+import { IAdmin } from "@/types/Admin";
+import { adminLogout, getMyInfo, updateAdminInfo } from "@/util";
+import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 // type definitions
 type sectionType = "form" | "permission" | "password";
@@ -14,14 +19,64 @@ interface IPassword {
   setShowConfPwd: (value: boolean) => void;
 }
 
+interface ISettings {
+  adminInfo: IAdmin | null;
+  inputs: Record<string, any>;
+  pic: File | string;
+  setPic: React.Dispatch<React.SetStateAction<File | string>>;
+  setAdminInfo: React.Dispatch<React.SetStateAction<IAdmin | null>>;
+}
+
 export default function Sidebar() {
   const [settingsModal, setSettingsModal] = React.useState<boolean>(false);
   const [logoutModal, setLogoutModal] = React.useState<boolean>(false);
   const [section, setSection] = React.useState<sectionType>("form");
   const [showPassword, setShowPassword] = React.useState<boolean>(false);
+  const [adminInfo, setAdminInfo] = React.useState<IAdmin | null>(null);
+  const [inputs, setInputs] = React.useState<Record<string, any>>({});
+  const [pic, setPic] = React.useState<File | string>(
+    adminInfo?.imageUrl as string,
+  );
   const [showConfirmPassword, setShowConfirmPassword] =
     React.useState<boolean>(false);
   const pathname = usePathname();
+
+  const handleLogout = async () => {
+    try {
+      const response = await adminLogout({
+        name: adminInfo?.name as string,
+        email: adminInfo?.email as string,
+        password: adminInfo?.password as string,
+      });
+      if (response.success) {
+        toast.success("Logged out successfully!", { position: "bottom-right" });
+        localStorage.removeItem("user");
+        Cookies.remove("token");
+        window.location.href = "/admin/auth";
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.error("Failed to Logout, please try again!", {
+        position: "bottom-right",
+      });
+    } finally {
+      setLogoutModal(false);
+    }
+  };
+
+  React.useEffect(() => {
+    const fetchAdminInfo = async () => {
+      try {
+        const response = await getMyInfo();
+        if (response.success) {
+          setAdminInfo(response.data.admin);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchAdminInfo();
+  }, []);
 
   return (
     <main className="w-[256px] py-4 px-5 border-r-[1px] border-[#E4E8E5] h-full">
@@ -274,7 +329,15 @@ export default function Sidebar() {
               <span className="text-[16px]">Password</span>
             </button>
           </div>
-          {section == "form" ? <SettingsForm /> : null}
+          {section == "form" ? (
+            <SettingsForm
+              adminInfo={adminInfo}
+              inputs={inputs}
+              pic={pic}
+              setPic={setPic}
+              setAdminInfo={setAdminInfo}
+            />
+          ) : null}
           {section == "permission" ? <Permission /> : null}
           {section == "password" ? (
             <Password
@@ -322,7 +385,11 @@ export default function Sidebar() {
             <div className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
           </button>
 
-          <button className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-[#8C5C5C] text-[#EEEEE6] group relative overflow-hidden rounded-[5px] mt-5 cursor-pointer">
+          <button
+            type="button"
+            className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-[#8C5C5C] text-[#EEEEE6] group relative overflow-hidden rounded-[5px] mt-5 cursor-pointer"
+            onClick={() => handleLogout()}
+          >
             <span className="z-40 font-sen">Log out</span>
             <div className="absolute top-0 left-0 bg-[#6d4a4aa6] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
           </button>
@@ -332,17 +399,87 @@ export default function Sidebar() {
   );
 }
 
-const SettingsForm = () => {
+const SettingsForm = ({
+  adminInfo,
+  inputs,
+  pic,
+  setPic,
+  setAdminInfo,
+}: ISettings) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const toastId = toast.loading("Updating profile...", {
+      position: "bottom-right",
+    });
+
+    console.log(pic);
+
+    if (typeof pic !== "string" && pic !== undefined) {
+      inputs.image = pic;
+    }
+
+    if (Object.keys(inputs).length === 0) {
+      return toast.update(toastId, {
+        render: "Nothing was changed!",
+        type: "info",
+        autoClose: 6000,
+        isLoading: false,
+      });
+    }
+
+    const formData = new FormData();
+    Object.entries(inputs).map(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    try {
+      const response = await updateAdminInfo(formData);
+      if (response.success) {
+        toast.update(toastId, {
+          render: "Profile updated successfully!",
+          type: "success",
+          autoClose: 6000,
+          isLoading: false,
+        });
+        setAdminInfo(response.data.admin);
+      } else {
+        toast.update(toastId, {
+          render: response.message as string,
+          type: "error",
+          autoClose: 6000,
+          isLoading: false,
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.update(toastId, {
+        render: "Something went wrong! Please try again later.",
+        type: "error",
+        autoClose: 6000,
+        isLoading: false,
+      });
+    }
+
+    console.log(inputs);
+  };
   return (
-    <form className="w-full flex flex-col gap-5">
+    <form className="w-full flex flex-col gap-5" onSubmit={handleSubmit}>
       <div className="form-group flex flex-col md:flex-row items-center justify-between">
-        <Image
-          src={"/gallery/girl.svg"}
+        <div
+          className="rounded-full w-[70px] h-[70px] bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${pic ? (typeof pic === "string" ? pic : URL.createObjectURL(pic)) : "/gallery/girl.svg"})`,
+          }}
+        ></div>
+        {/*<Image
+          src={
+
+          }
           width={70}
           height={70}
           className="rounded-full"
           alt="Profile Image"
-        />
+        />*/}
 
         <label
           htmlFor="photo"
@@ -352,6 +489,7 @@ const SettingsForm = () => {
             type="file"
             id="photo"
             name="photo"
+            onChange={(e) => (e.target.files ? setPic(e.target.files[0]) : "")}
             accept="image/*,video/*"
             className="hidden"
           />
@@ -371,7 +509,8 @@ const SettingsForm = () => {
             type="text"
             id="name"
             name="name"
-            defaultValue={"Juliet Ranky"}
+            onChange={(e) => (inputs.name = e.target.value)}
+            defaultValue={adminInfo?.name}
             placeholder="Name"
             className="w-full h-[52px] rounded2px py-3 border-b-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] text-[#999999] leading-[22px] tracking-[0.5px]"
           />
@@ -390,7 +529,8 @@ const SettingsForm = () => {
             type="email"
             id="email"
             name="email"
-            defaultValue={"juliet@gmail.com"}
+            onChange={(e) => (inputs.email = e.target.value)}
+            defaultValue={adminInfo?.email}
             placeholder="Email"
             className="w-full h-[52px] rounded2px py-3 border-b-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] text-[#999999] leading-[22px] tracking-[0.5px]"
           />
@@ -409,7 +549,8 @@ const SettingsForm = () => {
             type="phone"
             id="phone"
             name="phone"
-            defaultValue={"+123456789"}
+            onChange={(e) => (inputs.phone = e.target.value)}
+            defaultValue={adminInfo?.phone || ""}
             placeholder="Phone"
             className="w-full h-[52px] rounded2px py-3 border-b-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] text-[#999999] leading-[22px] tracking-[0.5px]"
           />
@@ -418,7 +559,7 @@ const SettingsForm = () => {
 
       <button
         type="submit"
-        className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3"
+        className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3 cursor-pointer"
       >
         <span className="z-40">Save</span>
         <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
