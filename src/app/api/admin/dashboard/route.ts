@@ -43,6 +43,7 @@ export const GET = errorHandler(
         const events = upcomingEvents.slice(0, 4);
         const cleanedEvents = events.map(event => ({
             id: event.id,
+            title: event.title,
             name: event.customer ? `${event.customer.firstname} ${event.customer.lastname}` : "N/A",
             date: event.date,
             duration: getDuration(event.time.start, event.time.end)
