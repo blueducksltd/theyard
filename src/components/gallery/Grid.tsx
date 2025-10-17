@@ -13,34 +13,50 @@ export default function Grid() {
   const [gallery, setGallery] = React.useState<IGallery[]>([]);
   const [_gallery, setTempGallery] = React.useState<IGallery[]>([]);
   const [tags, setTags] = React.useState<ITag[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  const handleGallery = async (value: string) => {
+  const handleGallery = (value: string) => {
+    // Remove async, not needed
     if (value === "all") {
       setGallery(_gallery);
     } else {
       const filteredGallery = _gallery.filter(
-        (image) => image.category.toString() === value,
+        (image) => image.category?.id === value, // Add optional chaining
       );
-      console.log(filteredGallery);
       setGallery(filteredGallery);
     }
   };
 
   React.useEffect(() => {
     (async () => {
+      setLoading(true);
       try {
-        const gallery = await getGallery();
-        console.log(gallery);
-        const tags = await getTags();
+        const [galleryRes, tagsRes] = await Promise.all([
+          getGallery(),
+          getTags(),
+        ]);
 
-        setGallery(gallery.data.gallery);
-        setTempGallery(gallery.data.gallery);
-        setTags(tags.data.tags);
+        setGallery(galleryRes?.data?.gallery || []);
+        setTempGallery(galleryRes?.data?.gallery || []);
+        setTags(tagsRes?.data?.tags || []);
       } catch (error) {
-        console.log(error);
+        console.error("Error loading data:", error);
+        setGallery([]);
+        setTempGallery([]);
+        setTags([]);
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
+
+  if (loading) {
+    return (
+      <main className="flex justify-center items-center min-h-screen">
+        <div>Loading...</div>
+      </main>
+    );
+  }
 
   return (
     <main>
