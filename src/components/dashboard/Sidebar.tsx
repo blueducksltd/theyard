@@ -6,7 +6,13 @@ import React from "react";
 import Modal from "../Modal";
 import { usePathname } from "next/navigation";
 import { IAdmin } from "@/types/Admin";
-import { adminLogout, getMyInfo, updateAdminInfo } from "@/util";
+import {
+  adminLogout,
+  getMyInfo,
+  updateAdminInfo,
+  updateAdminPassword,
+  updateAdminPreferences,
+} from "@/util";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 
@@ -16,15 +22,29 @@ interface IPassword {
   showPwd: boolean;
   setShowPwd: (value: boolean) => void;
   showConfPwd: boolean;
+  adminInfo: IAdmin | null;
+  inputs: Record<string, any>;
   setShowConfPwd: (value: boolean) => void;
+  setAdminInfo: React.Dispatch<React.SetStateAction<IAdmin | null>>;
+  setInputs: React.Dispatch<React.SetStateAction<Record<string, any>>>;
 }
 
 interface ISettings {
   adminInfo: IAdmin | null;
   inputs: Record<string, any>;
   pic: File | string;
+  setInputs: React.Dispatch<React.SetStateAction<Record<string, any>>>;
   setPic: React.Dispatch<React.SetStateAction<File | string>>;
   setAdminInfo: React.Dispatch<React.SetStateAction<IAdmin | null>>;
+}
+
+interface IPermission {
+  inputs: Record<string, any>;
+  adminInfo: IAdmin | null;
+  preferences: number[];
+  setAdminInfo: React.Dispatch<React.SetStateAction<IAdmin | null>>;
+  setInputs: React.Dispatch<React.SetStateAction<Record<string, any>>>;
+  setPreferences: React.Dispatch<React.SetStateAction<number[]>>;
 }
 
 export default function Sidebar() {
@@ -34,9 +54,8 @@ export default function Sidebar() {
   const [showPassword, setShowPassword] = React.useState<boolean>(false);
   const [adminInfo, setAdminInfo] = React.useState<IAdmin | null>(null);
   const [inputs, setInputs] = React.useState<Record<string, any>>({});
-  const [pic, setPic] = React.useState<File | string>(
-    adminInfo?.imageUrl as string,
-  );
+  const [pic, setPic] = React.useState<File | string>("");
+  const [preferences, setPreferences] = React.useState<number[]>([]);
   const [showConfirmPassword, setShowConfirmPassword] =
     React.useState<boolean>(false);
   const pathname = usePathname();
@@ -69,6 +88,8 @@ export default function Sidebar() {
       try {
         const response = await getMyInfo();
         if (response.success) {
+          setPic(response.data.admin.imageUrl);
+          setPreferences(response.data.admin.permissions);
           setAdminInfo(response.data.admin);
         }
       } catch (error) {
@@ -334,17 +355,31 @@ export default function Sidebar() {
               adminInfo={adminInfo}
               inputs={inputs}
               pic={pic}
+              setInputs={setInputs}
               setPic={setPic}
               setAdminInfo={setAdminInfo}
             />
           ) : null}
-          {section == "permission" ? <Permission /> : null}
+          {section == "permission" ? (
+            <Permission
+              inputs={inputs}
+              preferences={preferences}
+              setInputs={setInputs}
+              setAdminInfo={setAdminInfo}
+              setPreferences={setPreferences}
+              adminInfo={adminInfo}
+            />
+          ) : null}
           {section == "password" ? (
             <Password
+              adminInfo={adminInfo}
+              inputs={inputs}
               showPwd={showPassword}
               setShowPwd={setShowPassword}
               showConfPwd={showConfirmPassword}
               setShowConfPwd={setShowConfirmPassword}
+              setInputs={setInputs}
+              setAdminInfo={setAdminInfo}
             />
           ) : null}
         </div>
@@ -403,6 +438,7 @@ const SettingsForm = ({
   adminInfo,
   inputs,
   pic,
+  setInputs,
   setPic,
   setAdminInfo,
 }: ISettings) => {
@@ -411,8 +447,6 @@ const SettingsForm = ({
     const toastId = toast.loading("Updating profile...", {
       position: "bottom-right",
     });
-
-    console.log(pic);
 
     if (typeof pic !== "string" && pic !== undefined) {
       inputs.image = pic;
@@ -442,6 +476,8 @@ const SettingsForm = ({
           isLoading: false,
         });
         setAdminInfo(response.data.admin);
+        localStorage.setItem("user", JSON.stringify(response.data.admin));
+        setInputs({});
       } else {
         toast.update(toastId, {
           render: response.message as string,
@@ -459,9 +495,8 @@ const SettingsForm = ({
         isLoading: false,
       });
     }
-
-    console.log(inputs);
   };
+
   return (
     <form className="w-full flex flex-col gap-5" onSubmit={handleSubmit}>
       <div className="form-group flex flex-col md:flex-row items-center justify-between">
@@ -568,7 +603,74 @@ const SettingsForm = ({
   );
 };
 
-const Permission = () => {
+const Permission = ({
+  adminInfo,
+  preferences,
+  setPreferences,
+  setAdminInfo,
+}: IPermission) => {
+  const handleSubmit = async () => {
+    const toastId = toast.loading("Setting preferences...", {
+      position: "bottom-right",
+    });
+
+    if (preferences.length === 0) {
+      return toast.update(toastId, {
+        render: "Nothing was changed!",
+        type: "info",
+        autoClose: 6000,
+        isLoading: false,
+      });
+    }
+
+    if (
+      adminInfo?.permissions.sort().join(",") === preferences.sort().join(",")
+    ) {
+      return toast.update(toastId, {
+        render: "Nothing was changed!",
+        type: "info",
+        autoClose: 6000,
+        isLoading: false,
+      });
+    }
+
+    const permissions = new FormData();
+    permissions.append("permissions", preferences.join(","));
+
+    permissions.forEach((value, key) => {
+      console.log(`Key: ${key}, Value: ${value}`);
+    });
+
+    try {
+      const response = await updateAdminPreferences(permissions);
+      if (response.success) {
+        toast.update(toastId, {
+          render: "Preferences updated successfully!",
+          type: "success",
+          autoClose: 6000,
+          isLoading: false,
+        });
+        console.log(response.data.admin);
+        setAdminInfo(response.data.admin);
+      } else {
+        toast.update(toastId, {
+          render: response.message as string,
+          type: "error",
+          autoClose: 6000,
+          isLoading: false,
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.update(toastId, {
+        render: "Something went wrong! Please try again later.",
+        type: "error",
+        autoClose: 6000,
+        isLoading: false,
+      });
+    }
+  };
+
   return (
     <section className="w-full flex flex-col gap-5">
       <h3 className="text-[#1A1A1A] text-[16px] leading-6 tracking-[0.5px]">
@@ -586,6 +688,12 @@ const Permission = () => {
           type="checkbox"
           id="admin"
           name="admin"
+          defaultChecked={preferences.includes(1)}
+          onChange={(e) =>
+            e.target.checked
+              ? setPreferences([...preferences, 1])
+              : setPreferences(preferences.filter((p) => p !== 1))
+          }
           className="checkbox checkbox-lg rounded-full"
         />
       </label>
@@ -601,6 +709,12 @@ const Permission = () => {
           type="checkbox"
           id="space"
           name="space"
+          defaultChecked={preferences.includes(2)}
+          onChange={(e) =>
+            e.target.checked
+              ? setPreferences([...preferences, 2])
+              : setPreferences(preferences.filter((p) => p !== 2))
+          }
           className="checkbox checkbox-lg rounded-full"
         />
       </label>
@@ -616,13 +730,20 @@ const Permission = () => {
           type="checkbox"
           id="review"
           name="review"
+          defaultChecked={preferences.includes(3)}
+          onChange={(e) =>
+            e.target.checked
+              ? setPreferences([...preferences, 3])
+              : setPreferences(preferences.filter((p) => p !== 3))
+          }
           className="checkbox checkbox-lg text-yard-primary rounded-full"
         />
       </label>
 
       <button
-        type="submit"
-        className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3"
+        type="button"
+        onClick={() => handleSubmit()}
+        className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3 cursor-pointer"
       >
         <span className="z-40">Save preferences</span>
         <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
@@ -632,13 +753,67 @@ const Permission = () => {
 };
 
 const Password = ({
+  inputs,
   showPwd,
   showConfPwd,
   setShowPwd,
   setShowConfPwd,
+  setInputs,
 }: IPassword) => {
+  const handleChangePassword = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formEl = e.currentTarget;
+    const toastId = toast.loading("Updating Password...", {
+      position: "bottom-right",
+    });
+
+    if (Object.keys(inputs).length === 0) {
+      return toast.update(toastId, {
+        render: "Nothing was changed!",
+        type: "info",
+        autoClose: 6000,
+        isLoading: false,
+      });
+    }
+    const data = { ...inputs } as {
+      currentPassword: string;
+      newPassword: string;
+    };
+
+    try {
+      const response = await updateAdminPassword(data);
+      if (response.success) {
+        toast.update(toastId, {
+          render: "Password updated successfully!",
+          type: "success",
+          autoClose: 6000,
+          isLoading: false,
+        });
+        formEl.reset();
+        setInputs({});
+      } else {
+        toast.update(toastId, {
+          render: response.message as string,
+          type: "error",
+          autoClose: 6000,
+          isLoading: false,
+        });
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.update(toastId, {
+        render: `An error occurred while updating password! Possible Reasons: Network issues, Invalid credentials, Server error`,
+        type: "error",
+        autoClose: 10000,
+        isLoading: false,
+      });
+    }
+  };
   return (
-    <form className="w-full flex flex-col gap-5">
+    <form
+      className="w-full flex flex-col gap-5"
+      onSubmit={handleChangePassword}
+    >
       <div className="form-group flex flex-col md:flex-row items-start gap-6">
         <div className="w-full input-group flex flex-col gap-3 relative">
           <label
@@ -651,6 +826,7 @@ const Password = ({
             type={showPwd ? "text" : "password"}
             id="password"
             name="password"
+            onChange={(e) => (inputs.currentPassword = e.target.value)}
             placeholder="Enter password"
             className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] text-[#999999] leading-[22px] tracking-[0.5px]"
           />
@@ -677,7 +853,9 @@ const Password = ({
             type={showConfPwd ? "text" : "password"}
             id="confPassword"
             name="confPassword"
+            minLength={6}
             placeholder="Enter password"
+            onChange={(e) => (inputs.newPassword = e.target.value)}
             className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] text-[#999999] leading-[22px] tracking-[0.5px]"
           />
           <Image
@@ -693,7 +871,7 @@ const Password = ({
 
       <button
         type="submit"
-        className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3"
+        className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3 cursor-pointer"
       >
         <span className="z-40">Save</span>
         <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
