@@ -102,6 +102,12 @@ export const getActiveBookings = async () => {
   return response.data;
 };
 
+// Get dashboard Data
+export const getDashboardData = async () => {
+  const response = await axios.get(`/admin/dashboard`);
+  return response.data;
+};
+
 export const publishOrIgnoreReview = async (data: {
   id?: string;
   status: string;

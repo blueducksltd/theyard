@@ -1,5 +1,4 @@
 "use client";
-import { IBooking } from "@/types/Booking";
 import Image from "next/image";
 import { confirmOrCancelBookings, getBookings } from "@/util";
 import { useEffect, useState } from "react";
@@ -9,7 +8,6 @@ import { ISpace } from "@/types/Space";
 import { IEvent } from "@/types/Event";
 import { IPackage } from "@/types/Package";
 import { toast } from "react-toastify";
-import { set } from "zod/v3";
 
 interface IPageBooking {
   id: string;
