@@ -21,7 +21,7 @@ export default function Grid() {
       setGallery(_gallery);
     } else {
       const filteredGallery = _gallery.filter(
-        (image) => image.category?.id === value, // Add optional chaining
+        (image) => image.category === value, // Add optional chaining
       );
       setGallery(filteredGallery);
     }
