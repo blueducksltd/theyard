@@ -54,10 +54,10 @@ export default function Header({ section }: IProps) {
           <div
             className="rounded-full w-[32px] h-[32px] bg-cover bg-center"
             style={{
-              backgroundImage: `url(${user.imageUrl ? user.imageUrl : "/gallery/girl.svg"})`,
+              backgroundImage: `url(${user?.imageUrl ? user?.imageUrl : "/gallery/girl.svg"})`,
             }}
           ></div>
-          <span className="z-50">{user.name?.split(" ")[0]} Profile</span>
+          <span className="z-50">{user?.name?.split(" ")[0]} Profile</span>
           {/*<div className="absolute top-0 left-0 bg-yard-hover w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>*/}
         </Link>
       </section>
