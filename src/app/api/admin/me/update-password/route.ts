@@ -24,7 +24,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
     // Validate current password
     const isMatch = await bcrypt.compare(data.currentPassword, admin.password);
-    if (!isMatch) throw APIError.BadRequest("Current password is incorrect");
+    if (!isMatch) return APIResponse.success("Current password is incorrect", undefined);
 
     // Update admin password
     admin.password = data.newPassword;
