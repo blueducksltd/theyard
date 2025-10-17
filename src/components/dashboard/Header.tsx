@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
-
+"use client";
+import { IAdmin } from "@/types/Admin";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -8,10 +9,14 @@ interface IProps {
 }
 
 export default function Header({ section }: IProps) {
+  const user: IAdmin = JSON.parse(localStorage.getItem("user") || "{}");
+
   return (
     <main className="w-full flex items-center justify-between py-4 px-5 border-b-[1px] border-[#E4E8E5]">
       <section className="flex items-center gap-[188px]">
-        <img src={"/logo-black.svg"} alt="Logo" className="w-[67px]" />
+        <Link href={"/"} target="_blank">
+          <img src={"/logo-black.svg"} alt="Logo" className="w-[67px]" />
+        </Link>
         <h2 className="font-bold text-2xl leading-8 text-yard-primary mt-4">
           {section || "Admin Dashboard"}
         </h2>
@@ -33,16 +38,15 @@ export default function Header({ section }: IProps) {
 
         <Link
           href={"/admin/dashboard"}
-          className="w-[159px] h-[52px] lg:flex justify-center items-center bg-[#E4E8E5] text-yard-primary py-3 px-4 rounded-sm gap-2 hidden group relative overflow-hidden mr-5"
+          className="w-max h-[52px] lg:flex justify-center items-center bg-[#E4E8E5] text-yard-primary py-3 px-4 rounded-sm gap-2 hidden group relative overflow-hidden mr-5"
         >
-          <Image
-            src={"/gallery/girl.svg"}
-            width={32}
-            height={32}
-            className="z-40"
-            alt="Dashboard Icon"
-          />
-          <span className="z-50">User Profile</span>
+          <div
+            className="rounded-full w-[32px] h-[32px] bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${user.imageUrl ? user.imageUrl : "/gallery/girl.svg"})`,
+            }}
+          ></div>
+          <span className="z-50">{user.name.split(" ")[0]} Profile</span>
           {/*<div className="absolute top-0 left-0 bg-yard-hover w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>*/}
         </Link>
       </section>

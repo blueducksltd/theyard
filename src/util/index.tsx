@@ -228,6 +228,23 @@ export const updateAdminInfo = async (data: FormData) => {
   return response.data;
 };
 
+// Update admin preferences
+export const updateAdminPreferences = async (data: FormData) => {
+  const response = await axios.put(`/admin/me`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Update admin password
+export const updateAdminPassword = async (data: {
+  currentPassword: string;
+  newPassword: string;
+}) => {
+  const response = await axios.post(`/admin/me/update-password`, data);
+  return response.data;
+};
+
 // Admin Logout
 export const adminLogout = async (data: {
   name: string;
