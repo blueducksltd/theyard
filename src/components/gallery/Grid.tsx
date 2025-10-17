@@ -28,13 +28,17 @@ export default function Grid() {
 
   React.useEffect(() => {
     (async () => {
-      const gallery = await getGallery();
-      console.log(gallery);
-      const tags = await getTags();
+      try {
+        const gallery = await getGallery();
+        console.log(gallery);
+        const tags = await getTags();
 
-      setGallery(gallery.data.gallery);
-      setTempGallery(gallery.data.gallery);
-      setTags(tags.data.tags);
+        setGallery(gallery.data.gallery);
+        setTempGallery(gallery.data.gallery);
+        setTags(tags.data.tags);
+      } catch (error) {
+        console.log(error);
+      }
     })();
   }, []);
 
