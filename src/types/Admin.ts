@@ -75,7 +75,7 @@ export const UpdateAdminDto = z.object({
     .optional(),
   role: z.enum(["admin", "manager"]).optional(),
   permissions: z.array(z.number()).optional(),
-  phone: z.string().min(10),
+  phone: z.string().min(10).optional(),
   imageUrl: z.string().optional()
 });
 
