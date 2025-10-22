@@ -139,7 +139,7 @@ export default function RootLayout({
       <body
         className={`${sen.variable} ${lato.variable} ${playfair.variable} antialiased`}
       >
-        <ToastContainer />
+        <ToastContainer position="bottom-right" autoClose={6000} />
         {children}
       </body>
     </html>

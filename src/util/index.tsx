@@ -91,6 +91,11 @@ export const createBookings = async (data: FormData) => {
   return response.data;
 };
 
+export const verifyPayment = async (data: { reference: string }) => {
+  const response = await axios.post(`/payments`, data);
+  return response.data;
+};
+
 // ============================= API's for admin =============================
 export const adminLogin = async (data: { email: string; password: string }) => {
   const response = await axios.post(`/admin/login`, data);
@@ -258,5 +263,17 @@ export const adminLogout = async (data: {
   password: string;
 }) => {
   const response = await axios.post(`/admin/logout`, data);
+  return response.data;
+};
+
+// Get admin notifications
+export const getAdminNotifications = async () => {
+  const response = await axios.get(`/notifications`);
+  return response.data;
+};
+
+// Read Notification
+export const readNotification = async (data: { id: string }) => {
+  const response = await axios.post(`/notifications/read`, data);
   return response.data;
 };
