@@ -25,6 +25,10 @@ interface IPageNotifications {
 export default function Header({ section }: IProps) {
   const [user, setUser] = useState<IAdmin | null>(null);
   const [notifications, setNotifications] = useState<IPageNotifications[]>([]);
+  const [defaultNotifications, setDefaultNotifications] = useState<
+    IPageNotifications[]
+  >([]);
+  const [notificationSection, setNotificationSection] = useState("unread");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -32,7 +36,22 @@ export default function Header({ section }: IProps) {
     try {
       const response = await getAdminNotifications();
       if (response) {
+        setDefaultNotifications(response.notifications);
         setNotifications(response.notifications);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  const fetchNotificationByInterval = async () => {
+    try {
+      const response = await getAdminNotifications();
+      if (response) {
+        const newNotifications: IPageNotifications[] = response.notifications;
+        if (newNotifications.length !== defaultNotifications.length) {
+          setDefaultNotifications(newNotifications);
+        }
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -84,6 +103,32 @@ export default function Header({ section }: IProps) {
     }
   };
 
+  const handleNotificationSection = (section: string) => {
+    setNotificationSection(section);
+    switch (section) {
+      case "all":
+        setNotifications(defaultNotifications);
+        break;
+      case "unread":
+        setNotifications(
+          defaultNotifications.filter(
+            (notification) => notification.read === false,
+          ),
+        );
+        break;
+      case "read":
+        setNotifications(
+          defaultNotifications.filter(
+            (notification) => notification.read === true,
+          ),
+        );
+        break;
+      default:
+        setNotifications(defaultNotifications);
+        break;
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
 
@@ -101,9 +146,10 @@ export default function Header({ section }: IProps) {
 
   useEffect(() => {
     fetchNotifications();
-    setInterval(async () => {
-      await fetchNotifications();
-    }, 5000);
+    const intervalId = setInterval(fetchNotificationByInterval, 5000);
+
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Prevent hydration mismatch
@@ -161,7 +207,14 @@ export default function Header({ section }: IProps) {
 
           {/* Notification Icon */}
           <button
-            onClick={() => setIsDrawerOpen(true)}
+            onClick={() => {
+              setNotifications(
+                defaultNotifications.filter(
+                  (notification) => notification.read === false,
+                ),
+              );
+              setIsDrawerOpen(true);
+            }}
             className="p-2 hover:bg-gray-100 transition-colors relative cursor-pointer"
             aria-label="Notifications"
           >
@@ -172,8 +225,9 @@ export default function Header({ section }: IProps) {
               alt="Notification Icon"
             />
             {/*Notification badge */}
-            {notifications.filter((notification) => notification.read === false)
-              .length > 0 && (
+            {defaultNotifications.filter(
+              (notification) => notification.read === false,
+            ).length > 0 && (
               <span className="absolute top-1 right-1 flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-yard-primary opacity-75 animate-ping"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-yard-dark-primary"></span>
@@ -214,7 +268,10 @@ export default function Header({ section }: IProps) {
               </h2>
               <div
                 className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-                onClick={() => setIsDrawerOpen(false)}
+                onClick={() => {
+                  setNotificationSection("unread");
+                  setIsDrawerOpen(false);
+                }}
               >
                 <img
                   src={"/icons/cancel.svg"}
@@ -228,42 +285,55 @@ export default function Header({ section }: IProps) {
 
           <section className="flex items-center justify-between mt-8">
             <div className="flex items-center gap-7">
-              <button className="flex items-center gap-1 border-b-2 pb-1">
+              <button
+                className={`flex items-center ${notificationSection == "unread" ? "border-b-2" : ""} gap-1 pb-1 duration-700 hover:scale-105 cursor-pointer`}
+                onClick={() => handleNotificationSection("unread")}
+              >
+                <p className="text-[16px] font-sen font-medium">Unread</p>
+                <span className="w-5 h-5 flex justify-center items-center rounded2px text-[#F1F1F0] p-1 bg-[#1A231C] font-sen font-medium text-xs leading-[24px] tracking-[0.4px]">
+                  {
+                    defaultNotifications.filter(
+                      (notification) => notification.read === false,
+                    ).length
+                  }
+                </span>
+              </button>
+
+              <button
+                className={`flex items-center ${notificationSection == "read" ? "border-b-2" : ""} gap-1 pb-1 duration-700 hover:scale-105 cursor-pointer`}
+                onClick={() => handleNotificationSection("read")}
+              >
+                <p className="text-[16px] font-sen font-medium">Read</p>
+                <span className="w-5 h-5 flex justify-center items-center rounded2px text-[#F1F1F0] p-1 bg-[#1A231C] font-sen font-medium text-xs leading-[24px] tracking-[0.4px]">
+                  {
+                    defaultNotifications.filter(
+                      (notification) => notification.read === true,
+                    ).length
+                  }
+                </span>
+              </button>
+
+              <button
+                className={`flex items-center ${notificationSection == "all" ? "border-b-2" : ""} gap-1 pb-1 duration-700 hover:scale-105 cursor-pointer`}
+                onClick={() => handleNotificationSection("all")}
+              >
                 <p className="text-[16px] font-sen font-medium">All</p>
                 <span className="w-5 h-5 flex justify-center items-center rounded2px text-[#F1F1F0] p-1 bg-[#1A231C] font-sen font-medium text-xs leading-[24px] tracking-[0.4px]">
-                  {notifications.length}
-                </span>
-              </button>
-
-              <button className="flex items-center gap-1 border-b-2 pb-1">
-                <p className="text-[16px] font-sen font-medium">Order</p>
-                <span className="w-5 h-5 flex justify-center items-center rounded2px text-[#F1F1F0] p-1 bg-[#1A231C] font-sen font-medium text-xs leading-[24px] tracking-[0.4px]">
-                  {
-                    notifications.filter(
-                      (notification) => notification.type === "booking",
-                    ).length
-                  }
-                </span>
-              </button>
-
-              <button className="flex items-center gap-1 border-b-2 pb-1">
-                <p className="text-[16px] font-sen font-medium">Update</p>
-                <span className="w-5 h-5 flex justify-center items-center rounded2px text-[#F1F1F0] p-1 bg-[#1A231C] font-sen font-medium text-xs leading-[24px] tracking-[0.4px]">
-                  {
-                    notifications.filter(
-                      (notification) => notification.type === "payment",
-                    ).length
-                  }
+                  {defaultNotifications.length}
                 </span>
               </button>
             </div>
-            <button
-              type="button"
-              className="flex items-center gap-1 cursor-pointer duration-500 hover:scale-105"
-              onClick={() => handleReadNotification("all")}
-            >
-              <p className="text-[16px] font-sen font-medium">Read all</p>
-            </button>
+            {defaultNotifications.filter(
+              (notification) => notification.read === false,
+            ).length > 0 && (
+              <button
+                type="button"
+                className="flex items-center gap-1 cursor-pointer duration-500 hover:scale-105"
+                onClick={() => handleReadNotification("all")}
+              >
+                <p className="text-[16px] font-sen font-medium">Read all</p>
+              </button>
+            )}
           </section>
 
           {/*Main Notification*/}
