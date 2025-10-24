@@ -42,7 +42,7 @@ BookingSchema.statics.isDoubleBooked = async function (
 ): Promise<boolean> {
   const requestedSlots = generateSlots(startTime, endTime);
 
-  const bookings = await this.find({ space: spaceId, eventDate: date });
+  const bookings = await this.find({ space: spaceId, eventDate: date, status: { $ne: "cancelled" } });
   if (bookings.length === 0) return false;
 
   // Check overlap
@@ -59,11 +59,13 @@ BookingSchema.statics.findByDateRange = async function (start: Date, end?: Date)
 
     return this.find({
       eventDate: { $gte: dayStart, $lte: dayEnd },
+      status: { $ne: "cancelled" }
     });
   }
 
   return this.find({
     eventDate: { $gte: start, $lte: end },
+    status: { $ne: "cancelled" }
   });
 };
 

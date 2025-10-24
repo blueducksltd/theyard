@@ -75,15 +75,18 @@ import { NextRequest } from "next/server";
 // )
 
 export const GET = errorHandler<{ params: { id: string } }>(
-    async (request: NextRequest, context) => {
+    async (__request: NextRequest, context) => {
         await connectDB();
 
-        requireAuth(request);
-        const { id } = await context.params;
+        // requireAuth(request);
+        let { id } = await context.params;
+        // remove start and end spaces
+        id = id.trim();
+        // decode URI components
+        id = decodeURIComponent(id);
 
-        const eventExist = await Event.findById(id)
+        const eventExist = await Event.findOne({ title: id })
             .populate("customer")
-            .populate("gallery");
         if (!eventExist) throw APIError.NotFound(`event with id: ${id} not found`);
 
         return APIResponse.success("fetched single event", { event: sanitizeEvent(eventExist) });

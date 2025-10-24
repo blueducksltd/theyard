@@ -36,6 +36,7 @@ export const GET = errorHandler<{ params: { area: string } }>(
             const spaces = await Space.find();
             const bookings = await Booking.find({
                 eventDate: { $gte: dayStart, $lte: dayEnd },
+                status: { $ne: "cancelled" }
             });
 
             const daySlots = generateSlots("08:00", "21:00"); // baseline slots
