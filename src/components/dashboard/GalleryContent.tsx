@@ -1171,28 +1171,29 @@ export default function GalleryContent() {
         </section>
         <div className="w-full max-w-[1000px] overflow-x-auto">
           <div className="flex gap-5 mt-8 pb-2">
-            {tags
-              .sort((a, b) => {
-                if (a.name === viewImage?.category) return -1;
-                if (b.name === viewImage?.category) return 1;
-                return 0;
-              })
-              .map((tag) => (
-                <button
-                  key={tag.id as string}
-                  onClick={() => {
-                    setSelectedTag(tag.name);
-                    galleryInputs.category = tag.name;
-                  }}
-                  className={`min-w-[124px] ${
-                    selectedTag === tag.name
-                      ? "bg-yard-primary text-[#EEEEE6]"
-                      : "bg-[#EDF0EE] text-yard-primary"
-                  } p-2.5 rounded-sm font-medium font-sen text-[15px] border-[1px] border-[#C7CFC9] whitespace-nowrap cursor-pointer`}
-                >
-                  {tag.name}
-                </button>
-              ))}
+            {tags &&
+              tags
+                .sort((a, b) => {
+                  if (a.name === viewImage?.category) return -1;
+                  if (b.name === viewImage?.category) return 1;
+                  return 0;
+                })
+                .map((tag) => (
+                  <button
+                    key={tag.id as string}
+                    onClick={() => {
+                      setSelectedTag(tag.name);
+                      galleryInputs.category = tag.name;
+                    }}
+                    className={`min-w-[124px] ${
+                      selectedTag === tag.name
+                        ? "bg-yard-primary text-[#EEEEE6]"
+                        : "bg-[#EDF0EE] text-yard-primary"
+                    } p-2.5 rounded-sm font-medium font-sen text-[15px] border-[1px] border-[#C7CFC9] whitespace-nowrap cursor-pointer`}
+                  >
+                    {tag.name}
+                  </button>
+                ))}
             <button
               onClick={() => {
                 setSelectedTag("other");
