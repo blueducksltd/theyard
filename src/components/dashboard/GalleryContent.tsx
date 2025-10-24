@@ -481,11 +481,12 @@ export default function GalleryContent() {
                 Purpose of event
               </option>
               <option value={"all"}>All/Others</option>
-              {tags.map((tag) => (
-                <option key={tag.id as string} value={tag.name.toLowerCase()}>
-                  {tag.name}
-                </option>
-              ))}
+              {tags &&
+                tags.map((tag) => (
+                  <option key={tag.id as string} value={tag.name.toLowerCase()}>
+                    {tag.name}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -910,18 +911,19 @@ export default function GalleryContent() {
         </section>
         <div className="w-full max-w-[1000px] overflow-x-auto">
           <div className="flex gap-5 mt-8 pb-2">
-            {tags.map((tag) => (
-              <button
-                key={tag.id as string}
-                onClick={() => {
-                  setSelectedTag(tag.name);
-                  galleryInputs.category = tag.name;
-                }}
-                className={`min-w-[124px] ${selectedTag === tag.name ? "bg-yard-primary text-[#EEEEE6]" : "bg-[#EDF0EE] text-yard-primary"} p-2.5 rounded-sm font-medium font-sen text-[15px] border-[1px] border-[#C7CFC9] whitespace-nowrap cursor-pointer`}
-              >
-                {tag.name} {/* Don't hardcode "Wedding" */}
-              </button>
-            ))}
+            {tags &&
+              tags.map((tag) => (
+                <button
+                  key={tag.id as string}
+                  onClick={() => {
+                    setSelectedTag(tag.name);
+                    galleryInputs.category = tag.name;
+                  }}
+                  className={`min-w-[124px] ${selectedTag === tag.name ? "bg-yard-primary text-[#EEEEE6]" : "bg-[#EDF0EE] text-yard-primary"} p-2.5 rounded-sm font-medium font-sen text-[15px] border-[1px] border-[#C7CFC9] whitespace-nowrap cursor-pointer`}
+                >
+                  {tag.name} {/* Don't hardcode "Wedding" */}
+                </button>
+              ))}
             <button
               onClick={() => {
                 setSelectedTag("other");
@@ -1083,11 +1085,15 @@ export default function GalleryContent() {
                 >
                   <option disabled>Connect media to an event</option>
                   <option value="null">No event attached</option>
-                  {events.map((event) => (
-                    <option key={event.id as string} value={event.id as string}>
-                      {event.title}
-                    </option>
-                  ))}
+                  {events &&
+                    events.map((event) => (
+                      <option
+                        key={event.id as string}
+                        value={event.id as string}
+                      >
+                        {event.title}
+                      </option>
+                    ))}
                 </select>
               </div>
             </div>
