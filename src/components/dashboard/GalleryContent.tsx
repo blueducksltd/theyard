@@ -568,64 +568,65 @@ export default function GalleryContent() {
       {/*Gallery Section*/}
       <section className="flex flex-wrap mt-5 gap-5">
         {/* Single Image */}
-        {galleries.toReversed().map((gallery) => (
-          <div key={gallery.id as string} className="inline-block grow">
-            <div className="relative h-[227px]">
-              <img src="/gallery/gallery3.svg" alt="" className="invisible" />
-              <div
-                onClick={() => {
-                  setViewImage(gallery);
-                  setPicModal(true);
-                }}
-                className="absolute inset-0 bg-cover bg-center rounded-[4px] cursor-pointer"
-                style={{ backgroundImage: `url(${gallery.imageUrl})` }}
-              ></div>
-            </div>
-
-            <div className="flex items-start justify-between mt-3">
-              <div className="flex flex-col">
-                <h4 className="text-[#66655E] font-semibold leading-6 tracking-[0.5px]">
-                  {gallery.title}
-                </h4>
-                <small className="text-[#999999] font-medium">
-                  {moment(gallery.mediaDate).fromNow()}
-                </small>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Image
-                    src={"/icons/share2.svg"}
-                    width={14}
-                    height={14}
-                    alt="Share Icon"
-                  />
-                  <span className="font-sen font-medium text-[#55544E] text-[14px] leading-3.5 tracking-[0.4px]">
-                    Share
-                  </span>
-                </div>
-
+        {galleries &&
+          galleries.toReversed().map((gallery) => (
+            <div key={gallery.id as string} className="inline-block grow">
+              <div className="relative h-[227px]">
+                <img src="/gallery/gallery3.svg" alt="" className="invisible" />
                 <div
-                  className="flex items-center gap-1.5 cursor-pointer"
                   onClick={() => {
                     setViewImage(gallery);
-                    setConfModal(true);
+                    setPicModal(true);
                   }}
-                >
-                  <Image
-                    src={"/icons/trash-black.svg"}
-                    width={14}
-                    height={14}
-                    alt="Share Icon"
-                  />
-                  <span className="font-sen font-medium text-[#55544E] text-[14px] leading-3.5 tracking-[0.4px]">
-                    Delete
-                  </span>
+                  className="absolute inset-0 bg-cover bg-center rounded-[4px] cursor-pointer"
+                  style={{ backgroundImage: `url(${gallery.imageUrl})` }}
+                ></div>
+              </div>
+
+              <div className="flex items-start justify-between mt-3">
+                <div className="flex flex-col">
+                  <h4 className="text-[#66655E] font-semibold leading-6 tracking-[0.5px]">
+                    {gallery.title}
+                  </h4>
+                  <small className="text-[#999999] font-medium">
+                    {moment(gallery.mediaDate).fromNow()}
+                  </small>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <Image
+                      src={"/icons/share2.svg"}
+                      width={14}
+                      height={14}
+                      alt="Share Icon"
+                    />
+                    <span className="font-sen font-medium text-[#55544E] text-[14px] leading-3.5 tracking-[0.4px]">
+                      Share
+                    </span>
+                  </div>
+
+                  <div
+                    className="flex items-center gap-1.5 cursor-pointer"
+                    onClick={() => {
+                      setViewImage(gallery);
+                      setConfModal(true);
+                    }}
+                  >
+                    <Image
+                      src={"/icons/trash-black.svg"}
+                      width={14}
+                      height={14}
+                      alt="Share Icon"
+                    />
+                    <span className="font-sen font-medium text-[#55544E] text-[14px] leading-3.5 tracking-[0.4px]">
+                      Delete
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
       </section>
 
       {/*Modals*/}
