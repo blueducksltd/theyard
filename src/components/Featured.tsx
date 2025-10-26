@@ -24,7 +24,7 @@ const Featured = async () => {
         </div>
 
         <Link
-          href={"#"}
+          href={"/services"}
           className="cta-btn group relative overflow-hidden hover:text-yard-dark-primary"
         >
           <span className="z-40">Explore all services</span>

@@ -36,7 +36,7 @@ const Hero = () => {
           className="absolute top-20 right-0 hidden md:block"
         />
       </header>
-      <section className="w-full h-max flex flex-row-reverse justify-center items-center gap-3 md:px-14">
+      <section className="w-full h-max flex flex-row-reverse md:flex-row justify-center items-center gap-3 md:px-14">
         <div className="w-[64px] h-[216px] md:w-[242px] md:h-[520px] bg-[url('/about/about.svg')] bg-cover bg-center"></div>
         <div className="w-[64px] h-[216px] md:w-[242px] md:h-[520px] bg-[url('/about/about-2.svg')] bg-cover bg-center"></div>
         <div className="w-[64px] h-[216px] md:w-[242px] md:h-[520px] bg-[url('/about/about-3.svg')] bg-cover bg-center"></div>

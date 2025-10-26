@@ -13,6 +13,12 @@ export const getEvents = async () => {
   return response.data;
 };
 
+// Get single events
+export const getSingleEvent = async (slug: string) => {
+  const response = await axios.get(`/events/${slug}`);
+  return response.data;
+};
+
 // Get spaces
 export const getSpaces = async () => {
   const response = await axios.get(`/spaces`);
