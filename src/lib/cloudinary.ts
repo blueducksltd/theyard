@@ -1,3 +1,6 @@
+import { v2 as cloudinary } from "cloudinary";
+import APIError, { ErrorDetails } from "./errors/APIError";
+
 /**
  * Deletes an image from Cloudinary given its URL.
  * @param imageUrl The full URL of the image to delete.
@@ -12,10 +15,9 @@ export async function deleteFromCloudinary(imageUrl: string) {
         const { v2: cloudinary } = await import("cloudinary");
         return await cloudinary.uploader.destroy(publicId);
     } catch (err) {
-        throw new Error("Failed to delete image from Cloudinary: " + err);
+        throw new APIError(500, "Failed to delete image from Cloudinary: ", (err as ErrorDetails));
     }
 }
-import { v2 as cloudinary } from "cloudinary";
 
 
 // configure cloudinary
