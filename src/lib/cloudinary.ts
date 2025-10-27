@@ -15,7 +15,7 @@ export async function deleteFromCloudinary(imageUrl: string) {
         const { v2: cloudinary } = await import("cloudinary");
         return await cloudinary.uploader.destroy(publicId);
     } catch (err) {
-        return new APIError(500, "Failed to delete image from Cloudinary: ", (err as ErrorDetails));
+        throw new APIError(500, "Failed to delete image from Cloudinary: ", (err as ErrorDetails));
     }
 }
 
@@ -27,7 +27,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function uploadToCloudinary(file: File): Promise<string | APIError> {
+export async function uploadToCloudinary(file: File): Promise<string> {
     try {
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
@@ -36,13 +36,17 @@ export async function uploadToCloudinary(file: File): Promise<string | APIError>
             const stream = cloudinary.uploader.upload_stream(
                 { folder: process.env.CLOUDINARY_FOLDER, format: "webp" },
                 (error, result) => {
-                    if (error) return reject(error);
+                    if (error) {
+                        console.error("Cloudinary Upload Error:", error);
+                        return reject(error);
+                    }
                     resolve(result?.secure_url as string);
                 }
             );
             stream.end(buffer);
         });
     } catch (err) {
-        return new APIError(500, "Failed to upload image to Cloudinary: ", (err as ErrorDetails));
+        console.error("UploadToCloudinary Error:", err);
+        throw new APIError(500, "Failed to upload image to Cloudinary");
     }
 }
