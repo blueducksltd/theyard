@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import APIResponse from "@/lib/APIResponse";
 import { requireAuth, requireRole } from "@/lib/auth";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+// import { uploadToCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
@@ -9,6 +9,7 @@ import Gallery from "@/models/Gallery";
 import { CreateGalleryDTO, CreateGalleryInput, sanitizeGallery } from "@/types/Gallery";
 import Event from "@/models/Event";
 import Tag from "@/models/Tag";
+import { uploadImage } from "@/lib/vercel";
 
 
 export const POST = errorHandler(async (request: NextRequest) => {
@@ -57,7 +58,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
     // Upload + create each gallery document concurrently
     const galleries = await Promise.all(
         images.map(async (image) => {
-            const imageUrl = await uploadToCloudinary(image);
+            const imageUrl = await uploadImage(image);
             body.imageUrl = imageUrl;
             // Validate & coerce with Zod
             const data = CreateGalleryDTO.parse(body);
