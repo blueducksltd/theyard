@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import APIError, { ErrorDetails } from "./errors/APIError";
+import { put } from "@vercel/blob";
 
 // configure cloudinary
 cloudinary.config({
@@ -102,4 +103,12 @@ export async function uploadToCloudinary(file: File): Promise<string> {
       `Failed to upload image: ${err?.message || "Unknown error"}`,
     );
   }
+}
+
+export async function uploadImage(file: File): Promise<string> {
+  const blob = await put(file.name, file, {
+    access: "public",
+  });
+
+  return blob.url;
 }
