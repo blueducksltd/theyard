@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import APIResponse from "@/lib/APIResponse";
 import { requireAuth, requireRole } from "@/lib/auth";
-import { uploadImage } from "@/lib/cloudinary";
+// import { uploadToCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
@@ -13,6 +13,7 @@ import {
   sanitizePackage,
 } from "@/types/Package";
 import { z } from "zod";
+import { uploadImage } from "@/lib/vercel";
 
 export const POST = errorHandler(async (request: NextRequest) => {
   await connectDB();
@@ -41,6 +42,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
     specs,
   };
 
+  // const imageUrl = file ? await uploadToCloudinary(file) : undefined;
   const imageUrl = file ? await uploadImage(file) : undefined;
 
   // Validate & coerce with Zod
