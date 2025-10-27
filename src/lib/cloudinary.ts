@@ -8,11 +8,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-/**
- * Deletes an image from Cloudinary given its URL.
- * @param imageUrl The full URL of the image to delete.
- * @returns The result of the Cloudinary destroy operation.
- */
 export async function deleteFromCloudinary(imageUrl: string) {
     if (!imageUrl) return;
     try {
@@ -22,7 +17,8 @@ export async function deleteFromCloudinary(imageUrl: string) {
         const { v2: cloudinary } = await import("cloudinary");
         return await cloudinary.uploader.destroy(publicId);
     } catch (err) {
-        throw new APIError(500, "Failed to delete image from Cloudinary: ", (err as ErrorDetails));
+        console.error("Cloudinary Delete Error:", err);
+        throw new APIError(500, "Failed to delete image from Cloudinary", err as ErrorDetails);
     }
 }
 
@@ -36,7 +32,11 @@ export async function uploadToCloudinary(file: File): Promise<string> {
                 { folder: process.env.CLOUDINARY_FOLDER, format: "webp" },
                 (error, result) => {
                     if (error) {
-                        console.error("Cloudinary Upload Error:", error);
+                        // Log entire error object including HTML responses
+                        console.error("⚠️ Cloudinary Upload Error:");
+                        console.error("Type:", typeof error);
+                        console.error("Raw:", error);
+                        console.error("Stringified:", JSON.stringify(error, null, 2));
                         return reject(error);
                     }
                     resolve(result?.secure_url as string);
@@ -44,8 +44,18 @@ export async function uploadToCloudinary(file: File): Promise<string> {
             );
             stream.end(buffer);
         });
-    } catch (err) {
-        console.error("UploadToCloudinary Error:", err);
+    } catch (err: any) {
+        // Catch network or runtime errors (like HTML response)
+        console.error("⚠️ UploadToCloudinary Error (outer catch):");
+        if (typeof err === "string" && err.startsWith("<!DOCTYPE")) {
+            console.error("Received HTML error page (truncated):", err.slice(0, 500));
+        } else if (err?.response) {
+            console.error("Cloudinary HTTP error:", err.response?.status, err.response?.data);
+        } else {
+            console.error(err);
+        }
+
+        // Return API-friendly error, but keep the raw error logged
         throw new APIError(500, "Failed to upload image to Cloudinary");
     }
 }
