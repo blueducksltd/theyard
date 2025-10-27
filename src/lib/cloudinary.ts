@@ -28,17 +28,21 @@ cloudinary.config({
 });
 
 export async function uploadToCloudinary(file: File): Promise<string> {
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    try {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-    return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-            { folder: process.env.CLOUDINARY_FOLDER, format: "webp" },
-            (error, result) => {
-                if (error) return reject(error);
-                resolve(result?.secure_url as string);
-            }
-        );
-        stream.end(buffer);
-    });
+        return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                { folder: process.env.CLOUDINARY_FOLDER, format: "webp" },
+                (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result?.secure_url as string);
+                }
+            );
+            stream.end(buffer);
+        });
+    } catch (err) {
+        throw new APIError(500, "Failed to upload image to Cloudinary: ", (err as ErrorDetails));
+    }
 }
