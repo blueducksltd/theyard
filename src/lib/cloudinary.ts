@@ -22,57 +22,84 @@ export async function deleteFromCloudinary(imageUrl: string) {
   }
 }
 
+function getCloudinaryConfig() {
+  return {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME?.trim(),
+    api_key: process.env.CLOUDINARY_API_KEY?.trim(),
+    api_secret: process.env.CLOUDINARY_API_SECRET?.trim(),
+  };
+}
+
 export async function uploadToCloudinary(file: File): Promise<string> {
-  // Debug logging
-  console.log("🔍 Cloudinary Config Check:");
+  // Configure inside function
+  const config = getCloudinaryConfig();
+  cloudinary.config(config);
+
+  // Detailed logging
+  console.log("🔍 Attempting Cloudinary upload with config:");
   console.log(
     "Cloud Name:",
-    process.env.CLOUDINARY_CLOUD_NAME ? "SET" : "MISSING",
+    config.cloud_name ? `${config.cloud_name.substring(0, 5)}...` : "MISSING",
   );
-  console.log("API Key:", process.env.CLOUDINARY_API_KEY ? "SET" : "MISSING");
   console.log(
-    "API Secret:",
-    process.env.CLOUDINARY_API_SECRET ? "SET" : "MISSING",
+    "API Key:",
+    config.api_key ? `${config.api_key.substring(0, 5)}...` : "MISSING",
   );
-  console.log("Folder:", process.env.CLOUDINARY_FOLDER || "not set");
+  console.log("API Secret:", config.api_secret ? "SET" : "MISSING");
 
-  // Validate credentials exist
-  if (
-    !process.env.CLOUDINARY_CLOUD_NAME ||
-    !process.env.CLOUDINARY_API_KEY ||
-    !process.env.CLOUDINARY_API_SECRET
-  ) {
-    throw new Error("Cloudinary credentials are not configured");
+  if (!config.cloud_name || !config.api_key || !config.api_secret) {
+    throw new Error("Missing Cloudinary credentials");
   }
 
   try {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    console.log("📦 File buffer size:", buffer.length);
+
     return new Promise((resolve, reject) => {
+      const uploadOptions = {
+        folder: process.env.CLOUDINARY_FOLDER || "uploads",
+        resource_type: "auto" as const,
+        format: "webp",
+      };
+
+      console.log("⬆️ Starting upload with options:", uploadOptions);
+
       const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: process.env.CLOUDINARY_FOLDER || "uploads",
-          format: "webp",
-          resource_type: "auto",
-        },
+        uploadOptions,
         (error, result) => {
           if (error) {
-            console.error("⚠️ Cloudinary Upload Error:", {
+            console.error("❌ Cloudinary Upload Error:", {
               message: error.message,
+              name: error.name,
               http_code: error.http_code,
-              // Log if there's an error property with more details
-              error: error.error,
+              fullError: JSON.stringify(error, null, 2),
             });
             return reject(error);
           }
-          resolve(result?.secure_url as string);
+
+          if (!result?.secure_url) {
+            console.error("❌ No secure_url in result");
+            return reject(new Error("No URL returned from Cloudinary"));
+          }
+
+          console.log("✅ Upload successful:", result.secure_url);
+          resolve(result.secure_url);
         },
       );
+
       stream.end(buffer);
     });
-  } catch (err) {
-    console.error("⚠️ UploadToCloudinary Error:", err);
-    throw new Error("Failed to upload image to Cloudinary");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    console.error("❌ Upload function error:", {
+      message: err?.message,
+      stack: err?.stack,
+      fullError: JSON.stringify(err, null, 2),
+    });
+    throw new Error(
+      `Failed to upload image: ${err?.message || "Unknown error"}`,
+    );
   }
 }
