@@ -18,7 +18,7 @@ export async function deleteFromCloudinary(imageUrl: string) {
         return await cloudinary.uploader.destroy(publicId);
     } catch (err) {
         console.error("Cloudinary Delete Error:", err);
-        throw new APIError(500, "Failed to delete image from Cloudinary", err as ErrorDetails);
+        throw APIError.Internal("Failed to delete image from Cloudinary");
     }
 }
 
@@ -50,6 +50,6 @@ export async function uploadToCloudinary(file: File): Promise<string> {
         console.error("Stringified:", JSON.stringify(err, null, 2));
 
         // Return API-friendly error, but keep the raw error logged
-        throw new APIError(500, "Failed to upload image to Cloudinary");
+        throw APIError.Internal("Failed to upload image to Cloudinary");
     }
 }
