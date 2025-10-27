@@ -44,16 +44,10 @@ export async function uploadToCloudinary(file: File): Promise<string> {
             );
             stream.end(buffer);
         });
-    } catch (err: any) {
+    } catch (err) {
         // Catch network or runtime errors (like HTML response)
         console.error("⚠️ UploadToCloudinary Error (outer catch):");
-        if (typeof err === "string" && err.startsWith("<!DOCTYPE")) {
-            console.error("Received HTML error page (truncated):", err.slice(0, 500));
-        } else if (err?.response) {
-            console.error("Cloudinary HTTP error:", err.response?.status, err.response?.data);
-        } else {
-            console.error(err);
-        }
+        console.error("Stringified:", JSON.stringify(err, null, 2));
 
         // Return API-friendly error, but keep the raw error logged
         throw new APIError(500, "Failed to upload image to Cloudinary");
