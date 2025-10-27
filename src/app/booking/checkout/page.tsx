@@ -31,13 +31,6 @@ const Page = () => {
   const [totalPrice, setTotalPrice] = useState<any>("0");
 
   const handleSubmit = async () => {
-    if (!savedBookingDetails) {
-      toast.error(
-        "No booking details found. Please start from the booking page.",
-      );
-      return;
-    }
-
     const [hours, minutes] = startTime?.split(":") || ["0", "0"];
 
     // Create booking datetime
@@ -106,17 +99,19 @@ const Page = () => {
     inputs.endTime = endTime || "";
     inputs.public = isPublishing ? "true" : "false";
     inputs.date = eventDate || "";
-    inputs.images = image;
 
-    if (image == null) {
-      toast.error(`Please upload an image`);
-      return;
+    if (image != null) {
+      inputs.images = image;
     }
 
-    if (Object.keys(inputs).length < 13) {
+    console.log("Booking data loaded:", inputs);
+
+    if (Object.keys(inputs).length < 12) {
       toast.error(`Please fill out all fields`);
       return;
     }
+
+    console.log(inputs);
 
     const hasEmptyValues = Object.values(inputs).some(
       (val) => val === "" || val == null,
@@ -613,7 +608,7 @@ const Page = () => {
                     Package
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    {savedBookingDetails.package.name}
+                    {savedBookingDetails.package?.name}
                   </p>
                 </div>
 
@@ -684,9 +679,15 @@ const Page = () => {
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
                     {startTime && endTime
-                      ? moment(endTime, "HH:mm")
-                          .diff(moment(startTime, "HH:mm"), "hours", true)
-                          .toFixed(2)
+                      ? (() => {
+                          const diffInMinutes = moment(endTime, "HH:mm").diff(
+                            moment(startTime, "HH:mm"),
+                            "minutes",
+                          );
+                          const hours = Math.floor(diffInMinutes / 60);
+                          const minutes = diffInMinutes % 60;
+                          return `${hours}.${minutes.toString().padStart(2, "0")}`;
+                        })()
                       : 0}
                   </p>
                 </div>
