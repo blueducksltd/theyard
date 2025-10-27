@@ -1,6 +1,13 @@
 import { v2 as cloudinary } from "cloudinary";
 import APIError, { ErrorDetails } from "./errors/APIError";
 
+// configure cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 /**
  * Deletes an image from Cloudinary given its URL.
  * @param imageUrl The full URL of the image to delete.
@@ -18,14 +25,6 @@ export async function deleteFromCloudinary(imageUrl: string) {
         throw new APIError(500, "Failed to delete image from Cloudinary: ", (err as ErrorDetails));
     }
 }
-
-
-// configure cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
 export async function uploadToCloudinary(file: File): Promise<string> {
     try {
