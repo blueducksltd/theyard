@@ -1,33 +1,18 @@
 import { put, del } from "@vercel/blob";
-import sharp from "sharp";
 
 export async function uploadImage(file: File): Promise<string> {
+  // Validate
+  const MAX_SIZE = 4.5 * 1024 * 1024;
+  if (file.size > MAX_SIZE) {
+    throw new Error("File too large (max 4.5MB)");
+  }
+
   try {
-    // Convert file to buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Convert to WebP with sharp
-    const webpBuffer = await sharp(buffer)
-      .webp({ quality: 80 }) // Adjust quality (1-100)
-      .resize(1920, 1920, {
-        // Max dimensions
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .toBuffer();
-
-    console.log("Original size:", (buffer.length / 1024).toFixed(2), "KB");
-    console.log("WebP size:", (webpBuffer.length / 1024).toFixed(2), "KB");
-
-    // Generate filename with .webp extension
     const timestamp = Date.now();
-    const filename = `uploads/${timestamp}.webp`;
+    const filename = `uploads/${timestamp}-${file.name}`;
 
-    // Upload to Vercel Blob
-    const blob = await put(filename, webpBuffer, {
+    const blob = await put(filename, file, {
       access: "public",
-      contentType: "image/webp",
     });
 
     return blob.url;
