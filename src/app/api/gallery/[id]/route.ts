@@ -1,9 +1,9 @@
 import APIResponse from "@/lib/APIResponse";
 import { requireAuth } from "@/lib/auth";
-import { deleteFromCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
+import { deleteImage } from "@/lib/vercel";
 import Event from "@/models/Event";
 import Gallery from "@/models/Gallery";
 import Tag from "@/models/Tag";
@@ -81,7 +81,7 @@ export const DELETE = errorHandler<{ params: { id: string } }>(
         }
 
         // Delete the gallery image
-        await deleteFromCloudinary(imageExist.imageUrl)
+        await deleteImage(imageExist.imageUrl)
         await Gallery.findByIdAndDelete(id);
 
         return APIResponse.success(`Image with id ${id} removed`, undefined);
