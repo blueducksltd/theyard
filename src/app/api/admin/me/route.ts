@@ -6,8 +6,8 @@ import { IAdmin, sanitizeAdmin, UpdateAdminDto, UpdateAdminInput } from "@/types
 import APIResponse from "@/lib/APIResponse";
 import APIError from "@/lib/errors/APIError";
 import { NextRequest } from "next/server";
-import { deleteFromCloudinary, uploadToCloudinary } from "@/lib/cloudinary";
 import z from "zod";
+import { deleteImage, uploadImage } from "@/lib/vercel";
 
 export const GET = errorHandler(
     async (request: NextRequest) => {
@@ -68,8 +68,8 @@ export const PUT = errorHandler(async (request: NextRequest) => {
 
     if (file) {
         // delete old one only if new one uploaded
-        await deleteFromCloudinary(admin.imageUrl);
-        data.imageUrl = await uploadToCloudinary(file);
+        await deleteImage(admin.imageUrl);
+        data.imageUrl = await uploadImage(file);
     }
 
     // Merge existing data with new updates

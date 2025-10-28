@@ -1,9 +1,10 @@
 import APIResponse from "@/lib/APIResponse";
 import { requireAuth, requireRole } from "@/lib/auth";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+// import { uploadToCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
+import { uploadImage } from "@/lib/vercel";
 import Space from "@/models/Space";
 // import { CreateBookingDto } from "@/types/Booking";
 import { CreateSpaceDto, CreateSpaceInput, sanitizeSpace } from "@/types/Space";
@@ -41,7 +42,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
   if (!file) throw APIError.BadRequest("Image is required");
 
 
-  const imageUrl = await uploadToCloudinary(file);
+  const imageUrl = await uploadImage(file);
   // Validate & coerce with Zod
   const data = CreateSpaceDto.parse({
     ...body,

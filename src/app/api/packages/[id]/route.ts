@@ -1,9 +1,9 @@
 import APIResponse from "@/lib/APIResponse";
 import { requireAuth } from "@/lib/auth";
-import { deleteFromCloudinary, uploadToCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
+import { deleteImage, uploadImage } from "@/lib/vercel";
 import Package from "@/models/Package";
 import { IPackage, sanitizePackage, UpdatePackageDTO, UpdatePackageInput } from "@/types/Package";
 import { NextRequest } from "next/server";
@@ -48,8 +48,8 @@ export const PUT = errorHandler<{ params: { id: string } }>(
 
         if (file) {
             // delete old one only if new one uploaded
-            await deleteFromCloudinary(pkg.imageUrl);
-            data.imageUrl = await uploadToCloudinary(file);
+            await deleteImage(pkg.imageUrl);
+            data.imageUrl = await uploadImage(file);
         }
 
         // Merge existing data with new updates
@@ -78,7 +78,7 @@ export const DELETE = errorHandler<{ params: { id: string } }>(
         const pkg = await Package.findById(id);
         if (!pkg) throw APIError.NotFound(`Package with id: ${id} not found`);
 
-        await deleteFromCloudinary(pkg.imageUrl);
+        await deleteImage(pkg.imageUrl);
         await Package.findByIdAndDelete(id);
 
         return APIResponse.success(`Package deleted`, undefined, 200)

@@ -1,10 +1,11 @@
 import APIResponse from "@/lib/APIResponse";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+// import { uploadToCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import { sendBookingEmail } from "@/lib/mailer";
 import { sendNotification } from "@/lib/notification";
+import { uploadImage } from "@/lib/vercel";
 import Booking from "@/models/Booking";
 import Customer from "@/models/Customer";
 import Event from "@/models/Event";
@@ -67,7 +68,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
   data.imagesUrls = await Promise.all(
     images.map(async (image) => {
-      const imageUrl = await uploadToCloudinary(image);
+      const imageUrl = await uploadImage(image);
       return imageUrl;
     }),
   );

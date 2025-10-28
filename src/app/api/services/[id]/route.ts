@@ -1,9 +1,9 @@
 import APIResponse from "@/lib/APIResponse";
 import { requireAuth } from "@/lib/auth";
-import { deleteFromCloudinary, uploadToCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
+import { deleteImage, uploadImage } from "@/lib/vercel";
 import Service from "@/models/Service";
 import { IService, sanitizeService, UpdateServiceDTO, UpdateServiceInput } from "@/types/Service";
 import { NextRequest } from "next/server";
@@ -35,8 +35,8 @@ export const PUT = errorHandler<{ params: { id: string } }>(
 
         if (file) {
             // delete old one only if new one uploaded
-            await deleteFromCloudinary(service.imageUrl);
-            data.imageUrl = await uploadToCloudinary(file);
+            await deleteImage(service.imageUrl);
+            data.imageUrl = await uploadImage(file);
         }
 
         // Merge existing data with new updates
@@ -65,7 +65,7 @@ export const DELETE = errorHandler<{ params: { id: string } }>(
         const service = await Service.findById(id);
         if (!service) throw APIError.NotFound(`Service with id: ${id} not found`);
 
-        await deleteFromCloudinary(service.imageUrl);
+        await deleteImage(service.imageUrl);
         await Service.findByIdAndDelete(id);
 
         return APIResponse.success(`Service deleted`, undefined, 200)
