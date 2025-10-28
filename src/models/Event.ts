@@ -9,6 +9,7 @@ import {
 const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
   {
     title: { type: String, required: true },
+    slug: { type: String, required: true },
     description: { type: String },
     customer: { type: Types.ObjectId, ref: "Customer", required: true },
     images: [{ type: String }],

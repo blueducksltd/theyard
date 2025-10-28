@@ -8,7 +8,7 @@ export interface IEvent extends Document {
   title: string;
   description: string;
   customer: ICustomer["id"];
-  // type: ITag["name"];
+  slug: string;
   public: boolean;
   date: Date;
   images: string[];
@@ -41,7 +41,7 @@ export type SafeEvent = {
   title: string;
   description: string;
   images: string[];
-  // type: ITag["name"];
+  slug: string;
   public: boolean;
   date: Date;
   startTime: string;
@@ -56,7 +56,7 @@ export function sanitizeEvent(event: IEvent): SafeEvent {
     title: event.title,
     description: event.description,
     images: event.images,
-    // type: event.type,
+    slug: event.slug,
     public: event.public,
     date: event.date,
     startTime: event.time.start,
