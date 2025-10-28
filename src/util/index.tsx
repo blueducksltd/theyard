@@ -150,6 +150,14 @@ export const createPackages = async (data: FormData) => {
   return response.data;
 };
 
+// Create space
+export const createSpace = async (data: FormData) => {
+  const response = await axios.post(`/spaces`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
 // Confirm bookings
 export const confirmOrCancelBookings = async (data: {
   status: string;

@@ -3,11 +3,14 @@
 import Modal from "@/components/Modal";
 import { IPackage } from "@/types/Package";
 import { IService } from "@/types/Service";
+import { ISpace } from "@/types/Space";
 import {
   createPackages,
   createServices,
+  createSpace,
   getPackages,
   getServices,
+  getSpaces,
 } from "@/util";
 import Image from "next/image";
 import React, { DragEvent, FormEvent, useEffect } from "react";
@@ -17,10 +20,12 @@ export default function PackagesContent() {
   const [section, setSection] = React.useState<string>("services");
   const [addServiceModal, setAddServiceModal] = React.useState<boolean>(false);
   const [addPackageModal, setAddPackageModal] = React.useState<boolean>(false);
+  const [addSpaceModal, setAddSpaceModal] = React.useState<boolean>(false);
   const [preview, setPreview] = React.useState<File | undefined>(undefined);
   const [inputs, setInputs] = React.useState<Record<string, any>>({});
   const [packages, setPackages] = React.useState<IPackage[]>([]);
   const [services, setServices] = React.useState<IService[]>([]);
+  const [spaces, setSpaces] = React.useState<ISpace[]>([]);
 
   const handleDrop = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -131,14 +136,98 @@ export default function PackagesContent() {
     }
   };
 
+  const handleSubmitSpace = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formElement = e.currentTarget;
+
+    const toastId = toast.loading("Adding, please wait...", {
+      position: "bottom-right",
+    });
+
+    if (preview == null) {
+      toast.update(toastId, {
+        render: "Please upload an image!",
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+      return;
+    }
+    inputs.image = preview || "null";
+
+    if (Object.keys(inputs).length < 7) {
+      toast.update(toastId, {
+        render: "All inputs are needed!",
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+      return;
+    }
+
+    Object.values(inputs).map((val) => {
+      if (val == "" || val == null) {
+        toast.update(toastId, {
+          render: "All inputs are needed!",
+          type: "error",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
+    });
+
+    const formData = new FormData();
+    Object.entries(inputs).map(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    try {
+      const response = await createSpace(formData);
+      if (response.success == true) {
+        formElement.reset();
+        // Handle success
+        toast.update(toastId, {
+          render: `${response.message}`,
+          type: "success",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        await fetchData();
+        setAddServiceModal(false);
+        setAddPackageModal(false);
+        setAddSpaceModal(false);
+        clearInputs();
+        return;
+      } else {
+        toast.update(toastId, {
+          render: `${response.message}`,
+          type: "warning",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
+    } catch (error) {
+      toast.update(toastId, {
+        render: `An error occurred. Please try again later. (${error})`,
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+    }
+  };
+
   const fetchData = async () => {
-    const [packages, services] = await Promise.all([
+    const [packages, services, spaces] = await Promise.all([
       getPackages(),
       getServices(),
+      getSpaces(),
     ]);
 
     setPackages(packages.data.packages);
     setServices(services.data.services);
+    setSpaces(spaces.data.spaces);
   };
 
   useEffect(() => {
@@ -191,6 +280,21 @@ export default function PackagesContent() {
                 Available Packages
               </p>
             </div>
+
+            {/*Single Container*/}
+            <div
+              className={`w-full px-4 py-5 rounded-sm border-[1px] border-[#C7CFC9] ${section == "spaces" ? "bg-[#E4E8E5]" : "bg-[#FFFFFF]"} flex flex-col gap-4 cursor-pointer duration-700 hover:scale-105 hover:shadow-lg`}
+              onClick={() => setSection("spaces")}
+            >
+              <div className="flex justify-between items-center">
+                <h2 className="font-bold text-[52px] leading-9 text-[#66655E]">
+                  {spaces.length}
+                </h2>
+              </div>
+              <p className="font-medium leading-[22px] tracking-[0.5px] text-[#737373]">
+                Available Spaces
+              </p>
+            </div>
           </div>
           <div className="dropdown">
             <button
@@ -222,7 +326,7 @@ export default function PackagesContent() {
                   setAddServiceModal(true);
                 }}
               >
-                <button>Services</button>
+                <button>Service</button>
               </li>
               <li
                 className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
@@ -231,14 +335,23 @@ export default function PackagesContent() {
                   setAddPackageModal(true);
                 }}
               >
-                <button>Packages</button>
+                <button>Package</button>
+              </li>
+              <li
+                className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
+                onClick={() => {
+                  setSection("spaces");
+                  setAddSpaceModal(true);
+                }}
+              >
+                <button>Space</button>
               </li>
             </ul>
           </div>
         </div>
       </section>
 
-      {section == "services" ? (
+      {section == "services" && (
         <section className="w-full p-4">
           <div className="flex gap-3 items-center">
             <h2 className="text-[#66655E] font-semibold text-[22px] leading-[30px]">
@@ -266,7 +379,9 @@ export default function PackagesContent() {
             ))}
           </div>
         </section>
-      ) : (
+      )}
+
+      {section == "packages" && (
         <section className="w-full p-4">
           <div className="flex gap-3 items-center">
             <h2 className="text-[#66655E] font-semibold text-[22px] leading-[30px]">
@@ -289,6 +404,36 @@ export default function PackagesContent() {
                 </h3>
                 <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
                   {pck.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {section == "spaces" && (
+        <section className="w-full p-4">
+          <div className="flex gap-3 items-center">
+            <h2 className="text-[#66655E] font-semibold text-[22px] leading-[30px]">
+              All spaces
+            </h2>
+            <p className="text-[#999999] font-medium leading-[22px] tracking-[0.5px]">
+              {spaces.length} available
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 mt-5 gap-5">
+            {spaces.toReversed().map((space) => (
+              <div key={space.id as string} className="flex flex-col gap-3">
+                <div
+                  className="w-full h-[224px] bg-cover bg-center rounded2px"
+                  style={{ backgroundImage: `url(${space.imageUrl})` }}
+                ></div>
+                <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
+                  {space.name}
+                </h3>
+                <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
+                  {space.description}
                 </p>
               </div>
             ))}
@@ -592,6 +737,217 @@ export default function PackagesContent() {
                 className="w-full flex justify-center cta-btn bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
               >
                 <span className="z-40 font-sen">Add package</span>
+                <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/*Add space Modal*/}
+      <Modal isOpen={addSpaceModal}>
+        <section className="w-full">
+          <div className="w-full flex items-center justify-between">
+            <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary">
+              Add a new space
+            </h2>
+            <div
+              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
+              onClick={() => {
+                clearInputs();
+                setAddSpaceModal(false);
+              }}
+            >
+              <Image
+                src={"/icons/cancel.svg"}
+                width={16}
+                height={16}
+                alt="Close Icon"
+                className="z-40"
+              />
+              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            </div>
+          </div>
+        </section>
+
+        <div className="w-full flex items-start my-4 2xl:my-8 gap-10">
+          {/*Form*/}
+          <form
+            className="w-full flex flex-col gap-5 h-[555px] overflow-y-scroll"
+            onSubmit={(e: FormEvent<HTMLFormElement>) => handleSubmitSpace(e)}
+          >
+            <label
+              htmlFor="media"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className="bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${preview ? URL.createObjectURL(preview) : null})`,
+              }}
+            >
+              <div className="flex flex-col h-[200px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
+                {preview == undefined ? (
+                  <>
+                    <Image
+                      src={"/icons/upload.svg"}
+                      width={18}
+                      height={18}
+                      alt="Upload Icon"
+                    />
+                    <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
+                      Choose an image or drag &amp; drop them here
+                    </p>
+
+                    <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
+                      JPEG &amp; PNG up to 10mb
+                    </p>
+                  </>
+                ) : null}
+              </div>
+              <input
+                type="file"
+                accept="image/*,video/*"
+                onChange={(e) => setPreview(e.target.files?.[0])}
+                id="media"
+                className="hidden"
+              />
+            </label>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="spaceName"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter space name
+                </label>
+                <input
+                  type="text"
+                  id="spaceName"
+                  name="spaceName"
+                  onChange={(e) => (inputs.name = e.target.value)}
+                  placeholder="Enter space name"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="desc"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter description
+                </label>
+                <textarea
+                  id="desc"
+                  name="desc"
+                  onChange={(e) => (inputs.description = e.target.value)}
+                  placeholder="150 words"
+                  className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                ></textarea>
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="spacePrice"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter space price per hour
+                </label>
+                <input
+                  type="text"
+                  id="spacePrice"
+                  name="spacePrice"
+                  onChange={(e) => (inputs.pricePerHour = +e.target.value)}
+                  placeholder="Space price"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="spaceCapacity"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter space capacity
+                </label>
+                <input
+                  type="number"
+                  id="spaceCapacity"
+                  name="spaceCapacity"
+                  onChange={(e) => (inputs.capacity = e.target.value)}
+                  placeholder="Space capacity"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="spaceLocation"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter space location{" "}
+                  <small className="italic">(Hall 3, floor 2)</small>
+                </label>
+                <input
+                  type="text"
+                  id="spaceLocation"
+                  name="spaceLocation"
+                  onChange={(e) => (inputs.address = e.target.value)}
+                  placeholder="Space location"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="spaceSpecs"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter space specs{" "}
+                  <small className="italic">
+                    (Add a comma to seperate specs)
+                  </small>
+                </label>
+                <input
+                  type="text"
+                  id="spaceSpecs"
+                  name="spaceSpecs"
+                  onChange={(e) => (inputs.specs = e.target.value)}
+                  placeholder="games and dates, Game hall special, Game hall special"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="w-full flex items-center gap-5 mt-3">
+              <button
+                type="button"
+                className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
+                onClick={() => {
+                  clearInputs();
+                  setAddPackageModal(false);
+                }}
+              >
+                <span className="z-40 font-sen">Cancel</span>
+                <div className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+              </button>
+
+              <button
+                type="submit"
+                className="w-full flex justify-center cta-btn bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
+              >
+                <span className="z-40 font-sen">Add space</span>
                 <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
               </button>
             </div>

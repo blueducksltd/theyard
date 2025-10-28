@@ -66,7 +66,9 @@ const EventPageClient = ({ event }: IProps) => {
         <main className="pt-10 md:my-4 md:py-16">
           <header
             className="w-full h-[250px] md:h-[391px] bg-cover bg-center"
-            style={{ backgroundImage: `url(${event?.images[0]})` }}
+            style={{
+              backgroundImage: `url(${event.images ? (event.images.length > 0 ? event.images[0] : "/gallery/gallery.svg") : "/gallery/gallery.svg"})`,
+            }}
           ></header>
 
           <h2 className="text-yard-primary font-playfair font-bold text-[40px] leading-11 mt-8 md:mt-5 flex flex-col md:flex-row justify-between md:items-center">

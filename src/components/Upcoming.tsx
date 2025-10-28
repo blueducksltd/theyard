@@ -43,45 +43,49 @@ const Upcoming = () => {
       </header>
 
       <section className="grid md:grid-cols-3 items-center my-10 md:my-4 gap-2">
-        {events.slice(0, 3).map((event: IEvent) => (
-          <div
-            key={event.id}
-            className="h-[368px] rounded-md bg-cover bg-center relative overflow-hidden group"
-            style={{ backgroundImage: `url(${event?.images[0]})` }}
-          >
-            {/*Inner Hover*/}
-            <div className="absolute w-full h-full p-4 bg-[#090F10CC] top-0 left-0 transition-all duration-500 md:translate-y-full group-hover:translate-y-0">
-              <p className="text-yard-milk transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0">
-                {moment(event.date).format("d/MM/YYYY")}
-                <img
-                  src={"/featured-line.svg"}
-                  alt="featured line"
-                  className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
-                />
-              </p>
+        {events
+          .filter((event: IEvent) => event.public === true)
+          .toReversed()
+          .slice(0, 3)
+          .map((event: IEvent) => (
+            <div
+              key={event.id}
+              className="h-[368px] rounded-md bg-cover bg-center relative overflow-hidden group"
+              style={{ backgroundImage: `url(${event?.images[0]})` }}
+            >
+              {/*Inner Hover*/}
+              <div className="absolute w-full h-full p-4 bg-[#090F10CC] top-0 left-0 transition-all duration-500 md:translate-y-full group-hover:translate-y-0">
+                <p className="text-yard-milk transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0">
+                  {moment(event.date).format("d/MM/YYYY")}
+                  <img
+                    src={"/featured-line.svg"}
+                    alt="featured line"
+                    className="-mt-2 w-22 md:-translate-x-full transition-all delay-300 duration-500 group-hover:translate-x-0"
+                  />
+                </p>
 
-              <Link
-                href={`/event/${encodeURIComponent(event.title)}`}
-                className="w-max h-max group relative text-yard-milk font-playfair font-[700] text-[28px] leading-[36px] tracking-[-0.1px]"
-              >
-                {event.title}
-                <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
-              </Link>
-              <p className="paragraph text-gray-200 w-[280px] md:w-[340px] transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 mt-2">
-                {event.description}
-              </p>
-              <div
-                className="w-9 h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 cursor-pointer hover:scale-105"
-                onClick={() => {
-                  setSelectedEvent(event);
-                  setShareModal(true);
-                }}
-              >
-                <img src={"/icons/share.svg"} alt="share icon" />
+                <Link
+                  href={`/event/${encodeURIComponent(event.title)}`}
+                  className="w-max h-max group relative text-yard-milk font-playfair font-[700] text-[28px] leading-[36px] tracking-[-0.1px]"
+                >
+                  {event.title}
+                  <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
+                </Link>
+                <p className="paragraph text-gray-200 w-[280px] md:w-[340px] transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 mt-2">
+                  {event.description}
+                </p>
+                <div
+                  className="w-9 h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 cursor-pointer hover:scale-105"
+                  onClick={() => {
+                    setSelectedEvent(event);
+                    setShareModal(true);
+                  }}
+                >
+                  <img src={"/icons/share.svg"} alt="share icon" />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
       </section>
 
       {/*Share Event Modal*/}

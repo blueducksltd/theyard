@@ -109,13 +109,18 @@ export default function GalleryContent() {
       });
     }
 
+    if (galleryInputs.eventId === "null") {
+      // galleryInputs.eventId = undefined;
+      delete galleryInputs.eventId;
+    }
+
     //Initialize inputs
     // galleryInputs.images = selectedFiles[0];
     // galleryInputs.images = selectedFiles;
     galleryInputs.mediaDate = mediaDate;
     galleryInputs.category = selectedTag;
 
-    if (Object.keys(galleryInputs).length < 5) {
+    if (Object.keys(galleryInputs).length < 4) {
       return toast.update(toastId, {
         render: "All inputs are needed!",
         type: "error",
@@ -125,7 +130,7 @@ export default function GalleryContent() {
     }
 
     Object.values(galleryInputs).map((val) => {
-      if (val === "" || val === null) {
+      if (val === "") {
         return toast.update(toastId, {
           render: "All inputs are needed!",
           type: "error",
@@ -709,8 +714,13 @@ export default function GalleryContent() {
           </button>
         </div>
         <button
-          type="submit"
-          className="w-full flex justify-center cta-btn bg-base-100 text-yard-primary group relative overflow-hidden rounded-[5px] mt-5"
+          type="button"
+          onClick={() => {
+            const origin = window.location.origin;
+            navigator.clipboard.writeText(`${origin}/gallery`);
+            toast.success(`Link copied to clipboard`);
+          }}
+          className="w-full flex justify-center cta-btn bg-base-100 text-yard-primary group relative overflow-hidden rounded-[5px] mt-5 cursor-pointer"
         >
           <span className="z-40">Copy link</span>
           <div className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
@@ -835,7 +845,7 @@ export default function GalleryContent() {
 
                   <li className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded">
                     {viewImage?.event !== null ? (
-                      <Link href={`/event/${viewImage?.event.title}`}>
+                      <Link href={`/event/${viewImage?.event?.title}`}>
                         Event
                       </Link>
                     ) : (

@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: IProps): Promise<Metadata> {
 
     if (response.success && response.data.event) {
       const event = response.data.event;
-      const url = `${process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com"}/event/${title}`;
+      const url = `${process.env.NEXT_PUBLIC_SITE_URL || "https://theyardpicnics.com"}/event/${title}`;
 
       return {
         title: event.title,

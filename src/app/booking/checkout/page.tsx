@@ -27,7 +27,7 @@ const Page = () => {
   const [inputs] = useState<Record<string, any>>({});
   const [startTime, setStartTime] = useState<string | null>(null);
   const [endTime, setEndTime] = useState<string | null>(null);
-  const [eventDate, setEventDate] = useState<string | null>(null);
+  const [eventDate, setEventDate] = useState<string | Date>("");
   const [totalPrice, setTotalPrice] = useState<any>("0");
 
   const handleSubmit = async () => {
@@ -40,8 +40,9 @@ const Page = () => {
     const now = new Date();
 
     // Check if the date is in the past
-    const bookingDateOnly = new Date(inputs.date).setHours(0, 0, 0, 0);
-    const todayDateOnly = new Date().setHours(0, 0, 0, 0);
+    const bookingDateOnly = new Date(new Date(eventDate).setHours(0, 0, 0, 0));
+    const todayDateOnly = new Date(new Date().setHours(0, 0, 0, 0));
+    console.log(bookingDateOnly, todayDateOnly);
 
     if (bookingDateOnly < todayDateOnly) {
       toast.error("Booking date cannot be in the past");
@@ -90,15 +91,15 @@ const Page = () => {
       }
     }
 
-    if (inputs.date == null) {
-      inputs.date = savedBookingDetails.date;
-    }
+    // if (inputs.date == null) {
+    //   inputs.date = savedBookingDetails.date;
+    // }
 
     inputs.packageId = savedBookingDetails.package.id;
     inputs.startTime = startTime || "";
     inputs.endTime = endTime || "";
     inputs.public = isPublishing ? "true" : "false";
-    inputs.date = eventDate || "";
+    inputs.date = eventDate || savedBookingDetails.date || "";
 
     if (image != null) {
       inputs.images = image;
@@ -166,6 +167,7 @@ const Page = () => {
       toast.update(toastId, {
         render: `An error occurred while creating your booking. Please try again later.`,
         type: "error",
+        autoClose: 3000,
         isLoading: false,
       });
     }

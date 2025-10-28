@@ -32,7 +32,7 @@ const Gallery = async () => {
       </header>
 
       <section className="w-full flex flex-wrap items-center my-5 md:my-4 gap-2">
-        {gallery.map((image) => (
+        {gallery.toReversed().map((image) => (
           <div
             key={image.id}
             className="relative overflow-hidden group w-max flex-grow"
@@ -53,7 +53,7 @@ const Gallery = async () => {
                 />
               </p>
               <Link
-                href={`${image.event == null ? "#" : `/event/${encodeURIComponent(image.event.id as string)}`}`}
+                href={`${image.event == null ? "#" : `/event/${encodeURIComponent(image.event.title as string)}`}`}
                 className="w-max h-max group absolute top-8 md:top-auto md:bottom-10 md:relative text-yard-milk font-playfair font-[700] text-xl md:text-[28px] leading-[36px] tracking-[-0.1px]"
               >
                 {image.title}
