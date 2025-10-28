@@ -161,9 +161,21 @@ export const POST = errorHandler(async (request: NextRequest) => {
     { new: true, upsert: true },
   );
 
+  const slug = body.eventTitle
+    .trim()
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+  console.log(slug);
+
+
   // Create event (keep original times)
   const event = await Event.create({
     title: body.eventTitle,
+    slug,
     description: body.eventDescription,
     customer: customer.id,
     public: body.public,
@@ -192,18 +204,18 @@ export const POST = errorHandler(async (request: NextRequest) => {
     totalPrice,
   });
 
-  try {
-    await sendBookingEmail(customer.email);
-    await sendNotification({
-      type: "booking",
-      title: "New Booking",
-      message: "A Customer just completed Booking",
-      meta: { booking },
-      permission: 2,
-    });
-  } catch (error) {
-    throw APIError.Internal(`Error sending email: ${(error as Error).message}`);
-  }
+  // try {
+  //   await sendBookingEmail(customer.email);
+  //   await sendNotification({
+  //     type: "booking",
+  //     title: "New Booking",
+  //     message: "A Customer just completed Booking",
+  //     meta: { booking },
+  //     permission: 2,
+  //   });
+  // } catch (error) {
+  //   throw APIError.Internal(`Error sending email: ${(error as Error).message}`);
+  // }
 
   return APIResponse.success(
     "New booking created successfully",

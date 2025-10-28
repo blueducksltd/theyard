@@ -79,15 +79,15 @@ export const GET = errorHandler<{ params: { id: string } }>(
         await connectDB();
 
         // requireAuth(request);
-        let { id } = await context.params;
+        let { id: slug } = await context.params;
         // remove start and end spaces
-        id = id.trim();
-        // decode URI components
-        id = decodeURIComponent(id);
 
-        const eventExist = await Event.findOne({ title: id })
+        slug = decodeURIComponent(slug.trim());
+
+
+        const eventExist = await Event.findOne({ slug })
             .populate("customer")
-        if (!eventExist) throw APIError.NotFound(`event with id: ${id} not found`);
+        if (!eventExist) throw APIError.NotFound(`event with slug: ${slug} not found`);
 
         return APIResponse.success("fetched single event", { event: sanitizeEvent(eventExist) });
     }
