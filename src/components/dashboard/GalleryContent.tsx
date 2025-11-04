@@ -81,6 +81,7 @@ export default function GalleryContent() {
     setSelectedFiles([]);
     setSelectedTag("");
     setMediaDate("");
+
     setViewImage(undefined);
   };
 
