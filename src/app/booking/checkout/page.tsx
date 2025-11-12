@@ -101,6 +101,7 @@ const Page = () => {
     inputs.public = isPublishing ? "true" : "false";
     inputs.date = eventDate || savedBookingDetails.date || "";
 
+<<<<<<< Updated upstream
     if (image != null) {
       inputs.images = image;
     }
@@ -119,6 +120,19 @@ const Page = () => {
     );
     if (hasEmptyValues) {
       toast.error(`Please fill out all fields`);
+=======
+    if (image == null) {
+      toast.error(`Please upload an image`, {
+        position: "bottom-right",
+      });
+      return;
+    }
+
+    if (Object.keys(inputs).length < 13) {
+      toast.error(`Please fill out all fields`, {
+        position: "bottom-right",
+      });
+>>>>>>> Stashed changes
       return;
     }
 

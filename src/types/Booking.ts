@@ -11,6 +11,7 @@ import { IPackage, SafePackage, sanitizePackage } from "./Package";
 // TypeScript interface
 // -----------------------------
 export interface IBooking extends Document, IBookingMethods {
+<<<<<<< Updated upstream
     customer: ICustomer["id"];
     space: ISpace["id"];
     event: IEvent["id"];
@@ -23,6 +24,18 @@ export interface IBooking extends Document, IBookingMethods {
     totalPrice: number;
     createdAt: Date;
     updatedAt: Date;
+=======
+  customer: ICustomer["id"];
+  space: ISpace["id"];
+  event: IEvent["id"];
+  package: IPackage["id"];
+  eventDate: Date;
+  startTime: string;
+  endTime: string;
+  times: string[];
+  status: "pending" | "confirmed" | "cancelled";
+  totalPrice: number;
+>>>>>>> Stashed changes
 }
 
 // Instance methods
