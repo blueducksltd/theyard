@@ -1,5 +1,5 @@
 import APIResponse from "@/lib/APIResponse";
-import { requireAuth } from "@/lib/auth";
+// import { requireAuth } from "@/lib/auth";
 // import { deleteFromCloudinary } from "@/lib/cloudinary";
 import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";

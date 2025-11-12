@@ -45,8 +45,8 @@ export const GET = errorHandler(async (request: NextRequest) => {
     const limit = limitParam ? parseInt(limitParam, 10) : null;
 
     // --- Filtering ---
-    const filter = {};
-    if (status) Object.assign(filter, { status });
+    const filter: Record<string, string> = {};
+    if (status) filter.status = status;
 
     // --- Fetch Reviews ---
     const reviews = await Review.filter(filter, sort, direction);
