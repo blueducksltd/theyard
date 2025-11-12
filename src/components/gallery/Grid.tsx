@@ -9,6 +9,7 @@ import moment from "moment";
 import Link from "next/link";
 import React from "react";
 import Modal from "../Modal";
+import { toast } from "react-toastify";
 
 export default function Grid() {
   const [gallery, setGallery] = React.useState<IGallery[]>([]);
