@@ -98,9 +98,12 @@ export const createBookings = async (data: FormData) => {
 };
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 export const verifyPayment = async (data: { reference: string }) => {
   const response = await axios.post(`/payments`, data);
 =======
+=======
+>>>>>>> Stashed changes
 // Confirm bookings
 export const confirmOrCancelBookings = async (data: {
   status: string;
@@ -109,6 +112,9 @@ export const confirmOrCancelBookings = async (data: {
   const response = await axios.put(`/bookings/${data.id}`, {
     status: data.status,
   });
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   return response.data;
 };

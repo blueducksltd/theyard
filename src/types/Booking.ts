@@ -35,6 +35,9 @@ export interface IBooking extends Document, IBookingMethods {
   times: string[];
   status: "pending" | "confirmed" | "cancelled";
   totalPrice: number;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
 
