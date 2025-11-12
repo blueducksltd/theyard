@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@next/swc-win32-x64-msvc": "^16.0.1",
     "@paystack/inline-js": "^2.22.7",
     "@react-email/components": "^0.5.5",
     "@react-email/render": "^1.3.1",
