@@ -10,14 +10,13 @@ interface IProps {
 
 export async function generateMetadata({ params }: IProps): Promise<Metadata> {
   const { slug } = await params;
-  const title = decodeURIComponent(slug).replaceAll("-", " ");
 
   try {
-    const response = await getSingleEvent(title);
+    const response = await getSingleEvent(slug);
 
     if (response.success && response.data.event) {
       const event = response.data.event;
-      const url = `${process.env.NEXT_PUBLIC_SITE_URL || "https://theyardpicnics.com"}/event/${title}`;
+      const url = `${process.env.NEXT_PUBLIC_SITE_URL || "https://theyardpicnics.com"}/event/${slug}`;
 
       return {
         title: event.title,
