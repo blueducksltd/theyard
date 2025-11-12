@@ -8,14 +8,6 @@ import { ISpace } from "@/types/Space";
 import { IEvent } from "@/types/Event";
 import { IPackage } from "@/types/Package";
 import { toast } from "react-toastify";
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-import { set } from "zod/v3";
->>>>>>> Stashed changes
-=======
-import { set } from "zod/v3";
->>>>>>> Stashed changes
 
 interface IPageBooking {
   id: string;
@@ -152,14 +144,6 @@ export default function BookingContent() {
       }),
     );
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-    console.log(initialData[0].createdAt);
->>>>>>> Stashed changes
-=======
-    console.log(initialData[0].createdAt);
->>>>>>> Stashed changes
     const allPending = initialData.filter(
       (booking: IPageBooking) => booking.status === "pending",
     );
@@ -199,8 +183,6 @@ export default function BookingContent() {
     });
 
     const allBoookingToday = allActive.filter((booking: IPageBooking) => {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
       const bookingDate = moment(booking.createdAt).format("YYYY/DD/MM");
       const today = moment().format("YYYY/DD/MM");
       return bookingDate == today;
@@ -209,18 +191,6 @@ export default function BookingContent() {
     // console.log(moment(initialData[4].createdAt).isSame(moment()));
     // nug7mcc8
 
-=======
-=======
->>>>>>> Stashed changes
-      const bookingDate = moment(booking?.createdAt);
-      const today = moment().startOf("day");
-      return bookingDate.isSame(today);
-    });
-
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     setAllBookings(initialData);
     setAllPending(allPending);
     setAllActive(allActive);
