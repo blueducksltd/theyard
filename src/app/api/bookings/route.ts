@@ -204,7 +204,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
   });
 
   try {
-    // await sendBookingEmail(customer.email);
+    await sendBookingEmail(customer.email);
     await sendNotification({
       type: "booking",
       title: "New Booking",
