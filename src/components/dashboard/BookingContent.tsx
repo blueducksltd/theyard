@@ -400,8 +400,8 @@ export default function BookingContent() {
                           >
                             <Image
                               src={"/icons/tick.svg"}
-                              width={50}
-                              height={50}
+                              width={20}
+                              height={20}
                               alt="Tick Icon"
                             />
                           </button>
@@ -414,8 +414,8 @@ export default function BookingContent() {
                           >
                             <Image
                               src={"/icons/close.svg"}
-                              width={50}
-                              height={50}
+                              width={20}
+                              height={20}
                               alt="Trash Icon"
                             />
                           </button>

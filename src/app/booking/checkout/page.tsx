@@ -135,7 +135,6 @@ const Page = () => {
           inputs.email as string,
           totalPrice as number,
           async (transaction) => {
-            // Handle success | Create Booking
             toast.update(toastId, {
               render: `${response.message}`,
               type: "success",
