@@ -199,7 +199,7 @@ const Testimonials = () => {
                   type="text"
                   id="location"
                   name="location"
-                  placeholder="Enugu, Lagos"
+                  placeholder="Enugu"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
