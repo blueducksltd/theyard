@@ -961,15 +961,6 @@ export default function GalleryContent() {
                   {tag.name} {/* Don't hardcode "Wedding" */}
                 </button>
               ))}
-            <button
-              onClick={() => {
-                setSelectedTag("other");
-                galleryInputs.category = "other";
-              }}
-              className={`min-w-[124px] ${selectedTag === "other" ? "bg-yard-primary text-[#EEEEE6]" : "bg-[#EDF0EE] text-yard-primary"} p-2.5 rounded-sm font-medium font-sen text-[15px] border-[1px] border-[#C7CFC9] whitespace-nowrap cursor-pointer`}
-            >
-              Other
-            </button>
           </div>
         </div>
 
@@ -1231,19 +1222,6 @@ export default function GalleryContent() {
                     {tag.name}
                   </button>
                 ))}
-            <button
-              onClick={() => {
-                setSelectedTag("other");
-                galleryInputs.category = "other";
-              }}
-              className={`min-w-[124px] ${
-                selectedTag === "other"
-                  ? "bg-yard-primary text-[#EEEEE6]"
-                  : "bg-[#EDF0EE] text-yard-primary"
-              } p-2.5 rounded-sm font-medium font-sen text-[15px] border-[1px] border-[#C7CFC9] whitespace-nowrap cursor-pointer`}
-            >
-              Other
-            </button>
           </div>
         </div>
 
