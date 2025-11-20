@@ -12,6 +12,7 @@ import {
   getServices,
   getSpaces,
 } from "@/util";
+import { compressImage } from "@/util/helper";
 import Image from "next/image";
 import React, { DragEvent, FormEvent, useEffect } from "react";
 import { toast } from "react-toastify";
@@ -64,7 +65,7 @@ export default function PackagesContent() {
       });
       return;
     }
-    inputs.image = preview || "null";
+    inputs.image = (await compressImage(preview)) || "null";
 
     if (
       section == "services"
@@ -153,7 +154,7 @@ export default function PackagesContent() {
       });
       return;
     }
-    inputs.image = preview || "null";
+    inputs.image = (await compressImage(preview)) || "null";
 
     if (Object.keys(inputs).length < 7) {
       toast.update(toastId, {

@@ -19,6 +19,7 @@ import moment from "moment";
 import { ITag } from "@/types/Tag";
 import { toast } from "react-toastify";
 import { IEvent } from "@/types/Event";
+import { compressImage } from "@/util/helper";
 
 export default function GalleryContent() {
   const [mediaModal, setMediaModal] = React.useState<boolean>(false);
@@ -146,8 +147,8 @@ export default function GalleryContent() {
       formData.append(key, value);
     });
 
-    selectedFiles.forEach((file) => {
-      formData.append("images", file);
+    selectedFiles.forEach(async (file) => {
+      formData.append("images", await compressImage(file));
     });
 
     try {

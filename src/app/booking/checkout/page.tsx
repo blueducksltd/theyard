@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { ISpace } from "@/types/Space";
 import { createBookings, getSpaces } from "@/util";
-import { loadFromLS } from "@/util/helper";
+import { compressImage, loadFromLS } from "@/util/helper";
 import moment from "moment";
 import Link from "next/link";
 import Image from "next/image";
@@ -102,10 +102,10 @@ const Page = () => {
     inputs.date = eventDate || savedBookingDetails.date || "";
 
     if (image != null) {
-      inputs.images = image;
+      inputs.images = await compressImage(image);
     }
 
-    console.log("Booking data loaded:", inputs);
+    // console.log("Booking data loaded:", inputs);
 
     if (Object.keys(inputs).length < 12) {
       toast.error(`Please fill out all fields`);
