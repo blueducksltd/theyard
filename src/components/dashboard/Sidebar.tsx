@@ -15,6 +15,7 @@ import {
 } from "@/util";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
+import { compressImage } from "@/util/helper";
 
 // type definitions
 type sectionType = "form" | "permission" | "password";
@@ -449,7 +450,7 @@ const SettingsForm = ({
     });
 
     if (typeof pic !== "string" && pic !== undefined) {
-      inputs.image = pic;
+      inputs.image = await compressImage(pic);
     }
 
     if (Object.keys(inputs).length === 0) {

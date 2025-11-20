@@ -147,8 +147,8 @@ export default function GalleryContent() {
       formData.append(key, value);
     });
 
-    selectedFiles.forEach(async (file) => {
-      formData.append("images", await compressImage(file));
+    selectedFiles.forEach((file) => {
+      formData.append("images", file);
     });
 
     try {
@@ -329,29 +329,54 @@ export default function GalleryContent() {
     e.preventDefault();
   };
 
-  const processFiles = (files: File[]) => {
+  const processFiles = async (files: File[]) => {
     // Calculate total after adding new files
     const totalFiles = selectedFiles.length + files.length;
-
     if (totalFiles > 5) {
       return toast.info("You cannot select more than 5 images in total", {
         position: "bottom-right",
       });
     }
 
-    // Validate size for new files only
-    const validFiles = files.filter((file) => {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} exceeds 10MB limit`, {
+    try {
+      // Compress all files in parallel
+      const compressedFilesPromises = files.map(async (file) => {
+        // Check size first
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} exceeds 10MB limit`, {
+            position: "bottom-right",
+          });
+          return null;
+        }
+
+        try {
+          // Compress the image
+          const compressedFile = await compressImage(file);
+          return compressedFile;
+        } catch (error) {
+          console.error(`Failed to compress ${file.name}:`, error);
+          return null;
+        }
+      });
+
+      // Wait for all compressions to complete
+      const compressedFiles = await Promise.all(compressedFilesPromises);
+
+      // Filter out null values (failed compressions)
+      const validFiles = compressedFiles.filter(
+        (file): file is File => file !== null,
+      );
+
+      if (validFiles.length > 0) {
+        setSelectedFiles([...selectedFiles, ...validFiles]);
+      } else {
+        toast.error("No valid images to add", {
           position: "bottom-right",
         });
-        return false;
       }
-      return true;
-    });
-
-    // Add to existing files instead of replacing
-    setSelectedFiles([...selectedFiles, ...validFiles]);
+    } catch (error) {
+      console.error("Image processing error:", error);
+    }
   };
 
   // Delete Image

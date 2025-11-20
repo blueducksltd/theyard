@@ -14,9 +14,20 @@ export const loadFromLS = (key: string) => {
 };
 
 export const compressImage = async (file: File) => {
-  return await imageCompression(file, {
+  const compressed = await imageCompression(file, {
     maxSizeMB: 1,
     maxWidthOrHeight: 2000,
+    fileType: "image/webp",
     useWebWorker: true,
   });
+
+  const webpFile = new File(
+    [compressed],
+    file.name.replace(/\.\w+$/, ".webp"),
+    {
+      type: "image/webp",
+    },
+  );
+
+  return webpFile;
 };
