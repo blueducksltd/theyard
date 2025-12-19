@@ -185,7 +185,8 @@ const Footer = () => {
                 </h3>
                 <div className="flex items-center gap-2">
                   <Link
-                    href={"#"}
+                    href={"https://wa.link/ildaml"}
+                    target="_blank"
                     className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px] group relative overflow-hidden"
                   >
                     <img
@@ -207,7 +208,8 @@ const Footer = () => {
                     <div className="cta-btn-hover"></div>
                   </Link>
                   <Link
-                    href={"#"}
+                    href={"https://www.instagram.com/theyardenugu/"}
+                    target="_blank"
                     className="flex w-9 h-9 p-2 bg-[#EDF0EE] rounded-[2px] group relative overflow-hidden"
                   >
                     <img

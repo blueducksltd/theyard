@@ -142,6 +142,15 @@ export const createServices = async (data: FormData) => {
   return response.data;
 };
 
+// Update services
+export const updateService = async (data: FormData, id: string) => {
+  const response = await axios.put(`/services/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+
 // Create packages
 export const createPackages = async (data: FormData) => {
   const response = await axios.post(`/packages`, data, {
@@ -150,11 +159,37 @@ export const createPackages = async (data: FormData) => {
   return response.data;
 };
 
+//Update packages
+export const updatePackage = async (data: FormData, id: string) => {
+  const response = await axios.put(`/packages/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+}
+
 // Create space
 export const createSpace = async (data: FormData) => {
   const response = await axios.post(`/spaces`, data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return response.data;
+};
+
+// Delete Packages
+export const deletePackages = async (data: { id: string }) => {
+  const response = await axios.delete(`/packages/${data.id}`);
+  return response.data;
+};
+
+// Delete Services
+export const deleteServices = async (data: { id: string }) => {
+  const response = await axios.delete(`/services/${data.id}`);
+  return response.data;
+};
+
+// Delete Spaces
+export const deleteSpaces = async (data: { id: string }) => {
+  const response = await axios.delete(`/spaces/${data.id}`);
   return response.data;
 };
 
