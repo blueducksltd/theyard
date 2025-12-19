@@ -175,6 +175,14 @@ export const createSpace = async (data: FormData) => {
   return response.data;
 };
 
+// Update services
+export const updateSpace = async (data: FormData, id: string) => {
+  const response = await axios.put(`/spaces/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
 // Delete Packages
 export const deletePackages = async (data: { id: string }) => {
   const response = await axios.delete(`/packages/${data.id}`);

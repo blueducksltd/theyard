@@ -85,7 +85,7 @@ export const UpdateSpaceDTO = z.object({
   description: z.string().optional(),
   imageUrl: z.url().optional(),
   address: z.string().optional(),
-  capacity: z.string().optional(),
+  capacity: z.number().optional(),
 });
 
 
