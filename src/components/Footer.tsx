@@ -68,15 +68,6 @@ const Footer = () => {
               <div className="cta-btn-hover"></div>
             </button>
           </div>
-
-          <div className="mt-28 hidden md:block">
-            <img src={"/logo-white.svg"} alt="White Logo" />
-            <p className="text-[#CCCCCC] w-[415px] text-[12px] tracking-[0.5px] leading-[22px] mt-2">
-              We believe every moment is worth celebrating. Whether you’re here
-              for a quiet picnic, a romantic date, or a joyful event with
-              friends
-            </p>
-          </div>
         </div>
 
         <div className="flex flex-col md:h-[417px] relative mt-10 md:mt-0">
@@ -247,13 +238,27 @@ const Footer = () => {
               </div>
             </div>
           </div>
-
-          <div className="absolute bottom-0 text-[#CCCCCC] md:w-[415px] text-[12px] tracking-[0.5px] leading-[22px] mt-2">
-            <p>&copy; 2025 - Copyright The Yard Picnic Park.</p>
-            <p>All rights reserved</p>
-          </div>
         </div>
       </section>
+      <div className="flex items-center justify-between">
+        <img src={"/logo-white.svg"} alt="White Logo" width={90} />
+        {/*<p className="text-[#CCCCCC] w-[415px] text-[12px] tracking-[0.5px] leading-[22px] mt-2">*/}
+        {/*  We believe every moment is worth celebrating. Whether you’re here*/}
+        {/*  for a quiet picnic, a romantic date, or a joyful event with*/}
+        {/*  friends*/}
+        {/*</p>*/}
+
+        <div>
+          <Link href={'/'} className={'text-sm underline text-white'}>Terms &amp; Condition</Link>
+          <Link href={'/'} className={'text-sm underline text-white ml-3'}>Privacy Policy</Link>
+          <p className={'text-sm mt-2 text-white'}>&copy; 2025 - Copyright The Yard Picnic Park. All rights reserved</p>
+        </div>
+
+        <div>
+          <p className={'text-sm mt-2 text-white mb-2'}>Developed by</p>
+          <img src={"/blueducks.png"} alt="White Logo" width={90} />
+        </div>
+      </div>
     </main>
   );
 };

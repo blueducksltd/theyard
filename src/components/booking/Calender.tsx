@@ -390,7 +390,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             </div>
           </div>
         </section>
-        <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5">
+        <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5 h-[40rem] overflow-scroll">
           {packages.map((pck) => (
             <label
               htmlFor={pck.name}
