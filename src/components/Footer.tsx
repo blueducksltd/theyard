@@ -240,7 +240,7 @@ const Footer = () => {
           </div>
         </div>
       </section>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between">
         <img src={"/logo-white.svg"} alt="White Logo" width={90} />
         {/*<p className="text-[#CCCCCC] w-[415px] text-[12px] tracking-[0.5px] leading-[22px] mt-2">*/}
         {/*  We believe every moment is worth celebrating. Whether you’re here*/}
@@ -254,7 +254,7 @@ const Footer = () => {
           <p className={'text-sm mt-2 text-white'}>&copy; 2025 - Copyright The Yard Picnic Park. All rights reserved</p>
         </div>
 
-        <div>
+        <div className={'mt-5 ml-80 md:mt-0 md:ml-0'}>
           <p className={'text-sm mt-2 text-white mb-2'}>Developed by</p>
           <img src={"/blueducks.png"} alt="White Logo" width={90} />
         </div>
