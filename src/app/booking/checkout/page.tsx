@@ -198,8 +198,8 @@ const Page = () => {
         "hours",
         true,
       ) *
-        (_spacePrice ?? 0) +
-        savedBookingDetails.package.price,
+      (_spacePrice ?? 0) +
+      savedBookingDetails.package.price,
     );
   };
 
@@ -681,14 +681,14 @@ const Page = () => {
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
                     {startTime && endTime
                       ? (() => {
-                          const diffInMinutes = moment(endTime, "HH:mm").diff(
-                            moment(startTime, "HH:mm"),
-                            "minutes",
-                          );
-                          const hours = Math.floor(diffInMinutes / 60);
-                          const minutes = diffInMinutes % 60;
-                          return `${hours}.${minutes.toString().padStart(2, "0")}`;
-                        })()
+                        const diffInMinutes = moment(endTime, "HH:mm").diff(
+                          moment(startTime, "HH:mm"),
+                          "minutes",
+                        );
+                        const hours = Math.floor(diffInMinutes / 60);
+                        const minutes = diffInMinutes % 60;
+                        return `${hours}.${minutes.toString().padStart(2, "0")}`;
+                      })()
                       : 0}
                   </p>
                 </div>

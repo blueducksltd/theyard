@@ -4,6 +4,7 @@ import axios from "@/util/axios";
 // Get services
 export const getServices = async () => {
   const response = await axios.get(`/services`);
+  // const response = { data: [{ services: [] }] }
   return response.data;
 };
 
