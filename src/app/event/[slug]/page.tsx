@@ -10,6 +10,7 @@ interface IProps {
 
 export async function generateMetadata({ params }: IProps): Promise<Metadata> {
   const { slug } = await params;
+  console.log("SLUG => ", slug);
 
   try {
     const response = await getSingleEvent(slug);

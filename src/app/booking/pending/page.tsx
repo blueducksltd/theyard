@@ -5,7 +5,7 @@ import { use, useEffect, useState } from "react";
 import BookingCalendar from "@/components/booking/Calender";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import Modal from "@/components/Modal"; // ✅ Ensure you have this component
+import Modal from "@/components/Modal";
 import { IBooking } from "@/types/Booking";
 import { getBookings, getBookingsByDate, getPackages } from "@/util";
 import { IPackage } from "@/types/Package";
@@ -32,7 +32,20 @@ const Page = ({ searchParams }: IProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [packages, setPackages] = useState<IPackage[]>([]); // Replace 'any' with your package type
   const [selectedPackage, setSelectedPackage] = useState({});
+  const [expandedPackages, setExpandedPackages] = useState<Set<string>>(new Set());
   const router = useRouter();
+
+  const toggleExpand = (packageId: string) => {
+    setExpandedPackages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(packageId)) {
+        newSet.delete(packageId);
+      } else {
+        newSet.add(packageId);
+      }
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -179,7 +192,7 @@ const Page = ({ searchParams }: IProps) => {
       {/* Modal */}
       <Modal isOpen={isModalOpen}>
         <section className="w-full">
-          <div className="w-full flex items-center justify-between">
+          <div className="w-full flex items-center justify-between mt-10">
             <div className="title flex flex-col items-end">
               <h1 className="font-playfair text-xl md:text-[28px] text-yard-primary font-bold leading-9 tracking-[-0.1px]">
                 Select preferred package
@@ -203,56 +216,61 @@ const Page = ({ searchParams }: IProps) => {
             </div>
           </div>
         </section>
+        <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5 h-[40rem] overflow-scroll">
+          {packages.map((pck) => {
+            const isExpanded = expandedPackages.has(pck.id as string);
 
-        <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5">
-          {packages.map((pck) => (
-            <label
-              htmlFor={pck.id}
-              key={pck.id as string}
-              className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm"
-            >
-              <input
-                id={pck.id}
-                type="radio"
-                onChange={() =>
-                  setSelectedPackage({
-                    id: pck.id,
-                    name: pck.name,
-                    price: pck.price,
-                  })
-                }
-                className="radio radio-sm text-yard-primary mt-1 border-2"
-                name="package"
-              />
-              <div>
-                <h2 className="font-bold text-xl font-playfair">{pck.name}</h2>
-                <p className="text-[#717068] text-sm">{pck.description}</p>
-              </div>
-            </label>
-          ))}
-
-          <label
-            htmlFor="shutdow1n"
-            className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm"
-          >
-            <input
-              id="shutdow1n"
-              type="radio"
-              className="radio radio-sm text-yard-primary mt-1 border-2"
-              onChange={() => setSelectedPackage("shutdown")}
-              name="package"
-            />
-            <div>
-              <h2 className="font-bold text-xl font-playfair">
-                Special Custom Package
-              </h2>
-              <p className="text-[#8F4546] text-sm">Shut down the Yard!!!</p>
-            </div>
-          </label>
-
+            return (
+              <label
+                htmlFor={pck.name}
+                key={pck.id as string}
+                className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm"
+              >
+                <input
+                  id={pck.name}
+                  type="radio"
+                  onChange={() =>
+                    setSelectedPackage({
+                      id: pck.id,
+                      name: pck.name,
+                      price: pck.price,
+                    })
+                  }
+                  className="radio radio-sm text-yard-primary mt-1 border-2"
+                  name="package"
+                />
+                <div className="flex-1">
+                  <h2 className="font-bold text-xl font-playfair">{pck.name}</h2>
+                  <div>
+                    <p className={`text-[#717068] text-sm transition-all duration-500 ${isExpanded ? '' : 'line-clamp-3'}`}>
+                      {pck.description}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleExpand(pck.id as string);
+                      }}
+                      className="text-yard-primary text-xs mt-2 flex items-center gap-1 hover:underline cursor-pointer"
+                    >
+                      <span>{isExpanded ? 'show less' : 'expand description'}</span>
+                      <svg
+                        className={`w-3 h-3 transition-transform duration-700 ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </label>
+            );
+          })}
           <button
-            onClick={handleProcessPackage}
-            className="w-full md:w-[554px] flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden cursor-pointer"
+            onClick={() => handleProcessPackage()}
+            className="w-full md:w-[554px] flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden cursor-pointer mb-5"
           >
             <span className="z-40">Select package</span>
             <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>

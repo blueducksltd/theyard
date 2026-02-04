@@ -10,6 +10,8 @@ import Link from "next/link";
 import React from "react";
 import Modal from "../Modal";
 import { toast } from "react-toastify";
+import { saveToLS } from "@/util/helper";
+import { useRouter } from "next/navigation";
 
 export default function Grid() {
   const [gallery, setGallery] = React.useState<IGallery[]>([]);
@@ -21,6 +23,7 @@ export default function Grid() {
     null,
   );
   const [shareUrl, setShareUrl] = React.useState<string>("");
+  const router = useRouter();
 
   const handleGallery = (value: string) => {
     // Remove async, not needed
@@ -31,6 +34,12 @@ export default function Grid() {
         (image) => image.category === value, // Add optional chaining
       );
       setGallery(filteredGallery);
+    }
+  };
+
+  const handleShowImage = (image: IGallery) => {
+    if (image) {
+      saveToLS("selectedGallery", image);
     }
   };
 
@@ -104,7 +113,8 @@ export default function Grid() {
                   />
                 </p>
                 <Link
-                  href={`${image.event == null ? "#" : `/event/${encodeURIComponent(image.event.id as string)}`}`}
+                  href={`${image.event == null ? `/gallery/${encodeURIComponent(image.title)}` : `/event/${encodeURIComponent(image.event.id as string)}`}`}
+                  onClick={() => saveToLS("selectedGallery", image)}
                   className="w-max h-max group absolute top-8 md:top-auto md:bottom-10 md:relative text-yard-milk font-playfair font-[700] text-xl md:text-[28px] leading-[36px] tracking-[-0.1px]"
                 >
                   {image.title}

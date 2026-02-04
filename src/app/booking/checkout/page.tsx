@@ -20,7 +20,7 @@ const Page = () => {
   const router = useRouter();
   const [spaces, setSpaces] = useState<ISpace[]>([]);
   const [selectedSpace, setSelectedSpace] = useState<ISpace | null>(null);
-  const [isPublishing, setIsPublishing] = useState<boolean>(true);
+  const [isPublishing, setIsPublishing] = useState<boolean>(false);
   const [image, setImage] = useState<File | undefined>();
   const [savedBookingDetails, setSavedBookingDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,8 +96,8 @@ const Page = () => {
     // }
 
     inputs.packageId = savedBookingDetails.package.id;
-    inputs.startTime = startTime || "";
-    inputs.endTime = endTime || "";
+    // inputs.startTime = startTime || "";
+    // inputs.endTime = endTime || "";
     inputs.public = isPublishing ? "true" : "false";
     inputs.date = eventDate || savedBookingDetails.date || "";
 
@@ -107,18 +107,25 @@ const Page = () => {
 
     // console.log("Booking data loaded:", inputs);
 
-    if (Object.keys(inputs).length < 12) {
-      toast.error(`Please fill out all fields`);
-      return;
+    if (isPublishing) {
+      if (Object.keys(inputs).length < 12) {
+        toast.error(`Please fill out all fields ${Object.keys(inputs).length}`);
+        return;
+      }
+    } else {
+      if (Object.keys(inputs).length < 10) {
+        toast.error(`Please fill out all fields ${Object.keys(inputs).length}`);
+        return;
+      }
     }
 
-    console.log(inputs);
+    console.log("Inputs:", inputs);
 
     const hasEmptyValues = Object.values(inputs).some(
       (val) => val === "" || val == null,
     );
     if (hasEmptyValues) {
-      toast.error(`Please fill out all fields`);
+      toast.error(`Please fill out all fields ${Object.keys(inputs).length}`);
       return;
     }
 
@@ -374,7 +381,8 @@ const Page = () => {
                   />
                 </div>
 
-                <div className="input-group w-full flex flex-col gap-3">
+                {/* Removed select time */}
+                {/* <div className="input-group w-full flex flex-col gap-3">
                   <label
                     htmlFor="time-from"
                     className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
@@ -420,6 +428,25 @@ const Page = () => {
                       className="w-full md:h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                     />
                   </div>
+                </div> */}
+
+                <div className="w-full input-group flex flex-col gap-3">
+                  <label
+                    htmlFor="attendees"
+                    className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                  >
+                    How many people will be attending?
+                  </label>
+                  <input
+                    type="number"
+                    id="attendees"
+                    name="attendees"
+                    placeholder="0"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      (inputs.attendees = e.target.value)
+                    }
+                    className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                  />
                 </div>
               </div>
 
@@ -471,73 +498,77 @@ const Page = () => {
                 </div>
               </div>
 
-              <div className="form-group flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full input-group flex flex-col gap-3">
-                  <label
-                    htmlFor="desc"
-                    className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                  >
-                    Enter event description
-                  </label>
-                  <textarea
-                    id="desc"
-                    name="desc"
-                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-                      (inputs.eventDescription = e.target.value)
-                    }
-                    placeholder="Enter event description"
-                    className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                  ></textarea>
-                </div>
-              </div>
-
-              <div className="form-group flex flex-col md:flex-row items-start gap-6">
-                {image == undefined ? (
-                  <label htmlFor="image" className="w-full">
-                    <div className="flex flex-col h-[213px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
-                      <Image
-                        src={"/icons/upload.svg"}
-                        width={18}
-                        height={18}
-                        alt="Upload Icon"
-                      />
-                      <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
-                        Choose an image
-                        {/*or drag &amp; drop it here*/}
-                      </p>
-
-                      <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
-                        JPEG &amp; PNG up to 10mb
-                      </p>
+              {isPublishing ? (
+                <>
+                  <div className="form-group flex flex-col md:flex-row items-start gap-6">
+                    <div className="w-full input-group flex flex-col gap-3">
+                      <label
+                        htmlFor="desc"
+                        className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                      >
+                        Enter event description
+                      </label>
+                      <textarea
+                        id="desc"
+                        name="desc"
+                        onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                          (inputs.eventDescription = e.target.value)
+                        }
+                        placeholder="Enter event description"
+                        className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                      ></textarea>
                     </div>
-                    <input
-                      type="file"
-                      accept="image/*,video/*"
-                      onChange={(e) => setImage(e.target.files?.[0])}
-                      id="image"
-                      className="hidden"
-                    />
-                  </label>
-                ) : (
-                  <label
-                    htmlFor="image"
-                    className="w-full h-[213px] bg-center bg-cover rounded2px cursor-pointer"
-                    title="Change Image"
-                    style={{
-                      backgroundImage: `url(${URL.createObjectURL(image)})`,
-                    }}
-                  >
-                    <input
-                      type="file"
-                      accept="image/*,video/*"
-                      size={10}
-                      onChange={(e) => setImage(e.target.files?.[0])}
-                      id="image"
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
+                  </div>
+
+                  <div className="form-group flex flex-col md:flex-row items-start gap-6">
+                    {image == undefined ? (
+                      <label htmlFor="image" className="w-full">
+                        <div className="flex flex-col h-[213px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
+                          <Image
+                            src={"/icons/upload.svg"}
+                            width={18}
+                            height={18}
+                            alt="Upload Icon"
+                          />
+                          <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
+                            Choose an image
+                            {/*or drag &amp; drop it here*/}
+                          </p>
+
+                          <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
+                            JPEG &amp; PNG up to 10mb
+                          </p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*,video/*"
+                          onChange={(e) => setImage(e.target.files?.[0])}
+                          id="image"
+                          className="hidden"
+                        />
+                      </label>
+                    ) : (
+                      <label
+                        htmlFor="image"
+                        className="w-full h-[213px] bg-center bg-cover rounded2px cursor-pointer"
+                        title="Change Image"
+                        style={{
+                          backgroundImage: `url(${URL.createObjectURL(image)})`,
+                        }}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*,video/*"
+                          size={10}
+                          onChange={(e) => setImage(e.target.files?.[0])}
+                          id="image"
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+                  </div>
+                </>
+              ) : null}
 
               <div className="form-group flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full input-group flex flex-col gap-3">
@@ -556,7 +587,6 @@ const Page = () => {
                         type="radio"
                         id="yes"
                         value={"yes"}
-                        defaultChecked={true}
                         onChange={() => setIsPublishing(true)}
                         name="publish"
                         className="mt-3 radio radio-lg peer border-2 border-yard-primary checked:border-yard-dark-primary checked:text-yard-dark-primary"
@@ -578,6 +608,7 @@ const Page = () => {
                         type="radio"
                         id="no"
                         value={"no"}
+                        defaultChecked={true}
                         onChange={() => setIsPublishing(false)}
                         name="publish"
                         className="mt-3 radio radio-lg peer border-2 border-yard-primary checked:border-yard-dark-primary checked:text-yard-dark-primary"
@@ -676,7 +707,7 @@ const Page = () => {
 
                 <div className="w-full flex justify-between">
                   <p className="leading-6 tracking-[0.5px] text-[#717068]">
-                    No. Hours
+                    No. of Guests
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
                     {startTime && endTime

@@ -86,7 +86,7 @@ const Page = () => {
                     </p>
 
                     <Link
-                      href={`/event/${encodeURIComponent(event.title)}`}
+                      href={`/event/${encodeURIComponent(event.slug)}`}
                       className="w-max h-max group absolute top-8 md:top-auto md:bottom-10 md:relative text-yard-milk font-playfair font-[700] text-xl md:text-[28px] leading-[36px] tracking-[-0.1px]"
                     >
                       {event.title}

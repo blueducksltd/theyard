@@ -32,6 +32,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [packages, setPackages] = useState<IPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState({});
+  const [expandedPackages, setExpandedPackages] = React.useState<Set<string>>(new Set());
   const router = useRouter();
 
   const months: string[] = [
@@ -244,6 +245,19 @@ const BookingCalendar: React.FC<CalendarProps> = ({
     router.push(`/booking/checkout`);
   };
 
+  // Expand package description
+  const toggleExpand = (packageId: string) => {
+    setExpandedPackages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(packageId)) {
+        newSet.delete(packageId);
+      } else {
+        newSet.add(packageId);
+      }
+      return newSet;
+    });
+  };
+
   // Get packages
   useEffect(() => {
     (async () => {
@@ -315,9 +329,8 @@ const BookingCalendar: React.FC<CalendarProps> = ({
               <div
                 key={index}
                 onClick={() => day && !pastDay && handleDateClick(day, status)}
-                className={`relative h-20 flex items-center justify-center duration-10 rounded-sm group overflow-hidden ${
-                  pastDay ? "cursor-not-allowed opacity-40" : "cursor-pointer"
-                } ${todayDate ? "bg-[#C7CFC9]" : ""}`}
+                className={`relative h-20 flex items-center justify-center duration-10 rounded-sm group overflow-hidden ${pastDay ? "cursor-not-allowed opacity-40" : "cursor-pointer"
+                  } ${todayDate ? "bg-[#C7CFC9]" : ""}`}
               >
                 {day && (
                   <>
@@ -330,13 +343,12 @@ const BookingCalendar: React.FC<CalendarProps> = ({
                       )}
                       <button
                         disabled={pastDay}
-                        className={`w-full h-full flex items-center justify-center rounded z-40 ${
-                          todayDate
-                            ? "text-white font-bold"
-                            : pastDay
-                              ? "text-gray-400"
-                              : "text-black"
-                        }`}
+                        className={`w-full h-full flex items-center justify-center rounded z-40 ${todayDate
+                          ? "text-white font-bold"
+                          : pastDay
+                            ? "text-gray-400"
+                            : "text-black"
+                          }`}
                         aria-label={`Select ${day}`}
                       >
                         {day}
@@ -348,11 +360,10 @@ const BookingCalendar: React.FC<CalendarProps> = ({
                       )}*/}
                       {!pastDay && (
                         <div
-                          className={`absolute top-0 -left-0 h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0 ${
-                            todayDate
-                              ? "bg-[#3C5040] group-hover:w-full"
-                              : "bg-yard-primary-active group-hover:w-full"
-                          }`}
+                          className={`absolute top-0 -left-0 h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0 ${todayDate
+                            ? "bg-[#3C5040] group-hover:w-full"
+                            : "bg-yard-primary-active group-hover:w-full"
+                            }`}
                         ></div>
                       )}
                     </div>
@@ -366,7 +377,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
 
       <Modal isOpen={isModalOpen}>
         <section className="w-full">
-          <div className="w-full flex items-center justify-between">
+          <div className="w-full flex items-center justify-between mt-10">
             <div className="title flex flex-col items-end">
               <h1 className="font-playfair text-xl md:text-[28px] text-yard-primary font-bold leading-9 tracking-[-0.1px]">
                 Select preferred package
@@ -391,54 +402,60 @@ const BookingCalendar: React.FC<CalendarProps> = ({
           </div>
         </section>
         <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5 h-[40rem] overflow-scroll">
-          {packages.map((pck) => (
-            <label
-              htmlFor={pck.name}
-              key={pck.id as string}
-              className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm"
-            >
-              <input
-                id={pck.name}
-                type="radio"
-                onChange={() =>
-                  setSelectedPackage({
-                    id: pck.id,
-                    name: pck.name,
-                    price: pck.price,
-                  })
-                }
-                className="radio radio-sm text-yard-primary mt-1 border-2"
-                name="package"
-              />
-              <div>
-                <h2 className="font-bold text-xl font-playfair">{pck.name}</h2>
-                <p className="text-[#717068] text-sm">{pck.description}</p>
-              </div>
-            </label>
-          ))}
+          {packages.map((pck) => {
+            const isExpanded = expandedPackages.has(pck.id as string);
 
-          {/*<label
-            htmlFor="shutdown"
-            className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm"
-          >
-            <input
-              id="shutdown"
-              type="radio"
-              className="radio radio-sm text-yard-primary mt-1 border-2"
-              onChange={() => setSelectedPackage("shutdown")}
-              name="package"
-            />
-            <div>
-              <h2 className="font-bold text-xl font-playfair">
-                Special Custom Package
-              </h2>
-              <p className="text-[#8F4546] text-sm">Shut down the Yard!!!</p>
-            </div>
-          </label>*/}
-
+            return (
+              <label
+                htmlFor={pck.name}
+                key={pck.id as string}
+                className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm"
+              >
+                <input
+                  id={pck.name}
+                  type="radio"
+                  onChange={() =>
+                    setSelectedPackage({
+                      id: pck.id,
+                      name: pck.name,
+                      price: pck.price,
+                    })
+                  }
+                  className="radio radio-sm text-yard-primary mt-1 border-2"
+                  name="package"
+                />
+                <div className="flex-1">
+                  <h2 className="font-bold text-xl font-playfair">{pck.name}</h2>
+                  <div>
+                    <p className={`text-[#717068] text-sm transition-all duration-500 ${isExpanded ? '' : 'line-clamp-3'}`}>
+                      {pck.description}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleExpand(pck.id as string);
+                      }}
+                      className="text-yard-primary text-xs mt-2 flex items-center gap-1 hover:underline cursor-pointer"
+                    >
+                      <span>{isExpanded ? 'show less' : 'expand description'}</span>
+                      <svg
+                        className={`w-3 h-3 transition-transform duration-700 ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </label>
+            );
+          })}
           <button
             onClick={() => handleProcessPackage()}
-            className="w-full md:w-[554px] flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden cursor-pointer"
+            className="w-full md:w-[554px] flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden cursor-pointer mb-5"
           >
             <span className="z-40">Select package</span>
             <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
