@@ -37,7 +37,7 @@ const Hero = ({ packages }: HeroProps) => {
             />
           </div>
           <p className="w-[280px] md:w-[600px] lg:w-[814px] text-center text-yard-text my-4 font-lato text-[16px] font-[400] tracking-[0.5px] leading-6">
-            Whether you're planning a romantic picnic for two, a birthday with
+            Whether you&apos;re planning a romantic picnic for two, a birthday with
             friends, or a stylish intimate wedding, The Yard offers curated
             packages tailored to your needs.
           </p>
