@@ -9,8 +9,8 @@ export interface IPackage extends Document {
   specs: string[];
   description: string;
   imageUrl: string;
-  guestLimit: Number;
-  extraGuestFee: Number;
+  guestLimit: number;
+  extraGuestFee: number;
 }
 
 // Instance methods
