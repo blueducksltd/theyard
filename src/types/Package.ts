@@ -9,6 +9,8 @@ export interface IPackage extends Document {
   specs: string[];
   description: string;
   imageUrl: string;
+  guestLimit: Number;
+  extraGuestFee: Number;
 }
 
 // Instance methods
@@ -28,6 +30,8 @@ export type SafePackage = {
   specs: string[];
   description: string;
   imageUrl: string;
+  guestLimit: Number;
+  extraGuestFee: Number;
 };
 
 export function sanitizePackage(packages: IPackage): SafePackage {
@@ -38,12 +42,16 @@ export function sanitizePackage(packages: IPackage): SafePackage {
     specs: packages.specs,
     description: packages.description,
     imageUrl: packages.imageUrl,
+    guestLimit: packages.guestLimit,
+    extraGuestFee: packages.extraGuestFee
   };
 }
 
 export const CreatePackageDTO = z.object({
   name: z.string(),
   price: z.coerce.number(), // accepts "1000" and coerces to 1000
+  guestLimit: z.coerce.number(),
+  extraGuestFee: z.coerce.number(),
   specs: z.preprocess((val) => {
     if (Array.isArray(val)) {
       // already array (e.g., specs[]=a&specs[]=b)
@@ -62,6 +70,8 @@ export const CreatePackageDTO = z.object({
 export const UpdatePackageDTO = z.object({
   name: z.string().optional(),
   price: z.coerce.number().optional(), // accepts "1000" and coerces to 1000
+  guestLimit: z.coerce.number().optional(),
+  extraGuestFee: z.coerce.number().optional(),
   specs: z.preprocess((val) => {
     if (Array.isArray(val)) {
       // already array (e.g., specs[]=a&specs[]=b)

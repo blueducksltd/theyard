@@ -4,7 +4,6 @@ import {
   IBookingMethods,
   IBookingModel
 } from "../types/Booking";
-import { generateSlots } from "@/lib/util";
 import { startOfDay, endOfDay } from "date-fns";
 
 // Schema definition with TS generics
@@ -15,40 +14,28 @@ const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
     event: { type: Types.ObjectId, ref: "Event", required: true },
     package: { type: Types.ObjectId, ref: "Package", required: true },
     eventDate: { type: Date, required: true },
-    startTime: { type: String, required: true },
-    endTime: { type: String, required: true },
-    times: [{
-      type: String, required: true
-    }],
+    guestCount: { type: Number, required: true },
     status: { type: String, enum: ["pending", "confirmed", "cancelled"], default: "pending" },
     totalPrice: { type: Number, required: true },
   },
   { timestamps: true }
 );
 
-BookingSchema.pre("save", function (next) {
-  if (this.startTime && this.endTime) {
-    this.times = generateSlots(this.startTime, this.endTime);
-  }
-  next();
-});
-
 
 BookingSchema.statics.isDoubleBooked = async function (
   spaceId: string,
-  date: Date,
-  startTime: string,
-  endTime: string
+  eventDate: Date
 ): Promise<boolean> {
-  const requestedSlots = generateSlots(startTime, endTime);
+  const dayStart = startOfDay(eventDate);
+  const dayEnd = endOfDay(eventDate);
 
-  const bookings = await this.find({ space: spaceId, eventDate: date, status: { $ne: "cancelled" } });
-  if (bookings.length === 0) return false;
+  const count = await this.countDocuments({
+    space: spaceId,
+    eventDate: { $gte: dayStart, $lte: dayEnd },
+    status: { $ne: "cancelled" }
+  });
 
-  // Check overlap
-  return bookings.some((b: IBooking) =>
-    b.times.some((t: string) => requestedSlots.includes(t))
-  );
+  return count > 0;
 };
 
 

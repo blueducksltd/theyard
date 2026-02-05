@@ -9,11 +9,11 @@ import {
 const SpaceSchema = new Schema<ISpace, ISpaceModel, ISpaceMethods>(
     {
         name: { type: String, required: true },
-        pricePerHour: { type: Number, required: true },
+        // pricePerHour: { type: Number, required: true },
         imageUrl: { type: String },
         specs: [{ type: String, required: true }],
         address: { type: String, required: true },
-        capacity: { type: Number, required: true },
+        // capacity: { type: Number, required: true },
         description: { type: String, required: false },
     },
     { timestamps: true }

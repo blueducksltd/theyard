@@ -1,14 +1,14 @@
 import { IBooking } from "@/types/Booking";
 import dayjs from "dayjs";
 
-// Day view: group bookings by hour
+// Day view: group bookings by day (no time slots)
 export function groupBookingsByDay(bookings: IBooking[], date: Date) {
     return bookings
         .filter(b => dayjs(b.eventDate).isSame(date, "day"))
         .map(b => ({
             ...b.toObject(),
-            start: combineDateTime(b.eventDate, b.startTime),
-            end: combineDateTime(b.eventDate, b.endTime),
+            start: dayjs(b.eventDate).hour(9).minute(0).second(0).toDate(), // Default day start
+            end: dayjs(b.eventDate).hour(18).minute(0).second(0).toDate(), // Default day end
         }))
         .sort((a, b) => a.start.getTime() - b.start.getTime());
 }
@@ -19,8 +19,8 @@ export function groupBookingsByMonth(bookings: IBooking[], month: Date) {
         .filter(b => dayjs(b.eventDate).isSame(month, "month"))
         .map(b => ({
             ...b.toObject(),
-            start: combineDateTime(b.eventDate, b.startTime),
-            end: combineDateTime(b.eventDate, b.endTime),
+            start: dayjs(b.eventDate).hour(9).minute(0).second(0).toDate(),
+            end: dayjs(b.eventDate).hour(18).minute(0).second(0).toDate(),
         }))
         .reduce((acc, b) => {
             const day = dayjs(b.eventDate).format("YYYY-MM-DD");
@@ -30,10 +30,7 @@ export function groupBookingsByMonth(bookings: IBooking[], month: Date) {
         }, {} as Record<string, IBooking[]>);
 }
 
-export function combineDateTime(date: Date, time: string): Date {
-    return dayjs(date)
-        .hour(parseInt(time.split(":")[0], 10))
-        .minute(parseInt(time.split(":")[1], 10))
-        .second(0)
-        .toDate();
+// For day-based bookings, use default hours
+export function combineDateTime(date: Date, _time: string): Date {
+    return dayjs(date).hour(9).minute(0).second(0).toDate();
 }

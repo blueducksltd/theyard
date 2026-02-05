@@ -16,9 +16,7 @@ export interface IBooking extends Document, IBookingMethods {
   event: IEvent["id"];
   package: IPackage["id"];
   eventDate: Date;
-  startTime: string;
-  endTime: string;
-  times: string[];
+  guestCount: number;
   status: "pending" | "confirmed" | "cancelled";
   totalPrice: number;
   createdAt: Date;
@@ -37,8 +35,6 @@ export interface IBookingModel extends Model<IBooking, IBookingMethods> {
   isDoubleBooked(
     spaceId: string,
     eventDate: Date,
-    startTime: string,
-    endTime: string,
   ): Promise<boolean>;
   filter(
     filter: Record<string, string>,
@@ -55,8 +51,7 @@ export interface IBookingModel extends Model<IBooking, IBookingMethods> {
 export type SafeBooking = {
   id: string;
   eventDate: Date;
-  startTime: string;
-  endTime: string;
+  guestCount: number;
   status: string;
   totalPrice: number;
   customer: SafeCustomer | null;
@@ -71,8 +66,7 @@ export function sanitizeBooking(booking: IBooking): SafeBooking {
   return {
     id: booking.id,
     eventDate: booking.eventDate,
-    startTime: booking.startTime,
-    endTime: booking.endTime,
+    guestCount: booking.guestCount,
     status: booking.status,
     totalPrice: booking.totalPrice,
     customer: booking.customer ? sanitizeCustomer(booking.customer) : null,
@@ -106,23 +100,26 @@ export const CreateBookingDto = z.object({
     .min(10, "field `phone` must be at least 10 characters"),
   date: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, use YYYY-MM-DD"),
-  startTime: z
-    .string({
-      error: "field `startTime` is required",
-    })
-    .regex(
-      /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
-      "field `startTime` must be in HH:MM 24-hour format",
+    .refine(
+      (val) => {
+        // Accept multiple date formats
+        const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+        const standardRegex = /^\d{4}-\d{2}-\d{2}$/;
+        const usRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+        const euRegex = /^\d{2}\.\d{2}\.\d{4}$/;
+
+        return (
+          isoRegex.test(val) ||
+          standardRegex.test(val) ||
+          usRegex.test(val) ||
+          euRegex.test(val)
+        );
+      },
+      "Invalid date format. Use YYYY-MM-DD, ISO 8601, MM/DD/YYYY, or DD.MM.YYYY",
     ),
-  endTime: z
-    .string({
-      error: "field `endTime` is required",
-    })
-    .regex(
-      /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
-      "field `endTime` must be in HH:MM 24-hour format",
-    ),
+  guestCount: z.coerce.number({
+    error: "field `guestCount` is required",
+  }).min(1),
   spaceId: z.string({
     error: "field `spaceId` is required",
   }),
@@ -148,22 +145,25 @@ export const UpdateBookingDto = z.object({
     .optional(),
   date: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format, use YYYY-MM-DD")
-    .optional(),
-  startTime: z
-    .string()
-    .regex(
-      /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
-      "field `startTime` must be in HH:MM 24-hour format",
+    .refine(
+      (val) => {
+        // Accept multiple date formats
+        const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+        const standardRegex = /^\d{4}-\d{2}-\d{2}$/;
+        const usRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+        const euRegex = /^\d{2}\.\d{2}\.\d{4}$/;
+
+        return (
+          isoRegex.test(val) ||
+          standardRegex.test(val) ||
+          usRegex.test(val) ||
+          euRegex.test(val)
+        );
+      },
+      "Invalid date format. Use YYYY-MM-DD, ISO 8601, MM/DD/YYYY, or DD.MM.YYYY",
     )
     .optional(),
-  endTime: z
-    .string()
-    .regex(
-      /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
-      "field `endTime` must be in HH:MM 24-hour format",
-    )
-    .optional(),
+  guestCount: z.coerce.number().optional(),
   spaceId: z.string().optional(),
   packageId: z.string().optional(),
   eventTitle: z.string().optional(),
