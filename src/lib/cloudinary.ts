@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import APIError, { ErrorDetails } from "./errors/APIError";
+import APIError from "./errors/APIError";
 
 // configure cloudinary
 cloudinary.config({
