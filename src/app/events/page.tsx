@@ -219,7 +219,7 @@ const Page = () => {
             className="w-full flex justify-center cta-btn bg-base-100 text-yard-primary group relative overflow-hidden rounded-[5px] mt-5 cursor-pointer"
             onClick={() => {
               const origin = window.location.origin;
-              const shareUrl = `${origin}/event/${selectedEvent?.title}`;
+              const shareUrl = `${origin}/event/${selectedEvent?.slug}`;
               navigator.clipboard.writeText(shareUrl.replaceAll(" ", "-"));
               toast.success(`${selectedEvent?.title} copied to clipboard`);
             }}
