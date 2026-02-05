@@ -33,7 +33,9 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expired or invalid
       Cookies.remove("token", { path: "/" });
-      window.location.href = "/admin/auth";
+      if (typeof window !== "undefined") {
+        window.location.href = "/admin/auth";
+      }
     }
     return Promise.reject(error);
   },

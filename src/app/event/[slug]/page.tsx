@@ -2,6 +2,7 @@ import EventPageClient from "@/components/EventPageClient";
 import { IEvent } from "@/types/Event";
 import { getSingleEvent } from "@/util";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import React from "react";
 
 interface IProps {
@@ -10,12 +11,11 @@ interface IProps {
 
 export async function generateMetadata({ params }: IProps): Promise<Metadata> {
   const { slug } = await params;
-  console.log("SLUG => ", slug);
 
   try {
     const response = await getSingleEvent(slug);
 
-    if (response.success && response.data.event) {
+    if (response.success && response.data?.event) {
       const event = response.data.event;
       const url = `${process.env.NEXT_PUBLIC_SITE_URL || "https://theyardpicnics.com"}/event/${slug}`;
 
@@ -58,9 +58,20 @@ export async function generateMetadata({ params }: IProps): Promise<Metadata> {
 
 const Page = async ({ params }: IProps) => {
   const { slug } = await params;
-  const event: IEvent = (await getSingleEvent(slug)).data.event;
 
-  return <EventPageClient event={event} />;
+  try {
+    const response = await getSingleEvent(slug);
+
+    if (!response.success || !response.data?.event) {
+      return notFound();
+    }
+
+    const event: IEvent = response.data.event;
+    return <EventPageClient event={event} />;
+  } catch (error) {
+    console.error("Error loading event page:", error);
+    return notFound();
+  }
 };
 
 export default Page;
