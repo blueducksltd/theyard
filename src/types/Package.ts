@@ -30,8 +30,8 @@ export type SafePackage = {
   specs: string[];
   description: string;
   imageUrl: string;
-  guestLimit: Number;
-  extraGuestFee: Number;
+  guestLimit: number;
+  extraGuestFee: number;
 };
 
 export function sanitizePackage(packages: IPackage): SafePackage {
