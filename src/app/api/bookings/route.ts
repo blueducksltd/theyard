@@ -18,11 +18,11 @@ import {
 } from "@/types/Booking";
 import {
   addDays,
-  addHours,
-  differenceInMinutes,
   isBefore,
   isSameDay,
   parse,
+  parseISO,
+  startOfDay,
   startOfToday,
 } from "date-fns";
 import { NextRequest } from "next/server";
@@ -53,8 +53,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
     email: form.get("email") as CreateBookingInput["email"],
     phone: form.get("phone") as CreateBookingInput["phone"],
     date: form.get("date") as CreateBookingInput["date"],
-    startTime: form.get("startTime") as CreateBookingInput["startTime"],
-    endTime: form.get("endTime") as CreateBookingInput["endTime"],
+    guestCount: Number(form.get("guestCount")) as CreateBookingInput["guestCount"],
     spaceId: form.get("spaceId") as CreateBookingInput["spaceId"],
     packageId: form.get("packageId") as CreateBookingInput["packageId"],
     eventTitle: form.get("eventTitle") as CreateBookingInput["eventTitle"],
@@ -76,69 +75,79 @@ export const POST = errorHandler(async (request: NextRequest) => {
   // Validate with Zod
   const body = CreateBookingDto.parse(data);
 
-  const now = new Date();
+  // Constants for date validation (improves maintainability)
+  const PAST_DATE_ERROR_MESSAGE = "Bookings must be made at least 1 day in advance";
+  const INVALID_DATE_ERROR_MESSAGE = "Invalid date format. Please use YYYY-MM-DD format";
 
-  // Parse booking date (yyyy-MM-dd) into midnight of that day
-  const bookingDate = parse(body.date, "yyyy-MM-dd", new Date());
+  // Get current date at midnight (start of today) for accurate comparison
+  const today = startOfToday();
 
-  // Parse startTime (HH:mm) on the chosen date
-  const bookingStart = parse(body.startTime, "HH:mm", bookingDate);
-
-  // 1️⃣ Past date check
-  if (isBefore(bookingDate, new Date(now.toDateString()))) {
-    throw APIError.BadRequest("Booking date must be today or in the future");
-  }
-
-  // 2️⃣ Today’s date special rule
-  if (isSameDay(bookingDate, now)) {
-    const minStartTime = addHours(now, 1);
-    if (isBefore(bookingStart, minStartTime)) {
-      throw new APIError(
-        200,
-        "Bookings must be made at least 1 hour in advance",
-      );
+  // Flexible date parsing helper (handles multiple frontend formats)
+  const parseBookingDate = (dateStr: string): Date | null => {
+    // Try ISO 8601 first (e.g., "2026-02-04T22:02:44.543Z")
+    try {
+      const isoDate = parseISO(dateStr);
+      if (!isNaN(isoDate.getTime())) {
+        return startOfDay(isoDate);
+      }
+    } catch {
+      // Continue to next format
     }
+
+    // Try YYYY-MM-DD format
+    try {
+      const parsedDate = parse(dateStr, "yyyy-MM-dd", new Date());
+      if (!isNaN(parsedDate.getTime())) {
+        return startOfDay(parsedDate);
+      }
+    } catch {
+      // Continue to next format
+    }
+
+    // Try MM/DD/YYYY format (common US format)
+    try {
+      const parsedDate = parse(dateStr, "MM/dd/yyyy", new Date());
+      if (!isNaN(parsedDate.getTime())) {
+        return startOfDay(parsedDate);
+      }
+    } catch {
+      // Continue to next format
+    }
+
+    // Try DD/MM/YYYY format (common international format)
+    try {
+      const parsedDate = parse(dateStr, "dd/MM/yyyy", new Date());
+      if (!isNaN(parsedDate.getTime())) {
+        return startOfDay(parsedDate);
+      }
+    } catch {
+      // Continue to next format
+    }
+
+    return null;
+  };
+
+  // Parse booking date with flexible format support
+  const bookingDate = parseBookingDate(body.date);
+
+  if (!bookingDate) {
+    throw APIError.BadRequest(INVALID_DATE_ERROR_MESSAGE);
   }
-  // 3️⃣ Future dates are automatically fine
 
-  // Validate times
-  const start = parse(body.startTime, "HH:mm", new Date());
-  const end = parse(body.endTime, "HH:mm", new Date());
-
-  const minutes = differenceInMinutes(end, start);
-  if (minutes <= 0)
-    throw APIError.BadRequest("End time must be after start time");
-
-  // start time cannot be before 8am or after 8pm
-  if (start.getHours() < 8 || start.getHours() > 21) {
-    throw new APIError(
-      200,
-      "Bookings can only be made between 08:00 and 21:00",
-    );
+  // Validate booking date is at least 1 day in the future
+  if (isBefore(bookingDate, today)) {
+    throw APIError.BadRequest(PAST_DATE_ERROR_MESSAGE);
   }
 
-  // Compute total hours precisely (for pricing)
-  const exactHours = minutes / 60;
-
-  // Keep user’s original times for the Event
-  const eventStartTime = body.startTime;
-  const eventEndTime = body.endTime;
-
-  // Create rounded versions for Booking
-  const roundedStartTime = `${String(start.getHours()).padStart(2, "0")}:00`;
-  const roundedEndTime = `${String(Math.ceil(end.getHours())).padStart(2, "0")}:00`;
-
-  // Double booking check should use rounded hours
+  // Check double booking (space already booked for this day)
   const isBooked = await Booking.isDoubleBooked(
     body.spaceId,
-    new Date(body.date),
-    roundedStartTime,
-    roundedEndTime,
+    bookingDate, // Use the parsed date object
   );
   if (isBooked)
     throw new APIError(
       200,
-      "The selected space is already booked for the specified date and time.",
+      "The selected space is already booked for the specified date.",
     );
 
   // Validate space and package
@@ -171,34 +180,39 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
   console.log(slug);
 
-  // Create event (keep original times)
+  // Create event (no times needed for day experience)
   const event = await Event.create({
     title: body.eventTitle,
     slug,
     description: body.eventDescription,
     customer: customer.id,
     public: body.public,
-    date: body.date,
-    time: { start: eventStartTime, end: eventEndTime },
+    date: bookingDate, // Use the parsed date object
+    time: { start: "09:00", end: "18:00" }, // Default day hours
     status: "pending",
     images: body.imagesUrls,
     location: space.address,
   });
 
-  // Calculate totalPrice using exact hours (not rounded)
-  const totalPrice = Math.round(
-    space.pricePerHour * exactHours + _package.price,
-  );
+  // Calculate totalPrice using guestCount, guestLimit, and extraGuestFee
+  const guestLimit = _package.guestLimit as unknown as number;
+  const extraGuestFee = _package.extraGuestFee as unknown as number;
+  const guestCount = body.guestCount;
 
-  // Create booking (use rounded hours for schedule management)
+  let totalPrice = _package.price as unknown as number;
+  if (guestCount > guestLimit) {
+    const extraGuests = guestCount - guestLimit;
+    totalPrice += extraGuests * extraGuestFee;
+  }
+
+  // Create booking (day-based, no times)
   const booking = await Booking.create({
     customer: customer.id,
     space: space.id,
     event: event.id,
     package: _package.id,
-    eventDate: new Date(body.date),
-    startTime: roundedStartTime,
-    endTime: roundedEndTime,
+    eventDate: bookingDate, // Use the parsed date object
+    guestCount,
     status: "pending",
     totalPrice,
   });
@@ -228,15 +242,15 @@ export const POST = errorHandler(async (request: NextRequest) => {
         },
         space: {
           name: space.name,
-          pricePerHour: space.pricePerHour,
         },
         package: {
           name: _package.name,
           price: _package.price,
+          guestLimit: _package.guestLimit,
+          extraGuestFee: _package.extraGuestFee,
         },
         eventDate: booking.eventDate,
-        startTime: event.time.start,
-        endTime: event.time.end,
+        guestCount: booking.guestCount,
         status: booking.status,
         totalPrice: booking.totalPrice,
       },
@@ -267,24 +281,9 @@ export const GET = errorHandler(async (request: NextRequest) => {
   }
 
   if (status === "past") {
-    const now = new Date();
-    const cutoffHour = now.getHours() - 1;
-    const cutoffTimeStr = `${String(cutoffHour).padStart(2, "0")}:00`;
-
     Object.assign(filter, {
       status: "confirmed",
-      $or: [
-        // Bookings from previous days
-        { eventDate: { $lt: startOfToday() } },
-        // Bookings from today but whose startTime is <= cutoff hour
-        {
-          eventDate: {
-            $gte: startOfToday(),
-            $lt: addDays(startOfToday(), 1),
-          },
-          startTime: { $lte: cutoffTimeStr },
-        },
-      ],
+      eventDate: { $lt: startOfToday() },
     });
   }
 

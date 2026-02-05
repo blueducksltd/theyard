@@ -33,8 +33,8 @@ export const GET = errorHandler(
             space: booking.space.name,
             name: booking.customer ? `${booking.customer.firstname} ${booking.customer.lastname}` : "N/A",
             date: booking.eventDate,
-            time: `${booking.event.time.start} - ${booking.event.time.end}`,
-            duration: getDuration(booking.event.time.start, booking.event.time.end)
+            guestCount: booking.guestCount,
+            status: booking.status
         }));
 
         // Events stats

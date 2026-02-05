@@ -12,7 +12,6 @@ import {
     addDays,
     format,
 } from "date-fns";
-import { generateSlots } from "@/lib/util";
 import { ISpace } from "@/types/Space";
 
 export const GET = errorHandler<{ params: { area: string } }>(
@@ -39,32 +38,22 @@ export const GET = errorHandler<{ params: { area: string } }>(
                 status: { $ne: "cancelled" }
             });
 
-            const daySlots = generateSlots("08:00", "21:00"); // baseline slots
-
-            const spacesWithSlots = spaces.map((space: ISpace) => {
-                const spaceBookings = bookings.filter(
+            // Day-based availability - a space is either available or unavailable for the whole day
+            const spacesWithAvailability = spaces.map((space: ISpace) => {
+                const isBooked = bookings.some(
                     (b) => b.space.toString() === space.id
                 );
-
-                const slotStatuses: Record<string, "available" | "unavailable"> = {};
-                const booked = new Set(
-                    spaceBookings.flatMap((b) => b.times) // <-- using the times field
-                );
-
-                daySlots.forEach((slot) => {
-                    slotStatuses[slot] = booked.has(slot) ? "unavailable" : "available";
-                });
 
                 return {
                     id: space.id,
                     name: space.name,
-                    slots: slotStatuses,
+                    status: isBooked ? "unavailable" : "available",
                 };
             });
 
             return APIResponse.success("fetched day view", {
                 date: format(date, "yyyy-MM-dd"),
-                spaces: spacesWithSlots,
+                spaces: spacesWithAvailability,
             });
         }
 
@@ -84,8 +73,6 @@ export const GET = errorHandler<{ params: { area: string } }>(
             const spaces = await Space.find();
             const bookings = await Booking.findByDateRange(start, end);
 
-            const fullDaySlots = generateSlots("00:00", "23:00");
-
             const days: {
                 date: string;
                 status: "available" | "partial" | "unavailable";
@@ -95,31 +82,36 @@ export const GET = errorHandler<{ params: { area: string } }>(
             for (let d = start; d <= end; d = addDays(d, 1)) {
                 const dateStr = format(d, "yyyy-MM-dd");
 
-                // ✅ Just filter the pre-fetched bookings for this day
+                // Filter the pre-fetched bookings for this day
                 const dayBookings = bookings.filter(
                     (b) => format(b.eventDate, "yyyy-MM-dd") === dateStr
                 );
 
+                // Check each space's availability for this day
+                // A space is "unavailable" if it has any booking for this day
+                // A space is "available" if it has no bookings for this day
                 const statuses = spaces.map((space: ISpace) => {
                     const spaceBookings = dayBookings.filter(
                         (b) => b.space.toString() === space.id
                     );
 
-                    if (spaceBookings.length === 0) return "available";
-
-                    const booked = new Set(spaceBookings.flatMap((b) => b.times));
-
-                    const isFullyBooked = fullDaySlots.every((slot) => booked.has(slot));
-
-                    if (isFullyBooked) return "unavailable";
-                    return "partial";
+                    // Day-based: if any booking exists, space is unavailable for the whole day
+                    return spaceBookings.length > 0 ? "unavailable" : "available";
                 });
 
-                let overall: "available" | "partial" | "unavailable" = "partial";
-                if (statuses.every((s) => s === "available")) overall = "available";
-                else if (statuses.every((s) => s === "unavailable")) overall = "unavailable";
+                // Determine overall day status
+                let overall: "available" | "partial" | "unavailable" = "available";
 
-                // ✅ Already have dayBookings, no need for another DB query
+                const hasBookedSpaces = statuses.some((s) => s === "unavailable");
+                const hasAvailableSpaces = statuses.some((s) => s === "available");
+
+                if (hasBookedSpaces && hasAvailableSpaces) {
+                    overall = "partial"; // Some spaces booked, some available
+                } else if (hasBookedSpaces && !hasAvailableSpaces) {
+                    overall = "unavailable"; // All spaces booked
+                }
+                // If no booked spaces, remains "available"
+
                 days.push({
                     date: dateStr,
                     status: overall,
