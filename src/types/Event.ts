@@ -67,9 +67,15 @@ export function sanitizeEvent(event: IEvent): SafeEvent {
 }
 
 export const CreateEventDTO = z.object({
-  name: z.string(),
-  price: z.number(),
-  specs: z.array(z.string()),
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  date: z.string().min(1, "Date is required"),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
+  location: z.string().min(1, "Location is required"),
+  public: z.boolean().optional().default(false),
+  images: z.array(z.string()).optional(),
+  imageUrls: z.array(z.string()).optional(),
 });
 
 export type CreateEventInput = z.infer<typeof CreateEventDTO>;

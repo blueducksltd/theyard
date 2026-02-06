@@ -1,11 +1,15 @@
 import { Model } from "mongoose";
 import { Document } from "mongoose";
 import z from "zod";
+import {
+  isWeekend
+} from "date-fns";
 
 // Document fields
 export interface IPackage extends Document {
   name: string;
   price: number;
+  weekendPrice?: number;
   specs: string[];
   description: string;
   imageUrl: string;
@@ -32,24 +36,31 @@ export type SafePackage = {
   imageUrl: string;
   guestLimit: number;
   extraGuestFee: number;
+  isWeekend: boolean;
 };
 
 export function sanitizePackage(packages: IPackage): SafePackage {
+  const price = isWeekend(new Date()) && packages.weekendPrice
+    ? packages.weekendPrice
+    : packages.price
+
   return {
     id: packages.id,
     name: packages.name,
-    price: packages.price,
+    price,
     specs: packages.specs,
     description: packages.description,
     imageUrl: packages.imageUrl,
     guestLimit: packages.guestLimit,
-    extraGuestFee: packages.extraGuestFee
+    extraGuestFee: packages.extraGuestFee,
+    isWeekend: isWeekend(new Date()),
   };
 }
 
 export const CreatePackageDTO = z.object({
   name: z.string(),
   price: z.coerce.number(), // accepts "1000" and coerces to 1000
+  weekendPrice: z.coerce.number().optional(), // accepts "1000" and coerces to 1000
   guestLimit: z.coerce.number(),
   extraGuestFee: z.coerce.number(),
   specs: z.preprocess((val) => {
