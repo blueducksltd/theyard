@@ -7,72 +7,146 @@ import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Event from "@/models/Event";
 import { sanitizeEvent } from "@/types/Event";
 import { NextRequest } from "next/server";
+import { requireAuth, requireRole } from "@/lib/auth";
+import { deleteFromCloudinary } from "@/lib/cloudinary";
+import { uploadImage } from "@/lib/vercel";
+import { z } from "zod";
 
-// export const PUT = errorHandler<{ params: { id: string } }>(
-//     async (request: NextRequest, context) => {
-//         await connectDB();
+// ... existing imports ...
 
-//         // Authenticate user
-//         requireAuth(request);
+// DELETE Handler
+export const DELETE = errorHandler<{ params: { id: string } }>(
+    async (request: NextRequest, context) => {
+        await connectDB();
+        const payload = requireAuth(request);
+        requireRole(payload, "admin", "manager");
 
-//         const { id } = await context.params;
-//         const body: UpdateGalleryInput = await request.json();
+        let { id: slug } = await context.params;
+        slug = decodeURIComponent(slug.trim());
 
-//         // Validate incoming data
-//         const data = UpdateGalleryDTO.parse(body);
+        const event = await Event.findOne({ slug });
+        if (!event) throw APIError.NotFound(`Event with slug: ${slug} not found`);
 
-//         // Find the main gallery by id
-//         const gallery = await Gallery.findById(id);
-//         if (!gallery) throw APIError.NotFound(`Gallery with id: ${id} not found`);
+        // Delete images from Cloudinary
+        if (event.images && event.images.length > 0) {
+            await Promise.all(
+                event.images.map((imageUrl) => deleteFromCloudinary(imageUrl))
+            );
+        }
 
-//         // Find all galleries with the same title
-//         const relatedGalleries = await Gallery.find({ title: gallery.title });
+        await Event.deleteOne({ slug });
 
-//         if (relatedGalleries.length === 0)
-//             throw APIError.NotFound(`No galleries found with title: ${gallery.title}`);
+        return APIResponse.success("Event deleted successfully", { slug });
+    }
+);
 
-//         // Update all related galleries with the new data
-//         await Gallery.updateMany({ title: gallery.title }, { $set: data });
+// PUT Handler (update event - NO time editing)
+const UpdateEventDTO = z.object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    date: z
+        .string()
+        .refine(
+            (val) => {
+                const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/;
+                const standardRegex = /^\d{4}-\d{2}-\d{2}$/;
+                const usRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+                const euRegex = /^\d{2}\.\d{2}\.\d{4}$/;
+                return (
+                    isoRegex.test(val) ||
+                    standardRegex.test(val) ||
+                    usRegex.test(val) ||
+                    euRegex.test(val)
+                );
+            },
+            "Invalid date format"
+        )
+        .optional(),
+    location: z.string().min(1, "Location is required").optional(),
+    public: z.boolean().optional(),
+    status: z.enum(["active", "completed", "cancelled", "pending"]),
+    images: z.array(z.string()).optional(),
+});
 
-//         // Fetch the updated ones to return
-//         const title = data.title || gallery.title;
-//         const updatedGalleries = await Gallery.find({ title });
-//         const sanitizedGallery = updatedGalleries.map((image: IGallery) => sanitizeGallery(image));
+type UpdateEventInput = z.infer<typeof UpdateEventDTO>;
 
-//         return APIResponse.success(
-//             `Updated ${updatedGalleries.length} gallery item(s) with title '${title}'`,
-//             { galleries: sanitizedGallery },
-//             200
-//         );
-//     }
-// );
+export const PUT = errorHandler<{ params: { id: string } }>(
+    async (request: NextRequest, context) => {
+        await connectDB();
+        const payload = requireAuth(request);
+        requireRole(payload, "admin", "manager");
 
+        const contentType = request.headers.get("content-type") ?? "";
+        let { id: slug } = await context.params;
+        slug = decodeURIComponent(slug.trim());
 
-// export const DELETE = errorHandler<{ params: { id: string } }>(
-//     async (request: NextRequest, context) => {
-//         await connectDB();
+        const event = await Event.findOne({ slug });
+        if (!event) throw APIError.NotFound(`Event with slug: ${slug} not found`);
 
-//         requireAuth(request);
-//         const { id } = await context.params;
+        let body: UpdateEventInput;
 
-//         const imageExist = await Gallery.findById(id);
-//         if (!imageExist) throw APIError.NotFound(`Image with id: ${id} not found`);
+        if (contentType.includes("multipart/form-data")) {
+            const form = await request.formData();
+            const images = form.getAll("images") as File[];
+            const imageUrls = await Promise.all(
+                images.map((image) => uploadImage(image))
+            );
 
-//         // Remove the gallery id from the event's images array if event exists
-//         if (imageExist.event) {
-//             await Event.findByIdAndUpdate(
-//                 imageExist.event,
-//                 { $pull: { images: imageExist.id } }
-//             )
-//         }
+            const publicRaw = form.get("public");
 
-//         // Delete the gallery image
-//         await deleteFromCloudinary(imageExist.imageUrl)
-//         await Gallery.findByIdAndDelete(id);
+            body = {
+                status: form.get("status") as UpdateEventInput["status"] || undefined,
+                title: form.get("title") as UpdateEventInput["title"] || undefined,
+                description: form.get("description") as UpdateEventInput["description"] || undefined,
+                date: form.get("date") as UpdateEventInput["date"] || undefined,
+                location: form.get("location") as UpdateEventInput["location"] || undefined,
+                public: publicRaw === null ? undefined : publicRaw === "true",
+                images: imageUrls.length > 0 ? imageUrls : undefined,
+            };
+        } else {
+            body = await request.json();
+        }
 
-//         return APIResponse.success(`Image with id ${id} removed`, undefined);
-//     }
-// )
+        const data = UpdateEventDTO.parse(body);
+
+        // Generate new slug if title changed
+        let newSlug = slug;
+        if (data.title) {
+            newSlug = data.title
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-")
+
+            if (await Event.findOne({ slug })) throw APIError.Conflict("Event with slug exist, change title");
+        }
+
+        // Update event (time remains unchanged with defaults)
+        const updatedEvent = await Event.findOneAndUpdate(
+            { slug },
+            {
+                title: data.title,
+                slug: newSlug,
+                description: data.description ?? event.description,
+                date: data.date ? new Date(data.date) : event.date,
+                location: data.location,
+                public: data.public ?? event.public,
+                images: data.images ?? event.images,
+                // time field not included - keeps existing/default values
+            },
+            { new: true }
+        );
+
+        if (!updatedEvent) throw APIError.NotFound("Event not found");
+
+        await updatedEvent.populate("customer");
+
+        return APIResponse.success("Event updated successfully", {
+            event: sanitizeEvent(updatedEvent),
+        });
+    }
+);
 
 export const GET = errorHandler<{ params: { id: string } }>(
     async (__request: NextRequest, context) => {
