@@ -17,13 +17,12 @@ import {
   sanitizeBooking,
 } from "@/types/Booking";
 import {
-  addDays,
   isBefore,
-  isSameDay,
   parse,
   parseISO,
   startOfDay,
   startOfToday,
+  isWeekend
 } from "date-fns";
 import { NextRequest } from "next/server";
 
@@ -194,16 +193,22 @@ export const POST = errorHandler(async (request: NextRequest) => {
     location: space.address,
   });
 
+  // Calculate base price (weekend price if applicable)
+  const basePrice = isWeekend(bookingDate) && _package.weekendPrice
+    ? _package.weekendPrice
+    : _package.price;
+
   // Calculate totalPrice using guestCount, guestLimit, and extraGuestFee
   const guestLimit = _package.guestLimit as unknown as number;
   const extraGuestFee = _package.extraGuestFee as unknown as number;
   const guestCount = body.guestCount;
 
-  let totalPrice = _package.price as unknown as number;
+  let totalPrice = basePrice as unknown as number;
   if (guestCount > guestLimit) {
     const extraGuests = guestCount - guestLimit;
     totalPrice += extraGuests * extraGuestFee;
   }
+
 
   // Create booking (day-based, no times)
   const booking = await Booking.create({

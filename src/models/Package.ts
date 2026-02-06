@@ -10,6 +10,7 @@ const PackageSchema = new Schema<IPackage, IPackageModel, IPackageMethods>(
   {
     name: { type: String, required: true },
     price: { type: Number, required: true },
+    weekendPrice: {type: Number},
     guestLimit: { type: Number, required: true },
     extraGuestFee: { type: Number, required: true },
     specs: [{ type: String, required: true }],

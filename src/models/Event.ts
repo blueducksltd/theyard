@@ -20,10 +20,10 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
     // },
     public: { type: Boolean, default: false },
     date: { type: Date, required: true },
-    time: {
-      start: { type: String, required: true },
-      end: { type: String, required: true }
-    },
+    // time: {
+    //   start: { type: String, required: true },
+    //   end: { type: String, required: true }
+    // },
     status: {
       type: String,
       enum: ["active", "completed", "cancelled", "pending"],
