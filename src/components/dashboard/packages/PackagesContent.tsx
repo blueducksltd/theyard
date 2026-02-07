@@ -989,6 +989,46 @@ export default function PackagesContent() {
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label
+                  htmlFor="guestLimit"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter Guest Limit
+                </label>
+                <input
+                  type="number"
+                  id="guestLimit"
+                  name="guestLimit"
+                  value={inputs.guestLimit}
+                  onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
+                  placeholder="Guest Limit (2)"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="extraGuestFee"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter Extra Guest Fee
+                </label>
+                <input
+                  type="text"
+                  id="extraGuestFee"
+                  name="extraGuestFee"
+                  value={inputs.extraGuestFee ? Number(inputs.extraGuestFee.toString().replace(/,/g, "")).toLocaleString() : ""}
+                  onChange={(e) => setInputs({ ...inputs, extraGuestFee: e.target.value })}
+                  placeholder="Extra Guest Fee"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
                   htmlFor="packageSpecs"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
@@ -1139,7 +1179,7 @@ export default function PackagesContent() {
               </div>
             </div>
 
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            {/* <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label
                   htmlFor="spacePrice"
@@ -1159,7 +1199,7 @@ export default function PackagesContent() {
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
-            </div>
+            </div> */}
 
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
@@ -1370,6 +1410,46 @@ export default function PackagesContent() {
                   value={inputs.price ? Number(inputs.price.toString().replace(/,/g, "")).toLocaleString() : ""}
                   onChange={(e) => setInputs({ ...inputs, price: e.target.value })}
                   placeholder="Package price"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="guestLimit"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter Guest Limit
+                </label>
+                <input
+                  type="number"
+                  id="guestLimit"
+                  name="guestLimit"
+                  value={inputs.guestLimit}
+                  onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
+                  placeholder="Guest Limit (2)"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="extraGuestFee"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter Extra Guest Fee
+                </label>
+                <input
+                  type="text"
+                  id="extraGuestFee"
+                  name="extraGuestFee"
+                  value={inputs.extraGuestFee ? Number(inputs.extraGuestFee.toString().replace(/,/g, "")).toLocaleString() : ""}
+                  onChange={(e) => setInputs({ ...inputs, extraGuestFee: e.target.value })}
+                  placeholder="Extra Guest Fee"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1664,7 +1744,7 @@ export default function PackagesContent() {
               </div>
             </div>
 
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            {/* <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label
                   htmlFor="spacePrice"
@@ -1684,7 +1764,7 @@ export default function PackagesContent() {
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
-            </div>
+            </div> */}
 
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">

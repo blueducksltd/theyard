@@ -35,7 +35,7 @@ const Space = async () => {
             className="relative overflow-hidden group w-max flex-grow"
           >
             <img
-              src={space.name}
+              src={space.imageUrl}
               alt="Gallery"
               className="h-[260px] 2xl:h-[300px] w-full object-cover"
             />
