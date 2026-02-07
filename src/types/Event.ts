@@ -47,6 +47,7 @@ export type SafeEvent = {
   startTime: string;
   endTime: string;
   location: string;
+  status: IEvent["status"];
   customer?: SafeCustomer | null;
 };
 
@@ -59,9 +60,10 @@ export function sanitizeEvent(event: IEvent): SafeEvent {
     slug: event.slug,
     public: event.public,
     date: event.date,
-    startTime: event.time.start,
-    endTime: event.time.end,
+    startTime: event.time?.start || "09:00",
+    endTime: event.time?.end || "18:00",
     location: event.location,
+    status: event.status,
     customer: event.customer ? sanitizeCustomer(event.customer) : null,
   };
 }

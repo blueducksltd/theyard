@@ -154,6 +154,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         .replace(/\s+/g, "-")
         .replace(/-+/g, "-");
 
+    if (await Event.findOne({ slug })) throw APIError.Conflict("Event with slug exist, change title");
     // Get customerId from form (optional)
     const customerId = form.get("customerId") as string;
     let customer: Types.ObjectId;
