@@ -81,6 +81,7 @@ export const CreatePackageDTO = z.object({
 export const UpdatePackageDTO = z.object({
   name: z.string().optional(),
   price: z.coerce.number().optional(), // accepts "1000" and coerces to 1000
+  weekendPrice: z.coerce.number().optional(), // accepts "1000" and coerces to 1000
   guestLimit: z.coerce.number().optional(),
   extraGuestFee: z.coerce.number().optional(),
   specs: z.preprocess((val) => {
