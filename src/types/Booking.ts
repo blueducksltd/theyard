@@ -130,7 +130,7 @@ export const CreateBookingDto = z.object({
     error: "field `eventTitle` is required",
   }),
   // eventType: z.string(),
-  eventDescription: z.string(),
+  eventDescription: z.string().optional(),
   public: z.boolean().optional().default(false),
   imagesUrls: z.array(z.string().url()).optional(),
 });
