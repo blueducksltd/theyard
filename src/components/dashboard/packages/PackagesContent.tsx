@@ -242,6 +242,8 @@ export default function PackagesContent() {
       inputs.price = inputs.price.toString().replace(/[.,]/g, "");
     }
 
+    console.log(inputs);
+
     const formData = new FormData();
     Object.entries(inputs).map(([key, value]) => {
       formData.append(key, value);
@@ -1448,7 +1450,7 @@ export default function PackagesContent() {
                   id="extraGuestFee"
                   name="extraGuestFee"
                   value={inputs.extraGuestFee ? Number(inputs.extraGuestFee.toString().replace(/,/g, "")).toLocaleString() : ""}
-                  onChange={(e) => setInputs({ ...inputs, extraGuestFee: e.target.value })}
+                  onChange={(e) => setInputs({ ...inputs, extraGuestFee: e.target.value.replace(",", "") })}
                   placeholder="Extra Guest Fee"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
