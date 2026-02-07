@@ -119,7 +119,7 @@ const Page = () => {
       }
     }
 
-    console.log("Inputs:", inputs);
+    // console.log("Inputs:", inputs);
 
     const hasEmptyValues = Object.values(inputs).some(
       (val) => val === "" || val == null,
@@ -185,29 +185,37 @@ const Page = () => {
     inputs.spaceId = e.target.value;
 
     // Update Total Price
-    handleTotalPrice(
-      endTime || "0.00",
-      startTime || "0.00",
-      _selectedSpace?.pricePerHour || 0,
-    );
+    // handleTotalPrice(
+    //   endTime || "0.00",
+    //   startTime || "0.00",
+    //   _selectedSpace?.pricePerHour || 0,
+    // );
   };
 
   const handleTotalPrice = (
-    _endTime: string,
-    _startTime: string,
-    _spacePrice: number,
+    _extraguest: string
   ) => {
     if (!savedBookingDetails) return;
 
-    setTotalPrice(
-      moment(_endTime, "HH:mm").diff(
-        moment(_startTime, "HH:mm"),
-        "hours",
-        true,
-      ) *
-      (_spacePrice ?? 0) +
-      savedBookingDetails.package.price,
-    );
+    // setTotalPrice(
+    //   moment(_endTime, "HH:mm").diff(
+    //     moment(_startTime, "HH:mm"),
+    //     "hours",
+    //     true,
+    //   ) *
+    //   (_spacePrice ?? 0) +
+    //   savedBookingDetails.package.price,
+    // );
+    if (Number(_extraguest) <= savedBookingDetails.package.guestLimit) {
+      const totalExtraGuestFee = 0
+      const total = savedBookingDetails.package.price + totalExtraGuestFee;
+      setTotalPrice(total);
+    } else {
+      const extraguest = Number(_extraguest) - savedBookingDetails.package.guestLimit
+      const totalExtraGuestFee = savedBookingDetails.package.extraguestfee * Number(extraguest)
+      const total = savedBookingDetails.package.price + totalExtraGuestFee;
+      setTotalPrice(total);
+    }
   };
 
   // Load booking details from localStorage on client side only
@@ -221,6 +229,7 @@ const Page = () => {
     }
 
     setSavedBookingDetails(bookingData);
+    setTotalPrice(bookingData.package.price)
     setIsLoading(false);
 
     toast.info("Bookings made today must be made at least 1 hour in advance");
@@ -441,9 +450,12 @@ const Page = () => {
                     type="number"
                     id="attendees"
                     name="attendees"
+                    defaultValue={savedBookingDetails.package.guestLimit}
                     placeholder="0"
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                      (inputs.attendees = e.target.value)
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      (inputs.guestCount = e.target.value)
+                      handleTotalPrice(e.target.value)
+                    }
                     }
                     className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   />
@@ -665,14 +677,14 @@ const Page = () => {
                   </p>
                 </div>
 
-                <div className="w-full flex justify-between">
+                {/* <div className="w-full flex justify-between">
                   <p className="leading-6 tracking-[0.5px] text-[#717068]">
                     Event time
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
                     {startTime} - {endTime}
                   </p>
-                </div>
+                </div> */}
 
                 <div className="w-full flex justify-between">
                   <p className="leading-6 tracking-[0.5px] text-[#717068]">
@@ -680,6 +692,15 @@ const Page = () => {
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
                     {isPublishing ? "Yes" : "No"}
+                  </p>
+                </div>
+
+                <div className="w-full flex justify-between">
+                  <p className="leading-6 tracking-[0.5px] text-[#717068]">
+                    Package Guest Limit
+                  </p>
+                  <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
+                    {savedBookingDetails.package.guestLimit}
                   </p>
                 </div>
               </div>
@@ -692,7 +713,7 @@ const Page = () => {
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">₦</p>
                 </div>
 
-                <div className="w-full flex justify-between">
+                {/* <div className="w-full flex justify-between">
                   <p className="leading-6 tracking-[0.5px] text-[#717068]">
                     Game Space
                   </p>
@@ -703,24 +724,18 @@ const Page = () => {
                         : 0,
                     )}
                   </p>
-                </div>
+                </div> */}
 
                 <div className="w-full flex justify-between">
                   <p className="leading-6 tracking-[0.5px] text-[#717068]">
-                    No. of Guests
+                    Extra Guest(s)
                   </p>
                   <p className="leading-6 tracking-[0.5px] text-[#1A231C]">
-                    {startTime && endTime
-                      ? (() => {
-                        const diffInMinutes = moment(endTime, "HH:mm").diff(
-                          moment(startTime, "HH:mm"),
-                          "minutes",
-                        );
-                        const hours = Math.floor(diffInMinutes / 60);
-                        const minutes = diffInMinutes % 60;
-                        return `${hours}.${minutes.toString().padStart(2, "0")}`;
-                      })()
-                      : 0}
+                    {Intl.NumberFormat().format(
+                      savedBookingDetails.package.extraguestfee
+                        ? +savedBookingDetails!.package.extraguestfee
+                        : 0,
+                    )}
                   </p>
                 </div>
 
