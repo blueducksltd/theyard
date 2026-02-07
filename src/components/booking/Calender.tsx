@@ -419,6 +419,8 @@ const BookingCalendar: React.FC<CalendarProps> = ({
                       id: pck.id,
                       name: pck.name,
                       price: pck.price,
+                      extraguestfee: pck.extraGuestFee,
+                      guestLimit: pck.guestLimit
                     })
                   }
                   className="radio radio-sm text-yard-primary mt-1 border-2"
