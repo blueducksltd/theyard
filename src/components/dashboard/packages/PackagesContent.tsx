@@ -300,7 +300,7 @@ export default function PackagesContent() {
     if (preview && preview !== null) {
       inputs.image = (await compressImage(preview));
     }
-    inputs.pricePerHour = parseInt(inputs.pricePerHour.toString().replace(/[.,]/g, ""))
+    // inputs.pricePerHour = parseInt(inputs.pricePerHour.toString().replace(/[.,]/g, ""))
 
     Object.values(inputs).map((val) => {
       if (val == "" || val == null) {
