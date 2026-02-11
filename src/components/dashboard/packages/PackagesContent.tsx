@@ -267,6 +267,7 @@ export default function PackagesContent() {
         setUpdateServiceModal(false);
         setUpdatePackageModal(false);
         clearInputs();
+        window.location.reload();
         return;
       } else {
         toast.update(toastId, {
