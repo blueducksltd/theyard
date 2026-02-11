@@ -58,8 +58,8 @@ export const POST = errorHandler(async (request: NextRequest) => {
     eventTitle: form.get("eventTitle") as CreateBookingInput["eventTitle"],
     // eventType: form.get("eventType") as CreateBookingInput["eventType"],
     eventDescription: form.get(
-      "eventDescription",
-    ) as CreateBookingInput["eventDescription"],
+      "eventDescription"
+    ) as CreateBookingInput["eventDescription"] ?? undefined,
     public: _public,
     imagesUrls: [],
   };
