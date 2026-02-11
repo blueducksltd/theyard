@@ -1437,7 +1437,7 @@ export default function PackagesContent() {
               </div>
             </div>
 
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="form-group flex flex-col md:flex-row iqtems-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label
                   htmlFor="extraGuestFee"
