@@ -657,7 +657,7 @@ export default function PackagesContent() {
                     </div>
                   </div>
                 </div>
-                <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
+                <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999] line-clamp-3">
                   {pck.description}
                 </p>
               </div>
