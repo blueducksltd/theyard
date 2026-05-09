@@ -450,7 +450,7 @@ const Page = () => {
                     type="number"
                     id="attendees"
                     name="attendees"
-                    defaultValue={savedBookingDetails.package.guestLimit}
+                    // defaultValue={savedBookingDetails.package.guestLimit}
                     placeholder="0"
                     onChange={(e: ChangeEvent<HTMLInputElement>) => {
                       (inputs.guestCount = e.target.value)
