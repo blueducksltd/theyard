@@ -9,6 +9,7 @@ import { IBooking, sanitizeBooking, UpdateBookingDto, UpdateBookingInput } from 
 import { NextRequest } from "next/server";
 import { sendBookingConfirmedEmail } from "@/lib/mailer";
 import { sendBookingConfirmedWhatsApp } from "@/lib/whatsapp";
+import { ICustomer } from "@/types/Customer";
 
 
 export const PUT = errorHandler<{ params: { id: string } }>(
@@ -51,7 +52,7 @@ export const PUT = errorHandler<{ params: { id: string } }>(
 
         // ✅ Send confirmation email & WhatsApp if status is changed to "confirmed"
         if (data.status === "confirmed" && !wasConfirmed) {
-            const customer = booking.customer as any;
+            const customer = booking.customer as unknown as ICustomer;
             if (customer && customer.email) {
                 try {
                     await sendBookingConfirmedEmail(customer.email, booking.id);
