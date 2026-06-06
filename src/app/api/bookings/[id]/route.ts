@@ -7,6 +7,8 @@ import Booking from "@/models/Booking";
 import Event from "@/models/Event";
 import { IBooking, sanitizeBooking, UpdateBookingDto, UpdateBookingInput } from "@/types/Booking";
 import { NextRequest } from "next/server";
+import { sendBookingConfirmedEmail } from "@/lib/mailer";
+import { sendBookingConfirmedWhatsApp } from "@/lib/whatsapp";
 
 
 export const PUT = errorHandler<{ params: { id: string } }>(
@@ -18,6 +20,10 @@ export const PUT = errorHandler<{ params: { id: string } }>(
         const { id } = await context.params;
         const body: UpdateBookingInput = await request.json();
         const data = UpdateBookingDto.parse(body);
+
+        // ✅ Check previous status of the booking
+        const oldBooking = await Booking.findById(id);
+        const wasConfirmed = oldBooking?.status === "confirmed";
 
         // ✅ Update the booking
         await Booking.findByIdAndUpdate(id, data);
@@ -40,6 +46,19 @@ export const PUT = errorHandler<{ params: { id: string } }>(
 
             if (eventStatus) {
                 await Event.findByIdAndUpdate(booking.event._id, { status: eventStatus });
+            }
+        }
+
+        // ✅ Send confirmation email & WhatsApp if status is changed to "confirmed"
+        if (data.status === "confirmed" && !wasConfirmed) {
+            const customer = booking.customer as any;
+            if (customer && customer.email) {
+                try {
+                    await sendBookingConfirmedEmail(customer.email, booking.id);
+                    await sendBookingConfirmedWhatsApp(booking.id);
+                } catch (error) {
+                    console.error("Failed to send booking confirmation notification:", error);
+                }
             }
         }
 
