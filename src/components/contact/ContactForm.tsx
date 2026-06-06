@@ -34,12 +34,16 @@ export default function ContactForm() {
       <section className="w-full md:w-[954px] md:mx-auto shadow-md p-3 hidden gap-8 md:gap-0 md:flex items-center bg-[#FDFBF9]">
         <div className="w-full flex flex-col">
           <p className="font-[600px] text-yard-dark-primary">Call us on</p>
-          <p className="text-[#66655E] text-sm md:text-md">+234 8123-456-789</p>
+          <a href="tel:+2349018257388" target="_blank" rel="noopener noreferrer">
+            <p className="text-[#66655E] text-sm md:text-md">+234 901 825 7388</p>
+          </a>
         </div>
 
         <div className="w-full flex flex-col">
           <p className="font-[600px] text-yard-dark-primary">Whatsapp</p>
-          <p className="text-[#66655E] text-sm md:text-md">+234 8123-456-789</p>
+          <a href="https://wa.me/2349018257388" target="_blank" rel="noopener noreferrer">
+            <p className="text-[#66655E] text-sm md:text-md">+234 901 825 7388</p>
+          </a>
         </div>
 
         <div className="w-full flex flex-col">

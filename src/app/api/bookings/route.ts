@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import { sendBookingEmail } from "@/lib/mailer";
+import { sendBookingWhatsApp } from "@/lib/whatsapp";
 import { sendNotification } from "@/lib/notification";
 import { uploadImage } from "@/lib/vercel";
 import Booking from "@/models/Booking";
@@ -223,7 +224,8 @@ export const POST = errorHandler(async (request: NextRequest) => {
   });
 
   try {
-    await sendBookingEmail(customer.email);
+    await sendBookingEmail(customer.email, booking.id);
+    await sendBookingWhatsApp(booking.id);
     await sendNotification({
       type: "booking",
       title: "New Booking",

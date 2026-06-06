@@ -7,6 +7,7 @@ import APIResponse from "@/lib/APIResponse";
 import Payment from "@/models/Payment";
 import { sendNotification } from "@/lib/notification";
 import { sendBookingConfirmedEmail } from "@/lib/mailer";
+import { sendBookingConfirmedWhatsApp } from "@/lib/whatsapp";
 import { subMinutes } from "date-fns";
 
 export const POST = errorHandler(async (request: NextRequest) => {
@@ -79,7 +80,8 @@ export const POST = errorHandler(async (request: NextRequest) => {
     await booking.save();
 
     try {
-        await sendBookingConfirmedEmail(payment.email);
+        await sendBookingConfirmedEmail(payment.email, booking.id);
+        await sendBookingConfirmedWhatsApp(booking.id);
         await sendNotification({
             type: "payment",
             title: "New Payment has been made to confirm booking",

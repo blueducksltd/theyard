@@ -6,6 +6,7 @@ import Booking from "@/models/Booking";
 import Payment from "@/models/Payment";
 import { sendNotification } from "@/lib/notification";
 import { sendBookingConfirmedEmail } from "@/lib/mailer";
+import { sendBookingConfirmedWhatsApp } from "@/lib/whatsapp";
 import { subMinutes } from "date-fns";
 
 export const POST = async (req: NextRequest) => {
@@ -77,7 +78,8 @@ export const POST = async (req: NextRequest) => {
 
     // Notify & email
     try {
-        await sendBookingConfirmedEmail(payment.email);
+        await sendBookingConfirmedEmail(payment.email, booking.id);
+        await sendBookingConfirmedWhatsApp(booking.id);
         await sendNotification({
             type: "payment",
             title: "New Payment Confirmed",
