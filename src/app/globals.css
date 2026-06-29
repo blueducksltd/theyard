@@ -1,4 +1,5 @@
 @import "tailwindcss";
+
 @plugin "daisyui" {
   themes: light;
 }
@@ -7,6 +8,7 @@
   body {
     @apply font-lato;
   }
+
   .title {
     font-size: 32px;
     font-weight: 700;
@@ -16,6 +18,7 @@
     color: #0f3830;
     font-family: var(--font-playfair), serif;
   }
+
   .paragraph {
     font-size: 16px;
     font-weight: 400;
@@ -25,6 +28,7 @@
     color: #5a5a53;
     font-family: var(--font-lato), sans-serif;
   }
+
   .cta-link {
     font-family: var(--font-sen), sans-serif;
     font-weight: 500;
@@ -34,6 +38,7 @@
     letter-spacing: 0.4px;
     color: #55544e;
   }
+
   .cta-btn {
     width: 239px;
     height: 52px;
@@ -52,44 +57,58 @@
     display: flex;
     @apply w-max;
   }
+
   .cta-btn-hover {
     @apply absolute top-0 left-0 bg-yard-primary-active w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0;
   }
+
   .rounded2px {
     border-radius: 2px;
   }
+
   .yard-link-line {
     @apply absolute left-0 -bottom-0.5 h-[1px] w-0 transition-all duration-500 group-hover:w-full;
   }
+
   .yard-modal {
     grid-column-start: 1;
     grid-row-start: 1;
     max-height: 100vh;
-    width: calc(11 / 12 * 100%) /* 91.6667% */;
-    max-width: 32rem /* 512px */;
-    background-color: var(--color-base-100) /* var(--color-base-100) */;
-    padding: calc(0.25rem /* 4px */ * 6) /* 1.5rem = 24px */;
+    width: calc(11 / 12 * 100%)
+      /* 91.6667% */
+    ;
+    max-width: 32rem
+      /* 512px */
+    ;
+    background-color: var(--color-base-100)
+      /* var(--color-base-100) */
+    ;
+    padding: calc(0.25rem
+        /* 4px */
+        * 6)
+      /* 1.5rem = 24px */
+    ;
     transition:
       translate 0.3s ease-out,
       scale 0.3s ease-out,
       opacity 0.2s ease-out 0.05s,
       box-shadow 0.3s ease-out;
-    border-top-left-radius: var(
-      --modal-tl,
-      var(--radius-box) /* var(--radius-box) */
-    );
-    border-top-right-radius: var(
-      --modal-tr,
-      var(--radius-box) /* var(--radius-box) */
-    );
-    border-bottom-left-radius: var(
-      --modal-bl,
-      var(--radius-box) /* var(--radius-box) */
-    );
-    border-bottom-right-radius: var(
-      --modal-br,
-      var(--radius-box) /* var(--radius-box) */
-    );
+    border-top-left-radius: var(--modal-tl,
+        var(--radius-box)
+        /* var(--radius-box) */
+      );
+    border-top-right-radius: var(--modal-tr,
+        var(--radius-box)
+        /* var(--radius-box) */
+      );
+    border-bottom-left-radius: var(--modal-bl,
+        var(--radius-box)
+        /* var(--radius-box) */
+      );
+    border-bottom-right-radius: var(--modal-br,
+        var(--radius-box)
+        /* var(--radius-box) */
+      );
     scale: 95%;
     opacity: 0;
     box-shadow: oklch(0% 0 0/ 0.25) 0px 25px 50px -12px;
@@ -118,4 +137,40 @@
   --font-lato: var(--font-lato), sans-serif;
   --font-playfair: var(--font-playfair), serif;
   --font-sen: var(--font-sen), sans-serif;
+  --font-playfair-display: var(--font-playfair-display), sans-serif;
+  --font-lato: var(--font-lato), sans-serif;
+  --font-petit: var(--font-petit), sans-serif;
+  --font-inter: var(--font-inter), sans-serif;
+  --color-primaryGreen: #012615;
+  --color-primaryBrown: #A27639;
+  --color-secondaryGreen: #9FE0AF;
+  --color-lightBrown: #F0E9CC;
+}
+
+
+
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+.swiper-pagination-bullet {
+  width: 40px !important;
+  height: 3px !important;
+  border-radius: 10px !important;
+  background-color: white !important;
+  border: white !important;
+  margin-right: 20px;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

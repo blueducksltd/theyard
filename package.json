@@ -6,8 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint",
-    "seed": "tsx src/scripts/seed.ts"
+    "lint": "eslint"
   },
   "dependencies": {
     "@paystack/inline-js": "^2.22.7",
@@ -21,6 +20,8 @@
     "dayjs": "^1.11.18",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
+    "lucide": "^1.3.0",
+    "lucide-react": "^1.3.0",
     "moment": "^2.30.1",
     "mongoose": "^8.18.1",
     "multer": "^2.0.2",
@@ -29,9 +30,13 @@
     "nodemailer": "^7.0.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-icons": "^5.6.0",
     "react-share": "^5.2.2",
     "react-toastify": "^11.0.5",
-    "zod": "^4.1.11"
+    "sonner": "^2.0.7",
+    "swiper": "^12.2.0",
+    "zod": "^4.1.11",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

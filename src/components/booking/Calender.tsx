@@ -206,7 +206,10 @@ const BookingCalendar: React.FC<CalendarProps> = ({
     // Get bookings for this date
     const dateKey = getDateKey(day);
     const dayBookings = dateKey ? bookingsByDate[dateKey] || [] : [];
-
+    if (onDateClick) {
+      onDateClick(clickedDate, dayBookings);
+      return;
+    }
     switch (status) {
       case "unavailable":
         return setUnavailableModal(true);
@@ -224,9 +227,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
         setIsModalOpen(true);
     }
 
-    if (onDateClick) {
-      onDateClick(clickedDate, dayBookings);
-    }
+
   };
 
   const days = getDaysInMonth();
@@ -309,7 +310,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
           {dayNames.map((day: string) => (
             <div
               key={day}
-              className="text-center text-sm font-semibold text-[#2D3C30] py-2 leading-[22px]"
+              className="text-center text-sm font-semibold text-[#2D3C30] py-2 leading-5.5"
             >
               {day}
             </div>
@@ -360,7 +361,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
                       )}*/}
                       {!pastDay && (
                         <div
-                          className={`absolute top-0 -left-0 h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0 ${todayDate
+                          className={`absolute top-0 left-0 h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0 ${todayDate
                             ? "bg-[#3C5040] group-hover:w-full"
                             : "bg-yard-primary-active group-hover:w-full"
                             }`}
@@ -401,7 +402,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             </div>
           </div>
         </section>
-        <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5 h-[40rem] overflow-scroll">
+        <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5 h-160 overflow-scroll">
           {packages.map((pck) => {
             const isExpanded = expandedPackages.has(pck.id as string);
 
@@ -409,7 +410,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
               <label
                 htmlFor={pck.name}
                 key={pck.id as string}
-                className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm"
+                className="md:w-138.5 border border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm"
               >
                 <input
                   id={pck.name}
