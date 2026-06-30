@@ -113,8 +113,8 @@ const FORM_FIELDS: Array<{
         { key: 'lastname', label: 'Last name', placeholder: 'Last name', type: 'text' },
         { key: 'phone', label: 'Phone number (WhatsApp)', placeholder: '+234 800 000 0000', type: 'tel' },
         { key: 'email', label: 'Email address', placeholder: 'you@example.com', type: 'email' },
-        { key: 'children', label: 'Children (Aged 1–14)', placeholder: '0', type: 'number' },
-        { key: 'adults', label: 'Adults (Aged 15–80)', placeholder: '0', type: 'number' },
+        { key: 'children', label: 'Children (Aged 1–14)', placeholder: 'Number of children', type: 'number' },
+        { key: 'adults', label: 'Adults (Aged 15–80)', placeholder: 'Number of adults', type: 'number' },
     ];
 
 // ── Panel transition helpers ────────────────────────────────────────────

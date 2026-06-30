@@ -14,7 +14,7 @@ const NAV_LINKS = [
 
     { href: "/v2/faqs", label: "FAQs" },
     { href: "/v2/gallery", label: "Gallery" },
-    { href: "/v2/contact", label: "Contact Us" },
+    { href: "/v2/terms", label: "Our terms" },
 ];
 
 export default function Header() {
