@@ -63,7 +63,7 @@ export default function Header() {
                     {/* Logo */}
                     <div className="flex items-center justify-center bg-primaryGreen p-1 w-[15%] h-full">
                         <div className="w-14 h-full relative">
-                            <Link href="/">
+                            <Link href="/v2">
                                 <Image
                                     src="/images/logo.png"
                                     fill
@@ -135,7 +135,7 @@ export default function Header() {
 
                 {/* ── MOBILE NAV ── */}
                 <nav className="flex md:hidden items-center justify-between bg-primaryGreen p-2">
-                    <Link href="/">
+                    <Link href="/v2">
                         <Image
                             src="/images/logo.svg"
                             width={100}
