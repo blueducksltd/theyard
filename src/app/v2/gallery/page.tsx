@@ -4,8 +4,7 @@ import HeaderTextComp from "@/components/v2/HeaderTextComp";
 import { Inter, Lato, Petit_Formal_Script, Playfair_Display, Sen } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-
+import { useState } from "react";import { motion, useReducedMotion } from 'motion/react';
 
 function BentoGrid({ images }: { images: string[] }) {
     return (
@@ -79,15 +78,28 @@ const gallery: { image: string; category: (typeof filters)[number] }[] = [{
 }
 ]
 export default function GalleryPage() {
+    const shouldReduceMotion = useReducedMotion();
     const [activeFilter, setActiveFilter] = useState<(typeof filters)[number]>("All");
+    const sectionReveal = {
+        hidden: { opacity: 0, y: 18, filter: 'blur(6px)' },
+        visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    };
+    const itemReveal = {
+        hidden: { opacity: 0, y: 16, filter: 'blur(6px)' },
+        visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    };
 
     return (
-        <div className='min-h-screen bg-[#F6F2EC]'>
-            <HeaderTextComp pageName="Our Gallery" subtitleText="From intimate dates to joyful celebrations, every setup is thoughtfully curated to create memories that last a life time." titleText="A glimpse of unforgettable" titleStyledText="moments" />
+        <div className='min-h-screen bg-[#F6F2EC] pb-20 pb-40'>
+            <motion.div initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
+                <HeaderTextComp pageName="Our Gallery" subtitleText="From intimate dates to joyful celebrations, every setup is thoughtfully curated to create memories that last a life time." titleText="A glimpse of unforgettable" titleStyledText="moments" />
+            </motion.div>
 
-            <FilterCategory filters={filters.map(item => ({ id: item, label: item }))} activeFilter={activeFilter} handleClick={(id) => {
-                setActiveFilter(id)
-            }} />
+            <motion.div initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}>
+                <FilterCategory filters={filters.map(item => ({ id: item, label: item }))} activeFilter={activeFilter} handleClick={(id) => {
+                    setActiveFilter(id)
+                }} />
+            </motion.div>
 
             {/* <div className="w-full overflow-x-auto scrollbar-hide snap-x snap-mandatory px-5 flex items-center justify-center">
                 <div className="flex gap-2 md:gap-10  w-max ">
@@ -103,17 +115,19 @@ export default function GalleryPage() {
                 </div>
             </div> */}
 
-            <BentoGrid
-                images={gallery
-                    .filter(
-                        (item) =>
-                            activeFilter.toLowerCase() === "all" ||
-                            activeFilter === item.category
-                    )
-                    .map((item) => item.image)}
-            />
+            <motion.div initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}>
+                <BentoGrid
+                    images={gallery
+                        .filter(
+                            (item) =>
+                                activeFilter.toLowerCase() === "all" ||
+                                activeFilter === item.category
+                        )
+                        .map((item) => item.image)}
+                />
+            </motion.div>
 
-            <div className="flex items-center justify-center gap-4 py-10">
+            <motion.div className="flex items-center justify-center gap-4 py-10" initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
                 <div className="w-full md:w-[50%] flex items-center flex-col justify-center gap-4">
                     <h1 className={`text-primaryGreen font-medium text-4xl font-playfair-display text-center capitalize`}>
                         Join TheYard {" "} <br />
@@ -128,7 +142,7 @@ export default function GalleryPage() {
                 </div>
 
 
-            </div>
+            </motion.div>
 
         </div>
     )

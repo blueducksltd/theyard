@@ -1,17 +1,23 @@
-import { Lato_Font, PlayFair } from '@/app/v2/page';
+"use client";
+// import { Lato_Font, PlayFair } from '@/app/v2/page';
 import {  Mail,  MapPin, Phone } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { RiInstagramLine, RiTiktokLine, RiWhatsappLine } from 'react-icons/ri';
 import { SlSocialFacebook } from 'react-icons/sl';
 
 
 export default function Footer() {
+    const pathname = usePathname();
+    const [bgColor, setBgColor] = useState<string>("");
 
+    
     return (
-        <footer className='bg-white pt-10 '>
+        <footer className={`relative`}>
             <div
-                className="relative h-20 translate-y-5 md:translate-y-1"
+                className="absolute h-20 w-full left-0 -top-4 md:-top-10 -translate-y-1/2"
                 style={{
                     background: "url(/images/trees_design_footer.png) top / contain repeat-x",
                 }}
@@ -20,10 +26,10 @@ export default function Footer() {
 
             <div className="bg-primaryGreen p-7  md:p-14  grid  md:gap-10 text-white relative">
                 <div className='flex items-center justify-center flex-col'>
-                    <h1 className={`text-primaryBrown text-xl ${PlayFair.className} font-medium text`}>
+                    <h1 className={`text-primaryBrown text-xl font-playfair-display font-medium text`}>
                         Subscribe to our Newsletter
                     </h1>
-                    <p className={`${Lato_Font.className} text-sm text-center`}>Join our picnic lovers list for updates, offers, and event inspiration.</p>
+                    <p className={`font-lato text-sm text-center`}>Join our picnic lovers list for updates, offers, and event inspiration.</p>
                     <div className='grid grid-cols-1 md:grid-cols-2 w-full md:w-[60%] mt-10 gap-y-4'>
                         <div className='h-14 border flex items-center p-4'>
                             <input type="text" placeholder='Firstname' className='h-full outline-none' />
@@ -49,41 +55,41 @@ export default function Footer() {
                     <div className='grid grid-cols-1 md:grid-cols-5 gap-10 py-10'>
 
                         <div className='relative flex flex-col gap-5 grid-cols-1 md:col-span-2 pr-20'>
-                            <h1 className={`font-semibold text-xl  relative ${PlayFair.className} w-fit text-primaryBrown md:text-white`}>Quick Introduction:
+                            <h1 className={`font-semibold text-xl  relative font-playfair-display w-fit text-primaryBrown md:text-white`}>Quick Introduction:
                                 <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain right-0 absolute" />
 
 
                             </h1>
-                            <p className={`${Lato_Font.className} text-white/50 mt-2 text-sm font-light`}>
+                            <p className={`font-lato text-white/50 mt-2 text-sm font-light`}>
                                 At The Yard, we believe every moment is worth celebrating. Whether it's a quiet picnic, a romantic date, or a joyful gathering with friends, our beautiful green spaces and curated setups create memories to cherish forever.
                             </p>
 
                         </div>
 
                         <div className='flex flex-col gap-5'>
-                            <p className={`${Lato_Font.className} text-primaryBrown text-sm font-light relative w-fit uppercase`}>
+                            <p className={`font-lato text-primaryBrown text-sm font-light relative w-fit uppercase`}>
                                 Menus
                                 {/* <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain right-0 absolute" /> */}
 
                             </p>
 
-                            <Link href={"/"} className={`${Lato_Font.className}`}>
+                            <Link href={"/"} className={`font-lato`}>
                                 Packages
                             </Link>
-                            <Link href={"/"} className={`${Lato_Font.className}`}>
+                            <Link href={"/"} className={`font-lato`}>
                                 Events
                             </Link>
-                            <Link href={"/"} className={`${Lato_Font.className}`}>
+                            <Link href={"/"} className={`font-lato`}>
                                 About
                             </Link>
-                            <Link href={"/"} className={`${Lato_Font.className}`}>
+                            <Link href={"/"} className={`font-lato`}>
                                 Gallery
                             </Link>
 
                         </div>
 
                         <div className='flex flex-col gap-5'>
-                            <p className={`${Lato_Font.className} text-primaryBrown text-sm font-light relative w-fit uppercase`}>
+                            <p className={`font-lato text-primaryBrown text-sm font-light relative w-fit uppercase`}>
                                 Contact us
                                 {/* <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain right-0 absolute" /> */}
 
@@ -91,7 +97,7 @@ export default function Footer() {
 
                             <Link
                                 href={"/"}
-                                className={`${Lato_Font.className} inline-flex items-center gap-3 w-fit`}
+                                className={`font-lato inline-flex items-center gap-3 w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <Phone size={16} />
@@ -100,7 +106,7 @@ export default function Footer() {
                             </Link>
                             <Link
                                 href={"/"}
-                                className={`${Lato_Font.className} inline-flex items-center gap-3  w-fit`}
+                                className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <Mail size={16} />
@@ -109,7 +115,7 @@ export default function Footer() {
                             </Link>
                             <Link
                                 href={"/"}
-                                className={`${Lato_Font.className} inline-flex items-center gap-3  w-fit`}
+                                className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown shrink-0'>
                                     <MapPin size={16} />
@@ -121,7 +127,7 @@ export default function Footer() {
                         </div>
 
                         <div className='flex flex-col gap-5'>
-                            <p className={`${Lato_Font.className} text-primaryBrown text-sm font-light relative w-fit uppercase`}>
+                            <p className={`font-lato text-primaryBrown text-sm font-light relative w-fit uppercase`}>
                                 Social Links
                                 {/* <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain right-0 absolute" /> */}
 
@@ -129,7 +135,7 @@ export default function Footer() {
 
                             <Link
                                 href={"/"}
-                                className={`${Lato_Font.className} inline-flex items-center gap-3 w-fit`}
+                                className={`font-lato inline-flex items-center gap-3 w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <RiWhatsappLine size={16} />
@@ -138,7 +144,7 @@ export default function Footer() {
                             </Link>
                             <Link
                                 href={"/"}
-                                className={`${Lato_Font.className} inline-flex items-center gap-3  w-fit`}
+                                className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <RiInstagramLine size={16} />
@@ -148,7 +154,7 @@ export default function Footer() {
 
                             <Link
                                 href={"/"}
-                                className={`${Lato_Font.className} inline-flex items-center gap-3  w-fit`}
+                                className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <RiTiktokLine size={16} />
@@ -157,7 +163,7 @@ export default function Footer() {
                             </Link>
                             <Link
                                 href={"/"}
-                                className={`${Lato_Font.className} inline-flex items-center gap-3  w-fit`}
+                                className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <SlSocialFacebook size={16} />
@@ -172,7 +178,7 @@ export default function Footer() {
                     </div>
 
                     <hr />
-                    <div className={`flex flex-col md:flex-row md:items-center md:justify-between mt-10 gap-6 ${Lato_Font.className}`}>
+                    <div className={`flex flex-col md:flex-row md:items-center md:justify-between mt-10 gap-6 font-lato`}>
                         <Image src={"/images/logo.svg"} width={80} height={80} alt='Logo' className='object-contain' />
                         <div className='flex flex-col  md:justify-center md:items-center text-sm gap-3'>
                             <div className='flex flex-col md:flex-row md:items-center gap-3'>

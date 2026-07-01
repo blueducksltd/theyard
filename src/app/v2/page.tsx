@@ -14,6 +14,7 @@ import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { useRef, useState } from "react";
 export const PlayFair = Playfair_Display({
     subsets: ["latin"],
@@ -67,7 +68,28 @@ const slides = [
   },
 ];
 
+const sectionReveal = {
+  hidden: { opacity: 0, y: 18, filter: "blur(6px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const revealItem = {
+  hidden: { opacity: 0, y: 18, scale: 0.6 },
+  visible: { opacity: 1, y: 0, scale: 1 },
+};
+
 export default function Home() {
+  const shouldReduceMotion = useReducedMotion();
   const paginationRef = useRef(null);
   const [paginationEl, setPaginationEl] = useState<HTMLDivElement | null>(null);
   const swiperRef = useRef<SwiperType | null>(null);
@@ -233,7 +255,7 @@ export default function Home() {
             <span className="bg-secondaryGreen text-sm flex py-1 px-5 w-fit mb-4">
               Welcome to TheYard
             </span>
-            <h1 className={`text-white text-4xl ${PlayFair.className}`}>
+            <h1 className={`text-white text-4xl font-playfair-display`}>
               Memorable, exciting, joyful, and historic{" "}
               <span className={`${Petit.className} text-primaryBrown`}>
                 moments
@@ -249,8 +271,19 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <div className="flex items-center flex-col justify-center text-center py-20 relative bg-[#FDFBF9] px-7 md:px-0">
-        <h1 className={` text-4xl ${Lato_Font.className} mb-4 relative`}>
+      <motion.div
+        className="flex items-center flex-col justify-center text-center py-20 relative px-7 md:px-0"
+        initial={shouldReduceMotion ? false : "hidden"}
+        whileInView={shouldReduceMotion ? undefined : "visible"}
+        viewport={{ once: true, amount: 0.2 }}
+        variants={sectionReveal}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <motion.h1
+          className={`text-4xl font-lato mb-4 relative`}
+          variants={revealItem}
+          transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+        >
           <span className="font-bold">Where Serenity Meets</span>{" "} <br />
           <span className={`${Petit.className} text-primaryBrown`}>
             celebration
@@ -263,14 +296,32 @@ export default function Home() {
           <div className="w-20 h-20 absolute right-[-30%] top-[-30%] hidden md:block">
             <Image src={"/images/flower_right1.png"} fill alt="Flower Icon" />
           </div>
-        </h1>
-        <p className={`${Lato_Font.className} font-medium md:w-[60%] `}>Nestled in the heart of Independence Layout, Enugu, The Yard Picnic Park offers a serene, picturesque setting, perfect for picnics, intimate gatherings, and unforgettable celebrations.</p>
+        </motion.h1>
+        <motion.p
+          className={`font-lato font-medium md:w-[60%] `}
+          variants={revealItem}
+          transition={{ duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Nestled in the heart of Independence Layout, Enugu, The Yard Picnic Park offers a serene, picturesque setting, perfect for picnics, intimate gatherings, and unforgettable celebrations.
+        </motion.p>
 
-        <div className="w-full bg-primaryGreen  my-10 grid grid-cols-1 md:grid-cols-4">
-          {
-            percs.map((item, key) => <div key={key} className={`p-14 ${Lato_Font.className} flex flex-col gap-4 justify-center items-center relative`}>
+        <motion.div
+          className="w-full bg-primaryGreen my-10 grid grid-cols-1 md:grid-cols-4"
+          initial={shouldReduceMotion ? false : "hidden"}
+          whileInView={shouldReduceMotion ? undefined : "visible"}
+          viewport={{ once: true, amount: 0.2 }}
+          variants={staggerContainer}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {percs.map((item, key) => (
+            <motion.div
+              key={key}
+              className={`p-14 font-lato flex flex-col gap-4 justify-center items-center relative`}
+              variants={revealItem}
+              transition={{ duration: 0.55, delay: key * 0.08, ease: [0.22, 1, 0.36, 1] }}
+            >
               <div
-                className="absolute h-full w-px  opacity-40 right-0"
+                className="absolute h-full w-px opacity-40 right-0"
                 style={{
                   background: "linear-gradient(to bottom, #012615 0%, #A27639 80%, #012615 100%)",
                 }}
@@ -280,44 +331,72 @@ export default function Home() {
                 <h1 className="text-primaryBrown text-xl md:text-base">{item.title}</h1>
                 <p className="text-white font-light text-lg md:text-sm">{item.subtitle} </p>
               </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </motion.div>
 
+     
 
-            </div>)
-          }
-        </div>
+        <div
+          className="relative h-20 translate-y-5"
+          style={{
+            background: "url(/images/trees_design.png) top / cover repeat-x",
+          }}
+        ></div>
 
-
-
-
-      </div>
-
-      <div
-        className="relative h-20 translate-y-5"
-        style={{
-          background: "url(/images/trees_design.png) top / cover repeat-x",
-        }}
-      ></div>
-
-      <div className="bg-[#EEE8DE] px-5 md:px-0  md:pl-10 py-10 grid grid-cols-1 md:grid-cols-4 gap-10">
-        <div className="flex flex-col justify-between gap-5 md:gap-0">
-          <span className="bg-secondaryGreen text-sm md:flex py-1 px-5  mb-4 w-fit">
+      <div className="bg-[#EEE8DE] px-5 md:px-0 md:pl-10 py-10 grid grid-cols-1 md:grid-cols-4 gap-10">
+        <motion.div
+          className="flex flex-col justify-between gap-5 md:gap-0"
+          initial={shouldReduceMotion ? false : "hidden"}
+          whileInView={shouldReduceMotion ? undefined : "visible"}
+          viewport={{ once: true, amount: 0.2 }}
+          variants={sectionReveal}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <motion.span
+            className="bg-secondaryGreen text-sm md:flex py-1 px-5 mb-4 w-fit"
+            variants={revealItem}
+            transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+          >
             TheYard Experience
-          </span>
+          </motion.span>
 
-          <h1 className={`text-black text-4xl ${PlayFair.className} font-medium`}>
-            Every Moment <br /> is   <span className={`${Petit.className} text-primaryBrown`}>special </span>
-          </h1>
+          <motion.h1
+            className={`text-black text-4xl font-playfair-display font-medium`}
+            variants={revealItem}
+            transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          >
+            Every Moment <br /> is <span className={`${Petit.className} text-primaryBrown`}>special </span>
+          </motion.h1>
 
-          <p className={`${Lato_Font.className} `}>From romantic dates to birthdays and special occasions, we create the perfect setting for your most cherished moments</p>
+          <motion.p
+            className={`font-lato `}
+            variants={revealItem}
+            transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+          >
+            From romantic dates to birthdays and special occasions, we create the perfect setting for your most cherished moments
+          </motion.p>
 
-          <Link href={"/"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white  w-fit">
-            View Packages
-            <ArrowRight />
-          </Link>
-        </div>
+          <motion.div
+            variants={revealItem}
+            transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Link href={"/"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white w-fit">
+              View Packages
+              <ArrowRight />
+            </Link>
+          </motion.div>
+        </motion.div>
 
-
-        <div className="md:col-span-3">
+        <motion.div
+          className="md:col-span-3"
+          initial={shouldReduceMotion ? false : "hidden"}
+          whileInView={shouldReduceMotion ? undefined : "visible"}
+          viewport={{ once: true, amount: 0.2 }}
+          variants={sectionReveal}
+          transition={{ duration: 0.6, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+        >
           <Swiper
             modules={[Autoplay, FreeMode]}
             slidesPerView={1}
@@ -345,10 +424,17 @@ export default function Home() {
           >
             {packages.map((item, index) => (
               <SwiperSlide key={index} className="h-full">
-                <div className="h-full relative text-white p-4 flex items-end">
+                <motion.div
+                  className="h-full relative text-white p-4 flex items-end"
+                  variants={revealItem}
+                  initial={shouldReduceMotion ? false : "hidden"}
+                  whileInView={shouldReduceMotion ? undefined : "visible"}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                >
                   <div className="relative z-20 flex flex-col gap-4">
                     <div className="flex flex-col gap-1 w-[80%] md:w-full">
-                      <p className={`${PlayFair.className} text-xl font-semibold`}>{item.title}</p>
+                      <p className={`font-playfair-display text-xl font-semibold`}>{item.title}</p>
                       <p className={`${Inter_Font.className} text-sm`}>{item.subtitle}</p>
                     </div>
                     <div className="flex justify-end">
@@ -357,25 +443,25 @@ export default function Home() {
                   </div>
                   <Image src={"/images/" + item.image} fill alt="" className="object-cover" />
                   <div className="w-full h-full left-0 top-0 bg-black/40 absolute"></div>
-                </div>
+                </motion.div>
               </SwiperSlide>
             ))}
           </Swiper>
 
-        </div>
+        </motion.div>
       </div>
 
       <div className=" bg-[#EEE8DE] md:bg-transparent">
         <div className="p-5 md:p-10">
           <div className="md:px-20 flex flex-col md:flex-row items-center md:justify-between gap-6  mb-10">
             <div>
-              <h1 className={`font-semibold text-2xl italic ${PlayFair.className}  relative text-center md:text-left`}>Testimonials
+              <h1 className={`font-semibold text-2xl italic font-playfair-display  relative text-center md:text-left`}>Testimonials
 
                 <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain absolute left-0 md:block hidden" />
               </h1>
 
 
-              <p className={`${Lato_Font.className} text-[#5A5A53] md:mt-2 `}>See what our clients say about us...</p>
+              <p className={`font-lato text-[#5A5A53] md:mt-2 `}>See what our clients say about us...</p>
             </div>
             <Link href={"/"} className={" border-[1.4px] py-2 px-6  border-primaryGreen text-primaryGreen font-semibold" + Lato_Font.className}>
               Write a review
@@ -405,7 +491,7 @@ export default function Home() {
           >
             {testimonails.map((testimony, index) => (
               <SwiperSlide key={index} className="relative w-full h-full">
-                <div className={"bg-white md:bg-[#EEE8DE] p-10 grid gap-6 " + Inter_Font.className}>
+                <div className={"bg-white md:bg-[#EEE8DE] p-10 grid gap-6  font-inter" }>
                   <p>{testimony.testimony}</p>
                   <p className="font-semibold">{testimony.name}</p>
                 </div>
@@ -439,96 +525,131 @@ export default function Home() {
             background: "url(/images/trees_design_green.png) top / cover repeat-x",
           }}
         ></div>
-        <div className="bg-primaryGreen  px-10 py-10 ">
+        <div className="bg-primaryGreen px-10 py-10 ">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10 gap-6">
-            <div className="w-full  md:w-[40%]">
-              <h1 className={` text-2xl  ${PlayFair.className} text-white`}>Featured Services </h1>
+            <motion.div
+              className="w-full md:w-[40%]"
+              initial={shouldReduceMotion ? false : "hidden"}
+              whileInView={shouldReduceMotion ? undefined : "visible"}
+              viewport={{ once: true, amount: 0.2 }}
+              variants={sectionReveal}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <motion.h1
+                className={`text-2xl font-playfair-display text-white`}
+                variants={revealItem}
+                transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+              >
+                Featured Services
+              </motion.h1>
 
-              <p className={`${Lato_Font.className} text-primaryBrown mt-2 `}>We don't just provide a venue; we create memorable experiences.
-                Flexible spaces, unique experiences, your way.</p>
-            </div>
-            <Link href={"/"} className={" border-[1.4px] py-2 px-6  bg-white text-primaryGreen font-semibold w-fit " + Lato_Font.className}>
-              Explore all services
-            </Link>
+              <motion.p
+                className={`font-lato text-primaryBrown mt-2 `}
+                variants={revealItem}
+                transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+              >
+                We don't just provide a venue; we create memorable experiences. Flexible spaces, unique experiences, your way.
+              </motion.p>
+            </motion.div>
+            <motion.div
+              variants={revealItem}
+              transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Link href={"/v2/events"} className={"border py-2 px-6 bg-white text-primaryGreen font-semibold w-fit font-lato"}>
+                Explore all services
+              </Link>
+            </motion.div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {services.map((service, index) => (<div key={index} className={"border border-[#E9D9C0]/50 text-[#F6F6F6] p-3 grid gap-2 " + Inter_Font.className}>
-              <div className="h-50 relative">
-                <Image src={service.image} fill alt="" className="object-cover" />
-              </div>
-
-              <div className="grid gap-2">
-                <p className={`font-semibold text-lg ${PlayFair.className}`}>{service.title}</p>
-                <p className={`${Lato_Font.className} text-[#FEF6EB] text-sm font-light`}>{service.subtitle}</p>
-                <p className={`${Lato_Font.className} text-white/50 text-xs mt-6`}>{service.cta}</p>
-              </div>
-
-            </div>))}
-          </div>
-
-          {/* <Swiper
-            modules={[Autoplay, FreeMode]}
-            slidesPerView={1}
-            spaceBetween={10}
-            breakpoints={{768: {
-              slidesPerView: 4,
-
-            }}}
-            loop={true}
-            freeMode={true}
-            grabCursor={true}
-            simulateTouch={true}
-            touchRatio={1}
-            touchAngle={45}
-            threshold={5}
-            resistance={true}
-            resistanceRatio={0.85}
-            className="w-full h-full"
-            onSwiper={(swiper) => {
-              swiperRef.current = swiper;
-            }}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-4 gap-4"
+            initial={shouldReduceMotion ? false : "hidden"}
+            whileInView={shouldReduceMotion ? undefined : "visible"}
+            viewport={{ once: true, amount: 0.2 }}
+            variants={staggerContainer}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
             {services.map((service, index) => (
-              <SwiperSlide key={index} className="relative w-full h-full">
+              <motion.div
+                key={index}
+                className={"border border-[#E9D9C0]/50 text-[#F6F6F6] p-3 grid gap-2  font-inter" }
+                variants={revealItem}
+                transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="h-50 relative">
+                  <Image src={service.image} fill alt="" className="object-cover" />
+                </div>
 
-               
-              </SwiperSlide>
+                <div className="grid gap-2">
+                  <p className={`font-semibold text-lg font-playfair-display`}>{service.title}</p>
+                  <p className={`font-lato text-[#FEF6EB] text-sm font-light`}>{service.subtitle}</p>
+                  <p className={`font-lato text-white/50 text-xs mt-6`}>{service.cta}</p>
+                </div>
+              </motion.div>
             ))}
-          </Swiper> */}
+          </motion.div>
+
+          
 
         </div>
 
-        <div className=" px-5 md:px-10 py-10 ">
-          <div className="flex justify-center items-center flex-col mb-20 gap-4">
-            <h1 className={`text-black text-4xl ${PlayFair.className} font-medium text-center`}>
-              Join  our  celebrating   <span className={`${Petit.className} text-primaryBrown capitalize font-light`}>events </span>
-            </h1>
+        <div className="px-5 md:px-10 py-10 ">
+          <motion.div
+            className="flex justify-center items-center flex-col mb-20 gap-4"
+            initial={shouldReduceMotion ? false : "hidden"}
+            whileInView={shouldReduceMotion ? undefined : "visible"}
+            viewport={{ once: true, amount: 0.2 }}
+            variants={sectionReveal}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.h1
+              className={`text-black text-4xl font-playfair-display font-medium text-center`}
+              variants={revealItem}
+              transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+            >
+              Join our celebrating <span className={`${Petit.className} text-primaryBrown capitalize font-light`}>events </span>
+            </motion.h1>
 
-            <Link href={"/"} className={" flex gap-2 items-center border-[1.4px] py-2 px-6  bg-white text-primaryGreen font-semibold " + Lato_Font.className}>
-              Explore all events
-              <ArrowRight />
-            </Link>
-          </div>
+            <motion.div
+              variants={revealItem}
+              transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Link href={"/v2/events"} className={"flex gap-2 items-center border-[1.4px] py-2 px-6 bg-white text-primaryGreen font-medium font-lato"}>
+                Explore all events
+                <ArrowRight />
+              </Link>
+            </motion.div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 ">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3"
+            initial={shouldReduceMotion ? false : "hidden"}
+            whileInView={shouldReduceMotion ? undefined : "visible"}
+            viewport={{ once: true, amount: 0.2 }}
+            variants={staggerContainer}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
             {events.map((event, index) => (
-              <div className={"  p-3 grid gap-2 " + Inter_Font.className} key={index}>
+              <motion.div
+                className={"p-3 grid gap-2  font-inter" }
+                key={index}
+                variants={revealItem}
+                transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+              >
                 <div className="h-50 relative">
                   <Image src={event.image} fill alt="" className="object-cover" />
                 </div>
 
                 <div className="grid gap-1">
-                  <p className={`font-semibold text-lg ${PlayFair.className} text-primaryGreen`}>{event.title}</p>
-                  <p className={`${Lato_Font.className} text-[#4B6450] text-sm font-light`}>{event.subtitle}</p>
-                  <p className={`${Lato_Font.className} text-primaryGreen text-sm mt-6 font-medium`}>
+                  <p className={`font-semibold text-lg font-playfair-display text-primaryGreen`}>{event.title}</p>
+                  <p className={`font-lato text-[#4B6450] text-sm font-light`}>{event.subtitle}</p>
+                  <p className={`font-lato text-primaryGreen text-sm mt-6 font-medium`}>
                     {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}
-                    </p>
+                  </p>
                 </div>
-
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
 
           <Swiper
@@ -561,73 +682,93 @@ export default function Home() {
         ></div>
 
 
-        <div className="bg-[#EAF6EA] px-5 md:px-10 py-20 grid  gap-10">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 ">
+        <div className="bg-[#EAF6EA] px-5 md:px-10 pt-20 pb-60 grid gap-10">
+          <motion.div
+            className="flex flex-col md:flex-row md:justify-between md:items-center gap-3"
+            initial={shouldReduceMotion ? false : "hidden"}
+            whileInView={shouldReduceMotion ? undefined : "visible"}
+            viewport={{ once: true, amount: 0.2 }}
+            variants={sectionReveal}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          >
             <div className="flex flex-col justify-between">
-              <span className=" text-sm flex py-1  mb-4">
+              <motion.span
+                className="text-sm flex py-1 mb-4"
+                variants={revealItem}
+                transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+              >
                 Our Gallery
-              </span>
+              </motion.span>
 
-              <h1 className={`text-black text-4xl ${PlayFair.className} font-medium mb-2`}>
-                unForgettable     <span className={`${Petit.className} text-primaryBrown`}>Moments </span>
-              </h1>
+              <motion.h1
+                className={`text-black text-4xl font-playfair-display font-medium mb-2`}
+                variants={revealItem}
+                transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+              >
+                unForgettable <span className={`${Petit.className} text-primaryBrown`}>Moments </span>
+              </motion.h1>
 
-              <p className={`${Lato_Font.className} text-sm `}>From intimate dates to joyful celebrations, every setup is crafted to create lasting memories.</p>
-
-
+              <motion.p
+                className={`font-lato text-sm `}
+                variants={revealItem}
+                transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+              >
+                From intimate dates to joyful celebrations, every setup is crafted to create lasting memories.
+              </motion.p>
             </div>
 
-            <Link href={"/"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white  w-fit capitalize">
-              View full gallery
-              <ArrowRight />
-            </Link>
-          </div>
+            <motion.div
+              variants={revealItem}
+              transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Link href={"/v2/gallery"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white w-fit capitalize">
+                View full gallery
+                <ArrowRight />
+              </Link>
+            </motion.div>
+          </motion.div>
 
-          <div className="grid grid-cols-6 gap-2 md:gap-3">
-
-
-            <div className="col-span-6 md:row-span-2 md:col-span-2 relative  rounded-lg bg-white flex items-center justify-center min-h-50 md:min-h-36.25">
+          <motion.div
+            className="grid grid-cols-6 gap-2 md:gap-3"
+            initial={shouldReduceMotion ? false : "hidden"}
+            whileInView={shouldReduceMotion ? undefined : "visible"}
+            viewport={{ once: true, amount: 0.2 }}
+            variants={staggerContainer}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <motion.div className="col-span-6 md:row-span-2 md:col-span-2 relative rounded-lg bg-white flex items-center justify-center min-h-50 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}>
               <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </div>
+            </motion.div>
 
-
-            <div className="col-span-6 md:col-span-1 relative flex items-center justify-center min-h-40 md:min-h-36.25">
+            <motion.div className="col-span-6 md:col-span-1 relative flex items-center justify-center min-h-40 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
               <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </div>
-            <div className=" col-span-6 md:col-span-1  relative flex items-center justify-center min-h-30 md:min-h-36.25">
+            </motion.div>
+            <motion.div className="col-span-6 md:col-span-1 relative flex items-center justify-center min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}>
               <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </div>
+            </motion.div>
 
-            <div className="  col-span-6 md:col-span-1 relative  hidden md:flex  items-center justify-center min-h-40 md:min-h-36.25">
+            <motion.div className="col-span-6 md:col-span-1 relative hidden md:flex items-center justify-center min-h-40 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
               <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </div>
+            </motion.div>
 
-            <div className= " col-span-6 md:col-span-1 relative hidden md:flex items-center justify-center min-h-30 md:min-h-36.25">
+            <motion.div className="col-span-6 md:col-span-1 relative hidden md:flex items-center justify-center min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}>
               <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </div>
+            </motion.div>
 
-            <div className="col-span-6 md:col-span-4  grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-
-              <div className="relative flex items-center justify-center min-h-30 md:min-h-36.25">
+            <div className="col-span-6 md:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
+              <motion.div className="relative flex items-center justify-center min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.26, ease: [0.22, 1, 0.36, 1] }}>
                 <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-              </div>
+              </motion.div>
 
-              <div className="relative flex items-center justify-center min-h-30 md:min-h-36.25">
+              <motion.div className="relative flex items-center justify-center min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}>
                 <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-              </div>
+              </motion.div>
 
-              <div className="relative flex items-center justify-center col-span-2  md:col-span-1  min-h-30 md:min-h-36.25">
+              <motion.div className="relative flex items-center justify-center col-span-2 md:col-span-1 min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.34, ease: [0.22, 1, 0.36, 1] }}>
                 <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-              </div>
+              </motion.div>
             </div>
-
-
-
-
-          </div>
-
-
-
+          </motion.div>
         </div>
 
 

@@ -1,7 +1,9 @@
+"use client";
 import HeaderTextComp from '@/components/v2/HeaderTextComp';
 import { Inter, Lato, Petit_Formal_Script, Playfair_Display, Sen } from 'next/font/google';
 import Image from 'next/image';
 import Link from 'next/link';
+import { motion, useReducedMotion } from 'motion/react';
 export const PlayFair = Playfair_Display({
     subsets: ["latin"],
     style: ["italic", "normal"],
@@ -54,14 +56,34 @@ function addLineBreaks(text: string) {
 
 
 export default function AboutPage() {
-    return (
-        <div className='min-h-screen   space-y-10'>
+    const shouldReduceMotion = useReducedMotion();
 
-            <HeaderTextComp pageName='About Us' subtitleText='The Yard Picnic Park was born from a desire to create an elegant, open-air sanctuary right in the city’s vibrant Independence Layout. We wanted a place where people could step away from the bustle of everyday life and reconnect with nature, friends, and loved ones.' titleStyledText='Story' titleText='Our TheYard' />
+    const sectionReveal = {
+        hidden: { opacity: 0, y: 18, filter: 'blur(6px)' },
+        visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    };
+
+    const itemReveal = {
+        hidden: { opacity: 0, y: 16, filter: 'blur(6px)' },
+        visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    };
+
+    return (
+        <div className='min-h-screen   space-y-10 pb-20 md:pb-40'>
+
+            <motion.div
+                initial={shouldReduceMotion ? false : 'hidden'}
+                whileInView={shouldReduceMotion ? undefined : 'visible'}
+                viewport={{ once: true, amount: 0.2 }}
+                variants={sectionReveal}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+                <HeaderTextComp pageName='About Us' subtitleText='The Yard Picnic Park was born from a desire to create an elegant, open-air sanctuary right in the city’s vibrant Independence Layout. We wanted a place where people could step away from the bustle of everyday life and reconnect with nature, friends, and loved ones.' titleStyledText='Story' titleText='Our TheYard' />
+            </motion.div>
 
             <div className='grid grid-cols-1  md:grid-cols-2 md:px-10 gap-10 px-5  place-items-center'>
                 {
-                    images.map((image, index) => <div key={index} className='border-20 md:border-30 aspect-square w-full md:w-[70%] rounded-full relative border-primaryGreen'>
+                    images.map((image, index) => <motion.div key={index} className='border-20 md:border-30 aspect-square w-full md:w-[70%] rounded-full relative border-primaryGreen' initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={itemReveal} transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}>
                         <Image
                             src={image}
                             fill
@@ -69,10 +91,10 @@ export default function AboutPage() {
                             className="object-cover rounded-full outline-4 outline-primaryBrown"
                             sizes="50vw"
                         />
-                    </div>)
+                    </motion.div>)
                 }
 
-                <div className='flex flex-col text-center items-center border py-14 px-5 md:px-30 md:pt-10 gap-3 md:pb-30 border-[#F2E3C6] relative'>
+                <motion.div className='flex flex-col text-center items-center border py-14 px-5 md:px-30 md:pt-10 gap-3 md:pb-30 border-[#F2E3C6] relative' initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={itemReveal} transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
                     {/* <div className='border w-full h-full border'></div> */}
                     <h1 className={`text-[30px] ${PlayFair.className} font-bold relative md:w-fit`}>Our Mission                 <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain absolute right-0 md:block hidden" />
                     </h1>
@@ -87,9 +109,9 @@ export default function AboutPage() {
                         sizes="50vw"
                     />
 
-                </div>
+                </motion.div>
 
-                <div className='flex flex-col text-center items-center border py-14 px-5 md:px-30 md:pt-10 gap-3 md:pb-30 border-[#F2E3C6] relative'>
+                <motion.div className='flex flex-col text-center items-center border py-14 px-5 md:px-30 md:pt-10 gap-3 md:pb-30 border-[#F2E3C6] relative' initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={itemReveal} transition={{ duration: 0.55, delay: 0.16, ease: [0.22, 1, 0.36, 1] }}>
                     {/* <div className='border w-full h-full border'></div> */}
                     <h1 className={`text-[30px] ${PlayFair.className} font-bold relative w-fit`}>Our Vision                 <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain absolute right-0 md:block hidden" />
                     </h1>
@@ -104,14 +126,14 @@ export default function AboutPage() {
                         sizes="50vw"
                     />
 
-                </div>
+                </motion.div>
             </div>
 
-            <div className='p-5 md:p-10'>
+            <motion.div className='p-5 md:p-10' initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
                 <p className={`text-xl text-center ${Lato_Font.className} text-primaryGreen text-sm`}>Experiences we provide</p>
 
                 <div className='flex flex-col  justify-center items-center space-y-10 md:space-y-30 py-20'>
-                    {experiences.map((experience, index) => <div key={index} className='grid grid-cols-1 md:grid-cols-2 w-full md:w-[80%] gap-10 relative'>
+                    {experiences.map((experience, index) => <motion.div key={index} className='grid grid-cols-1 md:grid-cols-2 w-full md:w-[80%] gap-10 relative' initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={itemReveal} transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}>
                         <div className={` h-120 relative ${index % 2 === 0 ? "md:order-1" : "md:order-2"}`}>
                             <Image
                                 src={experience.image}
@@ -137,12 +159,12 @@ export default function AboutPage() {
                         </div>
 
                         <Image width={100} height={100} alt="" src={"/images/about_mobile_flower.png"} className="object-contain absolute -bottom-6 right-0 md:hidden block  " />
-                    </div>)}
+                    </motion.div>)}
                 </div>
 
-            </div>
+            </motion.div>
 
-            <div className="flex items-center justify-center gap-4 py-10 px-5 md:px-10">
+            <motion.div className="flex items-center justify-center gap-4 py-10 px-5 md:px-10" initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
                 <div className="w-[60%] md:w-[30%] flex items-center flex-col justify-center gap-4">
                     <h1 className={`text-primaryGreen font-medium text-2xl  ${PlayFair.className} text-center capitalize `}>
                         Customize your  {" "}
@@ -157,7 +179,7 @@ export default function AboutPage() {
                 </div>
 
 
-            </div>
+            </motion.div>
         </div>
     )
 }
