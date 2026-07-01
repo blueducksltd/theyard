@@ -1,3 +1,4 @@
+"use client";
 import HeaderTextComp from '@/components/v2/HeaderTextComp'
 import Image from 'next/image'
 import React from 'react'
@@ -129,7 +130,7 @@ function TermsSection({ section }: { section: TermsSectionData }) {
 
 export default function Page() {
     return (
-        <div className='relatve'>
+        <div className='relatve pb-20 md:pb-40'>
             <HeaderTextComp
                 pageName=''
                 subtitleText='Go through our terms of service, so a better client business relationship is established.'
@@ -137,7 +138,7 @@ export default function Page() {
                 titleStyledText='Service'
             />
 
-            <div className='px-4 sm:px-6 md:px-10 py-4 sm:py-5 space-y-10 sm:space-y-14 max-w-screen-lg mx-auto '>
+            <div className='px-4 sm:px-6 md:px-10 py-4 sm:py-5 space-y-10 sm:space-y-14 max-w-5xl mx-auto '>
                 {TERMS_SECTIONS.map((section, index) => (
                     <div key={section.number} >
                         <Image

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { RiWhatsappLine } from 'react-icons/ri';
+import { motion, useReducedMotion } from 'motion/react';
 
 type FAQ = { question: string; answer: string }
 
@@ -40,6 +41,7 @@ const faqs: FAQ[] = [
 ];
 
 export default function Page() {
+    const shouldReduceMotion = useReducedMotion();
     const [faqState, setFaqState] = useState<(FAQ & { show: boolean })[]>(
         faqs.map(item => ({ ...item, show: false }))
     );
@@ -55,14 +57,26 @@ export default function Page() {
         );
     };
 
+    const sectionReveal = {
+        hidden: { opacity: 0, y: 18, filter: 'blur(6px)' },
+        visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    };
+
+    const itemReveal = {
+        hidden: { opacity: 0, y: 16, filter: 'blur(6px)' },
+        visible: { opacity: 1, y: 0, filter: 'blur(0px)' },
+    };
+
     return (
-        <div>
-            <HeaderTextComp
+        <div className='pb-20 md:pb-40'>
+            <motion.div initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
+                <HeaderTextComp
                 pageName="FAQS"
                 subtitleText="Check out questions we feel you might have for us."
                 titleText="Frequently asked"
                 titleStyledText="Questions"
             />
+            </motion.div>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-3 px-5 md:px-20 py-10'>
                 <div className='relative md:block hidden'>
@@ -75,9 +89,9 @@ export default function Page() {
                     />
                 </div>
 
-                <div className='pl-0 md:pl-20 font-lato text-sm space-y-2'>
+                <motion.div className='pl-0 md:pl-20 font-lato text-sm space-y-2' initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}>
                     {faqState.map((item, index) => (
-                        <div
+                        <motion.div
                             key={index}
                             className='border cursor-pointer overflow-hidden'
                             onClick={() => toggleFaq(index)}
@@ -106,15 +120,15 @@ export default function Page() {
                                     <p className="px-3 pb-6 text-[#717068]">{item.answer}</p>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
 
-            <div className='py-20 flex flex-col justify-center items-center gap-4'>
+            <motion.div className='py-20 flex flex-col justify-center items-center gap-4' initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
                 <p className='text-primaryGreen font-lato'>COULD NOT FIND YOUR QUESTION?</p>
                 <Link href={"/"} className='px-9 py-3 bg-primaryGreen text-white w-fit flex gap-3 items-center font-lato text-sm'>Send us a whatsapp <RiWhatsappLine  size={18}/></Link>
-            </div>
+            </motion.div>
         </div>
     )
 }

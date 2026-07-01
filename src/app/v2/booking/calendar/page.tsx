@@ -8,7 +8,7 @@ export default function page() {
     const { setDate } = useBookingStore();
     const router = useRouter();
     return (
-        <div>
+        <div className='pb-20 md:pb-40'>
             <div className=' flex flex-col justify-center items-center gap-6 pt-30 pb-10 md:py-20 '>
                 <p className={`font-lato text-primaryGreen`}>{ }</p>
                 <div className="w-full md:w-[40%] grid gap-4">

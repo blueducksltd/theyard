@@ -4,6 +4,7 @@ import FilterCategory from '@/components/v2/FilterCategory';
 import Modal from '@/components/v2/Modal';
 import { AddMoreFun, type SelectedFun } from '@/app/v2/packages/page';
 import Image from 'next/image';
+import { motion, useReducedMotion } from 'motion/react';
 import React, { useCallback, useMemo, useState } from 'react';
 import { BadgeCheck, X } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -411,7 +412,7 @@ export default function EventsPage() {
     const selectedEvent = selectedIndex !== null ? eventsWithFun[selectedIndex] : null;
 
     return (
-        <div className="py-10">
+        <div className="pt-10 pb-20 md:pb-40">
             <Modal isOpen={modalOpen} handleClose={handleCloseModal}>
                 {selectedEvent && (
                     // key forces a fresh mount (and state reset) when a different event is opened

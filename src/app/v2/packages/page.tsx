@@ -7,6 +7,7 @@ import { BadgeCheck, Check, Minus, Plus, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "motion/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -504,8 +505,23 @@ export const PackageCard = React.memo(function PackageCard({
 }: PackageCardProps) {
     const pathname = usePathname()
     const isBooking = pathname.includes('booking');
+    const shouldReduceMotion = useReducedMotion();
+
+    const cardReveal = {
+        hidden: { opacity: 0, y: 16  },
+        visible: { opacity: 1, y: 0 },
+    };
+
     return (
-        <div onClick={() => onSelect(index)} className="cursor-pointer">
+        <motion.div
+            onClick={() => onSelect(index)}
+            className="cursor-pointer"
+            initial={shouldReduceMotion ? false : 'hidden'}
+            whileInView={shouldReduceMotion ? undefined : 'visible'}
+            viewport={{ once: true, amount: 0.2 }}
+            variants={cardReveal}
+            transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+        >
             <div className="bg-white p-3 rounded border border-primaryBrown">
                 <div className="h-50 relative">
                     <Image
@@ -548,7 +564,7 @@ export const PackageCard = React.memo(function PackageCard({
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 });
 
@@ -589,7 +605,7 @@ export default function PackagesPage() {
     );
 
     return (
-        <div>
+        <div className="pb-20 md:pb-40">
             <Modal handleClose={handleCloseModal} isOpen={modalOpen}>
                 {selectedPackage && (
                     <ModalContent
