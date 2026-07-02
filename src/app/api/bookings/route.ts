@@ -9,7 +9,6 @@ import { sendNotification } from "@/lib/notification";
 import { uploadImage } from "@/lib/vercel";
 import Booking from "@/models/Booking";
 import Customer from "@/models/Customer";
-import Event from "@/models/Event";
 import Package from "@/models/Package";
 import Space from "@/models/Space";
 import {
@@ -170,29 +169,27 @@ export const POST = errorHandler(async (request: NextRequest) => {
     { new: true, upsert: true },
   );
 
-  const slug = body.eventTitle
-    .trim()
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-
-  console.log(slug);
-
-  // Create event (no times needed for day experience)
-  const event = await Event.create({
-    title: body.eventTitle,
-    slug,
-    description: body.eventDescription,
-    customer: customer.id,
-    public: body.public,
-    date: bookingDate, // Use the parsed date object
-    time: { start: "09:00", end: "18:00" }, // Default day hours
-    status: "pending",
-    images: body.imagesUrls,
-    location: space.address,
-  });
+  // Event creation is disabled for bookings.
+  // const slug = body.eventTitle
+  //   .trim()
+  //   .toLowerCase()
+  //   .trim()
+  //   .replace(/[^a-z0-9\s-]/g, "")
+  //   .replace(/\s+/g, "-")
+  //   .replace(/-+/g, "-");
+  //
+  // const event = await Event.create({
+  //   title: body.eventTitle,
+  //   slug,
+  //   description: body.eventDescription,
+  //   customer: customer.id,
+  //   public: body.public,
+  //   date: bookingDate,
+  //   time: { start: "09:00", end: "18:00" },
+  //   status: "pending",
+  //   images: body.imagesUrls,
+  //   location: space.address,
+  // });
 
   // Calculate base price (weekend price if applicable)
   const basePrice = isWeekend(bookingDate) && _package.weekendPrice
@@ -215,7 +212,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
   const booking = await Booking.create({
     customer: customer.id,
     space: space.id,
-    event: event.id,
+    // event: event.id,
     package: _package.id,
     eventDate: bookingDate, // Use the parsed date object
     guestCount,

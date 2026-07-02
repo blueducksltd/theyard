@@ -13,7 +13,7 @@ import { IPackage, SafePackage, sanitizePackage } from "./Package";
 export interface IBooking extends Document, IBookingMethods {
   customer: ICustomer["id"];
   space: ISpace["id"];
-  event: IEvent["id"];
+  event?: IEvent["id"];
   package: IPackage["id"];
   eventDate: Date;
   guestCount: number;

@@ -11,7 +11,7 @@ const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
   {
     customer: { type: Types.ObjectId, ref: "Customer", required: true },
     space: { type: Types.ObjectId, ref: "Space", required: true },
-    event: { type: Types.ObjectId, ref: "Event", required: true },
+    event: { type: Types.ObjectId, ref: "Event" },
     package: { type: Types.ObjectId, ref: "Package", required: true },
     eventDate: { type: Date, required: true },
     guestCount: { type: Number, required: true },
