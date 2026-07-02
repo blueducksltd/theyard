@@ -310,7 +310,8 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
                         className="p-2 bg-primaryGreen text-white cursor-pointer"
                         onClick={() => {
                             if (inputs.adults === 0 && inputs.children === 0) {
-                                toast("You must select number for adult ")
+                                toast("You must select number for adult ", {type: "error"})
+                                return;
                             }
 
                             setStep('summary')
