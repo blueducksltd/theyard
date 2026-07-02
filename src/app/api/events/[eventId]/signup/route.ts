@@ -76,7 +76,7 @@ export async function POST(
       email,
       adultTickets,
       childTickets,
-    });
+    }); 
 
     return NextResponse.json(
       { success: true, data: newSignUp },
