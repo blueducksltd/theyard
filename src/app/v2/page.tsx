@@ -205,7 +205,7 @@ export default function Home() {
 
   return (
     <div >
-      <div className="bg-black h-[90vh] md:h-[80vh] relative">
+      <div className="bg-black h-screen relative">
         <Swiper
           modules={[Pagination, Autoplay, EffectFade]}
           effect="fade"
@@ -250,12 +250,12 @@ export default function Home() {
         </Swiper>
 
         {/* Content overlay - stays static, only text changes via state if needed */}
-        <div className="p-5 md:p-10 absolute bottom-20 md:bottom-0 md:flex justify-between w-full items-end  z-10 pointer-events-none ">
-          <div className="md:w-[40%] mb-4 md:mb-0">
-            <span className="bg-secondaryGreen text-sm flex py-1 px-5 w-fit mb-4">
-              Welcome to TheYard
+        <div className="p-5 md:p-10 absolute bottom-10  md:flex justify-between w-full items-end  z-10 pointer-events-none ">
+          <div className="md:w-[60%] mb-4 md:mb-0">
+            <span className="bg-secondaryGreen text-lg flex py-1 px-5 w-fit mb-4">
+              Welcome to The Yard
             </span>
-            <h1 className={`text-white text-4xl font-playfair-display`}>
+            <h1 className={`text-white text-6xl font-playfair-display`}>
               Memorable, exciting, joyful, and historic{" "}
               <span className={`${Petit.className} text-primaryBrown`}>
                 moments
@@ -555,7 +555,7 @@ export default function Home() {
               variants={revealItem}
               transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Link href={"/v2/events"} className={"border py-2 px-6 bg-white text-primaryGreen font-semibold w-fit font-lato"}>
+              <Link href={"/v2/packages"} className={"border py-2 px-6 bg-white text-primaryGreen font-semibold w-fit font-lato"}>
                 Explore all services
               </Link>
             </motion.div>
@@ -569,7 +569,7 @@ export default function Home() {
             variants={staggerContainer}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            {services.map((service, index) => (
+            {services.slice(0,4).map((service, index) => (
               <motion.div
                 key={index}
                 className={"border border-[#E9D9C0]/50 text-[#F6F6F6] p-3 grid gap-2  font-inter" }
@@ -593,7 +593,7 @@ export default function Home() {
 
         </div>
 
-        <div className="px-5 md:px-10 py-10 ">
+        <div className="px-5 md:px-10 py-20 ">
           <motion.div
             className="flex justify-center items-center flex-col mb-20 gap-4"
             initial={shouldReduceMotion ? false : "hidden"}
@@ -603,7 +603,7 @@ export default function Home() {
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
             <motion.h1
-              className={`text-black text-4xl font-playfair-display font-medium text-center`}
+              className={`text-black text-4xl font-playfair-display font-semibold text-center`}
               variants={revealItem}
               transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
             >
@@ -629,7 +629,7 @@ export default function Home() {
             variants={staggerContainer}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            {events.map((event, index) => (
+            {events.slice(0, 3).map((event, index) => (
               <motion.div
                 className={"p-3 grid gap-2  font-inter" }
                 key={index}

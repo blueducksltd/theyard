@@ -1,6 +1,6 @@
 "use client";
 // import { Lato_Font, PlayFair } from '@/app/v2/page';
-import {  Mail,  MapPin, Phone } from 'lucide-react';
+import { Mail, MapPin, Phone } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -13,18 +13,22 @@ export default function Footer() {
     const pathname = usePathname();
     const [bgColor, setBgColor] = useState<string>("");
 
-    
+
     return (
         <footer className={`relative`}>
             <div
-                className="absolute h-20 w-full left-0 -top-4 md:-top-10 -translate-y-1/2"
+                className="absolute h-45 w-full left-0 -top-15 -translate-y-1/2 flex overflow-x-auto overflow-y-hidden"
                 style={{
-                    background: "url(/images/trees_design_footer.png) top / contain repeat-x",
+                    // background: "url(/images/trees_design_footer.png) top / cover",
                 }}
-            ></div>
+            >
+                <Image src={"/images/trees_design_footer.svg"} alt='' width={1000} height={1000} className='object-cover shrink-0' />
+                <Image src={"/images/trees_design_footer.svg"} alt='' width={1000} height={1000} className='object-cover shrink-0' />
+
+            </div>
 
 
-            <div className="bg-primaryGreen p-7  md:p-14  grid  md:gap-10 text-white relative">
+            <div className="bg-primaryGreen p-7  md:p-14  grid  md:gap-5 text-white relative">
                 <div className='flex items-center justify-center flex-col'>
                     <h1 className={`text-primaryBrown text-xl font-playfair-display font-medium text`}>
                         Subscribe to our Newsletter
@@ -52,9 +56,9 @@ export default function Footer() {
                 </div>
 
                 <div className='pt-10'>
-                    <div className='grid grid-cols-1 md:grid-cols-5 gap-10 py-10'>
+                    <div className='grid grid-cols-1 md:grid-cols-5 gap-5 py-10 text-sm'>
 
-                        <div className='relative flex flex-col gap-5 grid-cols-1 md:col-span-2 pr-20'>
+                        <div className='relative flex flex-col gap-5 grid-cols-1 md:col-span-2 md:pr-10'>
                             <h1 className={`font-semibold text-xl  relative font-playfair-display w-fit text-primaryBrown md:text-white`}>Quick Introduction:
                                 <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain right-0 absolute" />
 
@@ -66,7 +70,7 @@ export default function Footer() {
 
                         </div>
 
-                        <div className='flex flex-col gap-5'>
+                        <div className='flex flex-col gap-5 text-sm'>
                             <p className={`font-lato text-primaryBrown text-sm font-light relative w-fit uppercase`}>
                                 Menus
                                 {/* <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain right-0 absolute" /> */}
@@ -88,7 +92,7 @@ export default function Footer() {
 
                         </div>
 
-                        <div className='flex flex-col gap-5'>
+                        <div className='flex flex-col gap-5 text-sm'>
                             <p className={`font-lato text-primaryBrown text-sm font-light relative w-fit uppercase`}>
                                 Contact us
                                 {/* <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain right-0 absolute" /> */}
@@ -126,7 +130,7 @@ export default function Footer() {
 
                         </div>
 
-                        <div className='flex flex-col gap-5'>
+                        <div className='flex flex-col gap-5 text-sm'>
                             <p className={`font-lato text-primaryBrown text-sm font-light relative w-fit uppercase`}>
                                 Social Links
                                 {/* <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain right-0 absolute" /> */}
@@ -177,7 +181,7 @@ export default function Footer() {
 
                     </div>
 
-                    <hr />
+                    <hr className='opacity-10' />
                     <div className={`flex flex-col md:flex-row md:items-center md:justify-between mt-10 gap-6 font-lato`}>
                         <Image src={"/images/logo.svg"} width={80} height={80} alt='Logo' className='object-contain' />
                         <div className='flex flex-col  md:justify-center md:items-center text-sm gap-3'>

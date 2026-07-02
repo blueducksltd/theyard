@@ -172,7 +172,7 @@ export const ModalContent = React.memo(function ModalContent({
 
     const totalPrice = selectedPackage.price + totalSelectedFun;
     const { setSelectedPackage } = useBookingStore();
-    const router = useRouter() 
+    const router = useRouter()
     return (
         <>
             <div
@@ -203,11 +203,11 @@ export const ModalContent = React.memo(function ModalContent({
                     <h1 className="font-bold text-primaryGreen">{selectedPackage.name}</h1>
                     <div className="gap-3 flex items-center">
                         <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                         <b>{formatNaira(totalPrice)}</b> /Person
-                    </span>
-                   <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                       {selectedPackage.maxPersons} {selectedPackage.maxPersons > 1 ? "Persons"  : "Person"}  <b>Max</b> 
-                    </span>
+                            <b>{formatNaira(totalPrice)}</b> /Person
+                        </span>
+                        <span className="text-xs  p-2 bg-lightBrown text-black">
+                            {selectedPackage.maxPersons} {selectedPackage.maxPersons > 1 ? "slots" : "slot"}  <b>left</b>
+                        </span>
                     </div>
                 </div>
 
@@ -364,8 +364,8 @@ export const AddMoreFun = React.memo(function AddMoreFun({
 
     return (
         <div
-            className={`bg-white p-5 space-y-3 transition-all duration-300 ${show
-                ? "opacity-100 scale-100 w-100 md:w-120 min-h-100"
+            className={`bg-white p-5 space-y-3 transition-all duration-300 flex flex-col justify-between ${show
+                ? "opacity-100 scale-100 w-100 md:w-140 min-h-120"
                 : "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none"
                 }`}
         >
@@ -408,14 +408,16 @@ export const AddMoreFun = React.memo(function AddMoreFun({
                     return (
                         <div
                             key={item.title}
-                            className="flex cursor-pointer gap-3.5 p-3.5 bg-white border border-neutral-200 max-w-140"
-                            onClick={() =>  handleToggleDecoration(item)}
+                            className={`flex cursor-pointer gap-3.5 p-3.5 bg-white border ${selected ? "border-primaryGreen" : "border-neutral-200"} max-w-140`}
+                            onClick={() => handleToggleDecoration(item)}
                         >
                             <div
-                                className={`shrink-0 w-5.5 h-5.5 rounded-full flex items-center justify-center ${selected ? "bg-primaryGreen text-white" : "outline text-primaryGreen"
+                                className={`shrink-0 w-4 h-4 rounded-full flex items-center justify-center ${selected ? "bg-primaryGreen text-white" : "outline text-primaryGreen"
                                     }`}
                             >
-                                <Check size={13} aria-hidden />
+
+                                {selected ? <Check size={13} aria-hidden /> : null}
+                                {/* <Check size={13} aria-hidden /> */}
                             </div>
 
                             <div className="flex items-center w-full gap-5">
@@ -508,7 +510,7 @@ export const PackageCard = React.memo(function PackageCard({
     const shouldReduceMotion = useReducedMotion();
 
     const cardReveal = {
-        hidden: { opacity: 0, y: 16  },
+        hidden: { opacity: 0, y: 16 },
         visible: { opacity: 1, y: 0 },
     };
 
@@ -537,13 +539,13 @@ export const PackageCard = React.memo(function PackageCard({
                     <h1 className="font-bold text-primaryGreen">{pkg.name}</h1>
                     {
                         isBooking ? <div className="w-full flex items-center gap-3 font-lato">
-                             <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
+                            <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
                                 <b className="font-playfair-display text-sm">{formatNaira(pkg.maxPersons)}</b>/Person
                             </span>
                             <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
                                 {pkg.maxPersons} {pkg.maxPersons === 1 ? "Person" : "Persons"} <b className="font-playfair-displa text-smy">Max</b>
                             </span>
-                           
+
                         </div> : <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
                             Starting at <b className="font-playfair-display">{formatNaira(pkg.price)}</b>
                         </span>
@@ -551,6 +553,7 @@ export const PackageCard = React.memo(function PackageCard({
                 </div>
 
                 <p className="font-lato text-sm text-[#8C8273] italic">Includes</p>
+
                 <div className="grid gap-2 my-5 text-[#8C8273]">
                     {pkg.includes.map((include) => (
                         <div key={include} className="flex items-center gap-2">
@@ -563,7 +566,10 @@ export const PackageCard = React.memo(function PackageCard({
                         <p className="font-lato text-sm">Learn more...</p>
                     </div>
                 </div>
+
+
             </div>
+
         </motion.div>
     );
 });
