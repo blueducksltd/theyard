@@ -6,6 +6,8 @@ import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import AddOn from "@/models/AddOn";
 import { CreateAddOnDTO, CreateAddOnInput, SafeAddOn, sanitizeAddOn } from "@/types/AddOn";
+import { uploadImage } from "@/lib/vercel";
+import { z } from "zod";
 
 export const POST = errorHandler(async (request: NextRequest) => {
   await connectDB();
@@ -16,8 +18,29 @@ export const POST = errorHandler(async (request: NextRequest) => {
     throw APIError.Forbidden("No permission to access this endpoint");
   }
 
-  const body: CreateAddOnInput = await request.json();
-  const data = CreateAddOnDTO.parse(body);
+  const contentType = request.headers.get("content-type") ?? "";
+
+  let body: CreateAddOnInput;
+  let imageUrl: string | undefined;
+
+  if (contentType.includes("multipart/form-data")) {
+    const form = await request.formData();
+    const file = form.get("image") as File | null;
+
+    imageUrl = file ? await uploadImage(file) : undefined;
+
+    body = {
+      name: form.get("name") as string,
+      category: form.get("category") as CreateAddOnInput["category"],
+      description: (form.get("description") as string | null) || undefined,
+      price: form.get("price") ? z.coerce.number().parse(form.get("price")) : undefined,
+      pricePerMin: form.get("pricePerMin") ? z.coerce.number().parse(form.get("pricePerMin")) : undefined,
+    };
+  } else {
+    body = await request.json();
+  }
+
+  const data = CreateAddOnDTO.parse({ ...body, imageUrl });
 
   const newAddOn = await AddOn.create(data);
   const sanitized = sanitizeAddOn(newAddOn);
