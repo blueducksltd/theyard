@@ -10,11 +10,13 @@ import { startOfDay, endOfDay } from "date-fns";
 const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
   {
     customer: { type: Types.ObjectId, ref: "Customer", required: true },
-    space: { type: Types.ObjectId, ref: "Space", required: true },
+    space: { type: Types.ObjectId, ref: "Space" },
     event: { type: Types.ObjectId, ref: "Event" },
     package: { type: Types.ObjectId, ref: "Package", required: true },
     eventDate: { type: Date, required: true },
     guestCount: { type: Number, required: true },
+    time: { type: String },
+    addon: [{ type: String }],
     status: { type: String, enum: ["pending", "confirmed", "cancelled"], default: "pending" },
     totalPrice: { type: Number, required: true },
   },

@@ -12,11 +12,13 @@ import { IPackage, SafePackage, sanitizePackage } from "./Package";
 // -----------------------------
 export interface IBooking extends Document, IBookingMethods {
   customer: ICustomer["id"];
-  space: ISpace["id"];
+  space?: ISpace["id"];
   event?: IEvent["id"];
   package: IPackage["id"];
   eventDate: Date;
   guestCount: number;
+  time?: string;
+  addon?: string[];
   status: "pending" | "confirmed" | "cancelled";
   totalPrice: number;
   createdAt: Date;
@@ -52,6 +54,8 @@ export type SafeBooking = {
   id: string;
   eventDate: Date;
   guestCount: number;
+  time?: string;
+  addon?: string[];
   status: string;
   totalPrice: number;
   customer: SafeCustomer | null;
@@ -67,6 +71,8 @@ export function sanitizeBooking(booking: IBooking): SafeBooking {
     id: booking.id,
     eventDate: booking.eventDate,
     guestCount: booking.guestCount,
+    time: booking.time,
+    addon: booking.addon,
     status: booking.status,
     totalPrice: booking.totalPrice,
     customer: booking.customer ? sanitizeCustomer(booking.customer) : null,
@@ -120,19 +126,12 @@ export const CreateBookingDto = z.object({
   guestCount: z.coerce.number({
     error: "field `guestCount` is required",
   }).min(1),
-  spaceId: z.string({
-    error: "field `spaceId` is required",
-  }),
   packageId: z.string({
     error: "field `packageId` is required",
   }),
-  eventTitle: z.string({
-    error: "field `eventTitle` is required",
-  }),
-  // eventType: z.string(),
+  time: z.string().optional(),
+  addon: z.array(z.string()).optional(),
   eventDescription: z.string().optional(),
-  public: z.boolean().optional().default(false),
-  imagesUrls: z.array(z.string().url()).optional(),
 });
 
 export const UpdateBookingDto = z.object({
@@ -164,9 +163,9 @@ export const UpdateBookingDto = z.object({
     )
     .optional(),
   guestCount: z.coerce.number().optional(),
-  spaceId: z.string().optional(),
   packageId: z.string().optional(),
-  eventTitle: z.string().optional(),
+  time: z.string().optional(),
+  addon: z.array(z.string()).optional(),
   eventType: z
     .enum(["picnics", "birthdays", "weddings", "corporate", "seasonal"], {
       error:
@@ -174,7 +173,6 @@ export const UpdateBookingDto = z.object({
     })
     .optional(),
   eventDescription: z.string().optional(),
-  public: z.boolean().optional().default(false).optional(),
   status: z
     .enum(["pending", "confirmed", "cancelled"], {
       error: "field `status` is required and must be one of pending,",

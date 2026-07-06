@@ -6,11 +6,10 @@ import { errorHandler } from "@/lib/errors/ErrorHandler";
 import { sendBookingEmail } from "@/lib/mailer";
 import { sendBookingWhatsApp } from "@/lib/whatsapp";
 import { sendNotification } from "@/lib/notification";
-import { uploadImage } from "@/lib/vercel";
 import Booking from "@/models/Booking";
 import Customer from "@/models/Customer";
 import Package from "@/models/Package";
-import Space from "@/models/Space";
+import AddOn from "@/models/AddOn";
 import {
   CreateBookingDto,
   CreateBookingInput,
@@ -30,46 +29,45 @@ export const POST = errorHandler(async (request: NextRequest) => {
   await connectDB();
 
   const contentType = request.headers.get("content-type") ?? "";
-  if (!contentType.includes("multipart/form-data")) {
-    throw APIError.BadRequest("Content-Type must be multipart/form-data");
+  const isMultipart = contentType.includes("multipart/form-data");
+  const isJson = contentType.includes("application/json");
+
+  let data: Partial<CreateBookingInput> = {};
+
+  if (isMultipart) {
+    const form = await request.formData();
+
+    data = {
+      firstName: form.get("firstName") as string,
+      lastName: form.get("lastName") as string,
+      email: form.get("email") as CreateBookingInput["email"],
+      phone: form.get("phone") as CreateBookingInput["phone"],
+      date: form.get("date") as CreateBookingInput["date"],
+      guestCount: Number(form.get("guestCount")) as CreateBookingInput["guestCount"],
+      packageId: form.get("packageId") as CreateBookingInput["packageId"],
+      time: form.get("time") as CreateBookingInput["time"] ?? undefined,
+      addon: form.getAll("addon").map((item) => item as string) as CreateBookingInput["addon"],
+      eventDescription: form.get(
+        "eventDescription"
+      ) as CreateBookingInput["eventDescription"] ?? undefined,
+    };
+  } else if (isJson) {
+    const body = await request.json();
+    data = {
+      firstName: body.firstName,
+      lastName: body.lastName,
+      email: body.email,
+      phone: body.phone,
+      date: body.date,
+      guestCount: body.guestCount,
+      packageId: body.packageId,
+      time: body.time,
+      addon: Array.isArray(body.addon) ? body.addon : body.addon ? [body.addon] : undefined,
+      eventDescription: body.eventDescription,
+    };
+  } else {
+    throw APIError.BadRequest("Content-Type must be multipart/form-data or application/json");
   }
-
-  const form = await request.formData();
-  const images = form.getAll("images") as File[];
-
-  if (images.length > 5) {
-    throw APIError.BadRequest(
-      "You can only upload a maximum of 5 images at once",
-    );
-  }
-
-  const pblc = form.get("public") as string; //public
-  const _public = pblc === "true" ? true : false;
-
-  const data: Partial<CreateBookingInput> = {
-    firstName: form.get("firstName") as string,
-    lastName: form.get("lastName") as string,
-    email: form.get("email") as CreateBookingInput["email"],
-    phone: form.get("phone") as CreateBookingInput["phone"],
-    date: form.get("date") as CreateBookingInput["date"],
-    guestCount: Number(form.get("guestCount")) as CreateBookingInput["guestCount"],
-    spaceId: form.get("spaceId") as CreateBookingInput["spaceId"],
-    packageId: form.get("packageId") as CreateBookingInput["packageId"],
-    eventTitle: form.get("eventTitle") as CreateBookingInput["eventTitle"],
-    // eventType: form.get("eventType") as CreateBookingInput["eventType"],
-    eventDescription: form.get(
-      "eventDescription"
-    ) as CreateBookingInput["eventDescription"] ?? undefined,
-    public: _public,
-    imagesUrls: [],
-  };
-
-  data.imagesUrls = await Promise.all(
-    images.map(async (image) => {
-      const imageUrl = await uploadImage(image);
-      return imageUrl;
-    }),
-  );
 
   // Validate with Zod
   const body = CreateBookingDto.parse(data);
@@ -138,21 +136,6 @@ export const POST = errorHandler(async (request: NextRequest) => {
     throw APIError.BadRequest(PAST_DATE_ERROR_MESSAGE);
   }
 
-  // Check double booking (space already booked for this day)
-  const isBooked = await Booking.isDoubleBooked(
-    body.spaceId,
-    bookingDate, // Use the parsed date object
-  );
-  if (isBooked)
-    throw new APIError(
-      200,
-      "The selected space is already booked for the specified date.",
-    );
-
-  // Validate space and package
-  const space = await Space.findById(body.spaceId);
-  if (!space) throw APIError.NotFound("Space not found");
-
   const _package = await Package.findById(body.packageId);
   if (!_package) throw APIError.NotFound("Package not found");
 
@@ -207,15 +190,23 @@ export const POST = errorHandler(async (request: NextRequest) => {
     totalPrice += extraGuests * extraGuestFee;
   }
 
+  // Add selected add-on prices
+  if (body.addon && body.addon.length > 0) {
+    const addOnDocs = await AddOn.find({ _id: { $in: body.addon } });
+    const addOnTotal = addOnDocs.reduce((sum, addOn) => {
+      return sum + (addOn.price ?? 0);
+    }, 0);
+    totalPrice += addOnTotal;
+  }
 
   // Create booking (day-based, no times)
   const booking = await Booking.create({
     customer: customer.id,
-    space: space.id,
-    // event: event.id,
     package: _package.id,
-    eventDate: bookingDate, // Use the parsed date object
+    eventDate: bookingDate,
     guestCount,
+    time: body.time,
+    addon: body.addon,
     status: "pending",
     totalPrice,
   });
@@ -244,9 +235,6 @@ export const POST = errorHandler(async (request: NextRequest) => {
           email: customer.email,
           phone: customer.phone,
         },
-        space: {
-          name: space.name,
-        },
         package: {
           name: _package.name,
           price: _package.price,
@@ -255,6 +243,8 @@ export const POST = errorHandler(async (request: NextRequest) => {
         },
         eventDate: booking.eventDate,
         guestCount: booking.guestCount,
+        time: booking.time,
+        addon: booking.addon,
         status: booking.status,
         totalPrice: booking.totalPrice,
       },
