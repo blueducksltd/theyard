@@ -120,6 +120,16 @@ export default function BookingPage() {
     .concat(show.package.value?.selectedAddon?.map(item => ({ title: item.name, subtitle: Number((item.price ?? item.pricePerMin ?? 0) * item.quantity) })) ?? [])
     .reduce((sum, item) => sum + item.subtitle, 0);
 
+  function formatDate(dateString: string) {
+    const date = new Date(dateString);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
   const handleSubmit = async () => {
     if (!show.package.value) return toast("Please select a package.", { type: "error" });
     if (!inputs.firstname.trim()) return toast("Please enter your first name.", { type: "error" });
@@ -129,21 +139,24 @@ export default function BookingPage() {
     if (!show.date.value) return toast("Please select an event date.", { type: "error" });
     if (!show.time.value) return toast("Please select an event time.", { type: "error" });
     if (!inputs.guest || inputs.guest < 1) return toast("Please enter the number of guests.", { type: "error" });
+    const formatted = new Intl.DateTimeFormat("en-GB")
+      .format(new Date(show.date.value))
+      .replace(/\//g, "-");
     const data = {
       firstName: inputs.firstname,
       lastName: inputs.lastname,
       email: inputs.email,
       phone: inputs.phonenumber,
-      date: show.date.value,
+      date: formatDate(show.date.value),
       time: show.time.value,
       guestCount: inputs.guest,
       packageId: show.package.value.id,
       addon: show.package.value.selectedAddon.map(item => item.id),
       eventDescription: inputs.note
     }
-
+    console.log(data);
     try {
-      let req = await axios.post("/api/admin/bookings", data);
+      let req = await axios.post("/bookings", data);
       setLoading(true);
       console.log(req);
     } catch (err) {
