@@ -13,6 +13,16 @@ export interface IGallery extends Document {
   category: string;
 }
 
+export interface IGalleryClient {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  event: IEvent["id"] | null;
+  mediaDate: Date;
+  category: string;
+}
+
 // Instance methods
 export interface IGalleryMethods {
   getGalleryOwner(): Promise<ICustomer | null>;

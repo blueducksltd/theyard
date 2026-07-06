@@ -9,10 +9,15 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { IPackageClient } from "@/types/Package";
+import axios from "@/util/axios";
+import Loading from "@/components/v2/Loading";
+import { AddOnCategory, IAddOnModelClient } from "@/types/AddOn";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
 export interface Package {
+    id: string;
     image: string;
     name: string;
     price: number;
@@ -24,7 +29,7 @@ interface FunItem {
     image: string;
     title: string;
     price: number;
-    category: "Decoration" | "Food" | "Games";
+    category: AddOnCategory;
 }
 
 export interface SelectedFun extends FunItem {
@@ -35,112 +40,19 @@ export interface PackageWithFun extends Package {
     selectedFun: SelectedFun[];
 }
 
-// ── Static Data ────────────────────────────────────────────────────────
+export interface IPackageFun extends IPackageClient {
+    selectedAddon: SelectedAddon[];
+}
 
-export const PACKAGES: Package[] = [
-    {
-        image: "https://images.pexels.com/photos/12896324/pexels-photo-12896324.jpeg",
-        name: "Romantic Date Night",
-        price: 45000,
-        includes: [
-            "Private candlelit table setup",
-            "Rose petals & fairy lights",
-            "3-course gourmet dinner",
-            "Complimentary wine bottle",
-            "Professional photography (30 mins)",
-            "Personalized love note",
-        ],
-        maxPersons: 10
-    },
-    {
-        image: "https://images.pexels.com/photos/2255935/pexels-photo-2255935.jpeg",
-        name: "Birthday Celebration",
-        price: 80000,
-        includes: [
-            "Themed balloon & backdrop decor",
-            "Custom birthday cake",
-            "Buffet setup for 10 guests",
-            "DJ & sound system",
-            "Photo booth with props",
-            "Party favors for guests",
-        ],
-        maxPersons: 20
-    },
-    {
-        image: "https://images.pexels.com/photos/1191710/pexels-photo-1191710.jpeg",
-        name: "Marriage Proposal",
-        price: 20000,
-        includes: [
-            "Exclusive venue reservation",
-            "Luxury floral arch arrangement",
-            "Live musician or string quartet",
-            "Champagne toast for two",
-            "Videography coverage",
-            "Dinner reservation post-proposal",
-        ],
-        maxPersons: 13
-    },
-    {
-        image: "https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg",
-        name: "Garden Picnic",
-        price: 35000,
-        includes: [
-            "Styled picnic blanket & cushions",
-            "Gourmet picnic basket for two",
-            "Fresh fruit platter",
-            "Sparkling juice & mocktails",
-            "Bluetooth speaker",
-            "Board games & playing cards",
-        ],
-        maxPersons: 11
-    },
-    {
-        image: "https://images.pexels.com/photos/587741/pexels-photo-587741.jpeg",
-        name: "Private Dining Experience",
-        price: 150000,
-        includes: [
-            "Exclusive restaurant buyout",
-            "Personal chef & waiter",
-            "5-course tasting menu",
-            "Premium wine pairing",
-            "Custom table settings",
-            "Valet parking for guests",
-        ],
-        maxPersons: 10
-    },
-    {
-        image: "https://images.pexels.com/photos/226737/pexels-photo-226737.jpeg",
-        name: "Anniversary Deluxe",
-        price: 95000,
-        includes: [
-            "Luxury hotel suite decoration",
-            "Red rose pathway",
-            "Couples massage voucher",
-            "7-course private dinner",
-            "Overnight stay package",
-            "Breakfast in bed service",
-        ],
-        maxPersons: 1
-    },
-];
+export interface SelectedAddon extends IAddOnModelClient {
+    quantity: number;
+}
 
-const FUN_DATA: FunItem[] = [
-    { image: "/images/balloons.jpg", title: "Party Balloons", price: 15, category: "Decoration" },
-    { image: "/images/banner.jpg", title: "Birthday Banner", price: 20, category: "Decoration" },
-    { image: "/images/flowers.jpg", title: "Flower Bouquet", price: 35, category: "Decoration" },
-    { image: "/images/lights.jpg", title: "Fairy Lights", price: 25, category: "Decoration" },
-    { image: "/images/pizza.jpg", title: "Pizza", price: 50, category: "Food" },
-    { image: "/images/burger.jpg", title: "Burger", price: 30, category: "Food" },
-    { image: "/images/cupcakes.jpg", title: "Cupcakes", price: 18, category: "Food" },
-    { image: "/images/drinks.jpg", title: "Soft Drinks", price: 12, category: "Food" },
-    { image: "/images/board-game.jpg", title: "Board Game", price: 40, category: "Games" },
-    { image: "/images/karaoke.jpg", title: "Karaoke", price: 60, category: "Games" },
-    { image: "/images/darts.jpg", title: "Dart Board", price: 28, category: "Games" },
-    { image: "/images/vr.jpg", title: "VR Experience", price: 120, category: "Games" },
-];
 
-const TABS: FunItem["category"][] = ["Decoration", "Food", "Games"];
-const QUANTITY_CATEGORIES = new Set<FunItem["category"]>(["Food", "Games"]);
+
+
+const TABS: FunItem["category"][] = ["decoration", "food", "game"];
+const QUANTITY_CATEGORIES = new Set<FunItem["category"]>(["food", "game"]);
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -151,28 +63,28 @@ export function formatNaira(value: number): string {
 // ── Sub-Components ─────────────────────────────────────────────────────
 
 interface ModalContentProps {
-    selectedPackage: PackageWithFun;
+    selectedPackage: IPackageFun;
     onClose: () => void;
-    onConfirmFun: (selectedFun: SelectedFun[]) => void;
+    onConfirmAddon: (selectedAddon: SelectedAddon[]) => void;
 }
 
 export const ModalContent = React.memo(function ModalContent({
     selectedPackage,
     onClose,
-    onConfirmFun,
+    onConfirmAddon,
 }: ModalContentProps) {
     const [showAddFun, setShowAddFun] = useState(false);
 
-    const totalSelectedFun = useMemo(() => {
-        return selectedPackage.selectedFun.reduce(
-            (sum, item) => sum + item.price * item.quantity,
+    const totalSelectedAddons = useMemo(() => {
+        return selectedPackage.selectedAddon.reduce(
+            (sum, item) => sum + (item.price ?? item.pricePerMin ?? 0) * item.quantity,
             0
         );
-    }, [selectedPackage.selectedFun]);
+    }, [selectedPackage.selectedAddon]);
 
-    const totalPrice = selectedPackage.price + totalSelectedFun;
+    const totalPrice = selectedPackage.price + totalSelectedAddons;
     const { setSelectedPackage } = useBookingStore();
-    const router = useRouter()
+    const router = useRouter();
     return (
         <>
             <div
@@ -183,7 +95,7 @@ export const ModalContent = React.memo(function ModalContent({
             >
                 <div className="h-40 relative">
                     <Image
-                        src={selectedPackage.image}
+                        src={selectedPackage.imageUrl}
                         fill
                         alt={selectedPackage.name}
                         className="object-cover object-center rounded"
@@ -206,15 +118,15 @@ export const ModalContent = React.memo(function ModalContent({
                             <b>{formatNaira(totalPrice)}</b> /Person
                         </span>
                         <span className="text-xs  p-2 bg-lightBrown text-black">
-                            {selectedPackage.maxPersons} {selectedPackage.maxPersons > 1 ? "slots" : "slot"}  <b>left</b>
+                            {selectedPackage.guestLimit} {selectedPackage.guestLimit > 1 ? "slots" : "slot"}  <b>left</b>
                         </span>
                     </div>
                 </div>
 
                 <p className="font-lato text-sm text-[#8C8273] italic">Includes</p>
                 <div className="grid gap-2 my-5 text-[#8C8273] h-30 overflow-auto text-sm">
-                    {selectedPackage.includes
-                        .concat(selectedPackage.selectedFun.map((item) => item.title))
+                    {selectedPackage.specs
+                        .concat(selectedPackage.selectedAddon.map((item) => item.name))
                         .map((include) => (
                             <div key={include} className="flex items-center gap-2">
                                 <BadgeCheck size={14} />
@@ -246,9 +158,10 @@ export const ModalContent = React.memo(function ModalContent({
 
             <AddMoreFun
                 show={showAddFun}
-                onClose={() => setShowAddFun(false)}
-                onConfirmFun={onConfirmFun}
-                packageSelectedFun={selectedPackage.selectedFun}
+                onClose={onClose}
+                closeFun={() => setShowAddFun(false)}
+                onConfirmAddon={onConfirmAddon}
+                packageSelectedFun={selectedPackage.selectedAddon}
             />
         </>
     );
@@ -259,21 +172,24 @@ export const ModalContent = React.memo(function ModalContent({
 interface AddMoreFunProps {
     show: boolean;
     onClose: () => void;
-    onConfirmFun: (selectedFun: SelectedFun[]) => void;
-    packageSelectedFun: SelectedFun[];
+    onConfirmAddon: (selectedAddon: SelectedAddon[]) => void;
+    closeFun: () => void;
+    packageSelectedFun: SelectedAddon[];
 }
 
 export const AddMoreFun = React.memo(function AddMoreFun({
     show,
     onClose,
-    onConfirmFun,
+    onConfirmAddon,
+    closeFun,
     packageSelectedFun,
 }: AddMoreFunProps) {
     const [selectedTab, setSelectedTab] = useState<FunItem["category"]>(TABS[0]);
+    const [addons, setAddons] = useState<IAddOnModelClient[]>([]);
     const [selections, setSelections] = useState<Map<string, number>>(() => {
         const map = new Map<string, number>();
         for (const item of packageSelectedFun) {
-            map.set(item.title, item.quantity);
+            map.set(item.name, item.quantity);
         }
         return map;
     });
@@ -287,7 +203,7 @@ export const AddMoreFun = React.memo(function AddMoreFun({
         if (show && !prevShowRef.current) {
             const map = new Map<string, number>();
             for (const item of packageSelectedFun) {
-                map.set(item.title, item.quantity);
+                map.set(item.name, item.quantity);
             }
             setSelections(map);
             setSelectedTab(TABS[0]);
@@ -296,8 +212,8 @@ export const AddMoreFun = React.memo(function AddMoreFun({
     }, [show, packageSelectedFun]);
 
     const filteredData = useMemo(
-        () => FUN_DATA.filter((item) => item.category === selectedTab),
-        [selectedTab]
+        () => addons.filter((item) => item.category === selectedTab),
+        [selectedTab, addons]
     );
 
     const isQuantityBased = useCallback(
@@ -315,52 +231,64 @@ export const AddMoreFun = React.memo(function AddMoreFun({
         [selections]
     );
 
-    const handleToggleDecoration = useCallback((item: FunItem) => {
+    const handleToggleDecoration = useCallback((item: IAddOnModelClient) => {
         setSelections((prev) => {
             const next = new Map(prev);
-            const current = next.get(item.title);
+            const current = next.get(item.name) ?? 0;
             if (current && current > 0) {
-                next.delete(item.title);
+                next.delete(item.name);
             } else {
-                next.set(item.title, 1);
+                next.set(item.name, 1);
             }
             return next;
         });
     }, []);
 
-    const handleIncrement = useCallback((item: FunItem) => {
+    const handleIncrement = useCallback((item: IAddOnModelClient) => {
         setSelections((prev) => {
             const next = new Map(prev);
-            const current = next.get(item.title) ?? 0;
-            next.set(item.title, current + 1);
+            const current = next.get(item.name) ?? 0;
+            next.set(item.name, current + 1);
             return next;
         });
     }, []);
 
-    const handleDecrement = useCallback((item: FunItem) => {
+    const handleDecrement = useCallback((item: IAddOnModelClient) => {
         setSelections((prev) => {
             const next = new Map(prev);
-            const current = next.get(item.title) ?? 0;
+            const current = next.get(item.name) ?? 0;
             if (current <= 1) {
-                next.delete(item.title);
+                next.delete(item.name);
             } else {
-                next.set(item.title, current - 1);
+                next.set(item.name, current - 1);
             }
             return next;
         });
     }, []);
 
     const handleConfirm = useCallback(() => {
-        const selected: SelectedFun[] = [];
-        for (const item of FUN_DATA) {
-            const qty = selections.get(item.title) ?? 0;
+        const selected: SelectedAddon[] = [];
+        for (const item of addons) {
+            const qty = selections.get(item.name) ?? 0;
             if (qty > 0) {
-                selected.push({ ...item, quantity: qty });
+                selected.push({ ...item, quantity: qty, id: item.id });
             }
         }
-        onConfirmFun(selected);
-        onClose();
-    }, [selections, onConfirmFun, onClose]);
+        onConfirmAddon(selected);
+        closeFun();
+    }, [addons, selections, onConfirmAddon, closeFun]);
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await axios.get("../api/admin/addons");
+
+                setAddons(res.data.data.addOns);
+            } catch (err) {
+                console.error("Error fetching add-ons:", err);
+            }
+        })()
+    }, []);
 
     return (
         <div
@@ -377,7 +305,7 @@ export const AddMoreFun = React.memo(function AddMoreFun({
                     type="button"
                     aria-label="Close"
                     className="h-9 w-9 flex items-center justify-center cursor-pointer shadow-[0px_4px_13.7px_0px_rgba(0,0,0,0.1)]"
-                    onClick={onClose}
+                    onClick={closeFun}
                 >
                     <X size={18} />
                 </button>
@@ -388,7 +316,7 @@ export const AddMoreFun = React.memo(function AddMoreFun({
                     <button
                         key={tab}
                         type="button"
-                        className={`flex items-center justify-center text-sm font-sen cursor-pointer ${tab === selectedTab
+                        className={`flex items-center justify-center text-sm font-sen cursor-pointer capitalize ${tab === selectedTab
                             ? "bg-primaryBrown text-lightBrown"
                             : "bg-white/30 text-primaryGreen"
                             }`}
@@ -402,12 +330,13 @@ export const AddMoreFun = React.memo(function AddMoreFun({
             <div className="h-60 overflow-auto space-y-5 scrollbar-hide">
                 {filteredData.map((item) => {
                     const quantityBased = isQuantityBased(item.category);
-                    const selected = isSelected(item.title);
-                    const quantity = getQuantity(item.title);
+                    const selected = isSelected(item.name);
+                    const quantity = getQuantity(item.name);
+                    const displayPrice = item.price ?? item.pricePerMin ?? 0;
 
                     return (
                         <div
-                            key={item.title}
+                            key={item.name}
                             className={`flex cursor-pointer gap-3.5 p-3.5 bg-white border ${selected ? "border-primaryGreen" : "border-neutral-200"} max-w-140`}
                             onClick={() => handleToggleDecoration(item)}
                         >
@@ -424,7 +353,7 @@ export const AddMoreFun = React.memo(function AddMoreFun({
                                 <div className="shrink-0 w-18 h-18 overflow-hidden relative">
                                     <Image
                                         src="https://images.pexels.com/photos/4989348/pexels-photo-4989348.jpeg"
-                                        alt={item.title}
+                                        alt={item.name}
                                         fill
                                         className="object-cover object-center"
                                         sizes="72px"
@@ -433,14 +362,14 @@ export const AddMoreFun = React.memo(function AddMoreFun({
 
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[15px] font-medium font-playfair text-primaryGreen truncate m-0">
-                                        {item.title}
+                                        {item.name}
                                     </p>
                                     <p className="text-[13px] text-neutral-400 m-0 font-lato">
                                         Beautiful balloon setup
                                     </p>
                                     {quantityBased && (
                                         <p className="text-sm font-bold text-primaryGreen whitespace-nowrap m-0">
-                                            {formatNaira(item.price)}
+                                            {formatNaira(displayPrice)}
                                         </p>
                                     )}
                                 </div>
@@ -471,7 +400,7 @@ export const AddMoreFun = React.memo(function AddMoreFun({
                                         </div>
                                     ) : (
                                         <p className="text-sm font-bold text-primaryGreen whitespace-nowrap m-0">
-                                            {formatNaira(item.price)}
+                                            {formatNaira(displayPrice)}
                                         </p>
                                     )}
                                 </div>
@@ -495,7 +424,7 @@ export const AddMoreFun = React.memo(function AddMoreFun({
 // ── Package Card ───────────────────────────────────────────────────────
 
 interface PackageCardProps {
-    pkg: PackageWithFun;
+    pkg: IPackageFun;
     index: number;
     onSelect: (index: number) => void;
 }
@@ -508,7 +437,6 @@ export const PackageCard = React.memo(function PackageCard({
     const pathname = usePathname()
     const isBooking = pathname.includes('booking');
     const shouldReduceMotion = useReducedMotion();
-
     const cardReveal = {
         hidden: { opacity: 0, y: 16 },
         visible: { opacity: 1, y: 0 },
@@ -527,7 +455,7 @@ export const PackageCard = React.memo(function PackageCard({
             <div className="bg-white p-3 rounded border border-primaryBrown">
                 <div className="h-50 relative">
                     <Image
-                        src={pkg.image}
+                        src={pkg.imageUrl}
                         fill
                         alt={pkg.name}
                         className="object-cover object-center rounded"
@@ -540,10 +468,10 @@ export const PackageCard = React.memo(function PackageCard({
                     {
                         isBooking ? <div className="w-full flex items-center gap-3 font-lato">
                             <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                                <b className="font-playfair-display text-sm">{formatNaira(pkg.maxPersons)}</b>/Person
+                                <b className="font-playfair-display text-sm">{formatNaira(pkg.guestLimit)}</b>/Person
                             </span>
                             <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                                {pkg.maxPersons} {pkg.maxPersons === 1 ? "Person" : "Persons"} <b className="font-playfair-displa text-smy">Max</b>
+                                {pkg.guestLimit} {pkg.guestLimit === 1 ? "Person" : "Persons"} <b className="font-playfair-display text-sm">Max</b>
                             </span>
 
                         </div> : <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
@@ -554,16 +482,16 @@ export const PackageCard = React.memo(function PackageCard({
 
                 <p className="font-lato text-sm text-[#8C8273] italic">Includes</p>
 
-                <div className="grid gap-2 my-5 text-[#8C8273]">
-                    {pkg.includes.map((include) => (
-                        <div key={include} className="flex items-center gap-2">
-                            <BadgeCheck size={14} />
-                            <p className="font-lato text-sm">{include}</p>
+                <div className="grid gap-2 my-5 text-[#8C8273] h-20 overflow-auto">
+                    {pkg.specs.map((spec) => (
+                        <div className="flex items-start gap-1 mb-1" key={spec}>
+                            <BadgeCheck size={14} className="shrink-0 mt-0.5" />
+                            <p className="font-lato text-sm line-clamp-2">{spec}</p>
                         </div>
                     ))}
-                    <div className="flex items-center gap-2 text-primaryGreen">
-                        <BadgeCheck size={14} />
-                        <p className="font-lato text-sm">Learn more...</p>
+                    <div className="flex items-center gap-2 text-primaryGreen h-6">
+                        <BadgeCheck size={14} className="shrink-0" />
+                        <p className="font-lato text-sm truncate">Learn more...</p>
                     </div>
                 </div>
 
@@ -577,16 +505,14 @@ export const PackageCard = React.memo(function PackageCard({
 // ── Page ───────────────────────────────────────────────────────────────
 
 export default function PackagesPage() {
-    // Each package now carries its own selectedFun
-    const [packagesWithFun, setPackagesWithFun] = useState<PackageWithFun[]>(() =>
-        PACKAGES.map((p) => ({ ...p, selectedFun: [] }))
-    );
+    const [packages, setPackages] = useState<IPackageFun[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
 
     const selectedPackage =
-        selectedIndex !== null ? packagesWithFun[selectedIndex] : null;
+        selectedIndex !== null ? packages[selectedIndex] : null;
 
     const handleShowPackage = useCallback((index: number) => {
         setSelectedIndex(index);
@@ -598,18 +524,39 @@ export default function PackagesPage() {
     }, []);
 
     // Saves selectedFun back to the SPECIFIC package that is currently open
-    const handleSelectFun = useCallback(
-        (selectedFun: SelectedFun[]) => {
+    const handleSelectAddon = useCallback(
+        (selectedAddon: SelectedAddon[]) => {
             if (selectedIndex === null) return;
-            setPackagesWithFun((prev) => {
+            setPackages((prev) => {
                 const next = [...prev];
-                next[selectedIndex] = { ...next[selectedIndex], selectedFun };
+                next[selectedIndex] = { ...next[selectedIndex], selectedAddon };
                 return next;
             });
         },
         [selectedIndex]
     );
 
+    useEffect(() => {
+        (async () => {
+            try {
+                document.body.style.overflow = "hidden"; // Disable scrolling while loading
+
+                const packagesRes = await axios.get(`../api/packages`);
+                setPackages(packagesRes.data.data.packages.map((p: IPackageClient) => ({ ...p, selectedAddon: [] })));
+            } catch (err) {
+                console.error("Error fetching packages:", err);
+            } finally {
+                setLoading(false);
+                document.body.style.overflow = "auto"; // Disable scrolling while loading
+
+            }
+        })()
+    }, []);
+
+
+    if (loading) {
+        return <Loading />
+    }
     return (
         <div className="pb-20 md:pb-40">
             <Modal handleClose={handleCloseModal} isOpen={modalOpen}>
@@ -617,7 +564,7 @@ export default function PackagesPage() {
                     <ModalContent
                         selectedPackage={selectedPackage}
                         onClose={handleCloseModal}
-                        onConfirmFun={handleSelectFun}
+                        onConfirmAddon={handleSelectAddon}
                     />
                 )}
             </Modal>
@@ -630,7 +577,7 @@ export default function PackagesPage() {
             />
 
             <div className="p-5 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-5">
-                {packagesWithFun.map((pkg, index) => (
+                {packages.map((pkg, index) => (
                     <PackageCard
                         key={pkg.name}
                         pkg={pkg}

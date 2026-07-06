@@ -2,17 +2,19 @@
 import Modal from '@/components/v2/Modal';
 import { ArrowLeft, CalendarDays, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
-import React, { useCallback, useEffect, useState } from 'react';
-import { AddMoreFun, Package, PackageCard, PACKAGES, PackageWithFun, SelectedFun } from '../packages/page';
+import React, { useEffect, useState } from 'react';
+import { AddMoreFun, IPackageFun, PackageCard, SelectedAddon } from '../packages/page';
 import BookingCalendar from '@/components/booking/Calender';
 import { toast } from 'react-toastify';
 import { useBookingStore } from '@/store/bookingStore';
 import Link from 'next/link';
-
+import axios from '@/util/axios';
+import { IPackageClient } from '@/types/Package';
+import { motion } from "motion/react";
 type ShowState = {
   package: {
     show: boolean;
-    value: PackageWithFun | null;
+    value: IPackageFun | null;
   };
   time: {
     show: boolean;
@@ -20,7 +22,7 @@ type ShowState = {
   };
   fun: {
     show: boolean;
-    value: SelectedFun[];
+    value: SelectedAddon[];
   };
   date: {
     show: boolean;
@@ -28,26 +30,16 @@ type ShowState = {
   };
 };
 
-const PackageModalContent = ({ showModal, setSelectedPackage }: { showModal: boolean, setSelectedPackage: (selectedPackage: PackageWithFun) => void }) => {
-  const [packagesWithFun, setPackagesWithFun] = useState<PackageWithFun[]>(() =>
-    PACKAGES.map((p) => ({ ...p, selectedFun: [] }))
-  );
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
-  const handleShowPackage = useCallback((index: number) => {
-    setSelectedIndex(index);
-
-  }, []);
-
+const PackageModalContent = ({ packages, showModal, setSelectedPackage }: { packages: IPackageFun[], showModal: boolean, setSelectedPackage: (selectedPackage: IPackageFun) => void }) => {
   return <div
     className={`bg-white p-5 space-y-3 transition-all duration-300 ${showModal
       ? "opacity-100 scale-100 w-100 h-[70vh] md:w-full md:min-h-100"
       : "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none"
       } grid grid-cols-1 md:grid-cols-2 gap-4 h-100 overflow-auto`}>
 
-    {packagesWithFun.map((pkg, index) => (
+    {packages.map((pkg, index) => (
       <PackageCard
-        key={index}
+        key={pkg.name}
         pkg={pkg}
         index={index}
         onSelect={() => {
@@ -60,12 +52,15 @@ const PackageModalContent = ({ showModal, setSelectedPackage }: { showModal: boo
 
 export default function BookingPage() {
   const { selectedPackage, selectedDate } = useBookingStore()
+  const [packages, setPackages] = useState<IPackageFun[]>([]);
   const [show, setShow] = useState<ShowState>({
     package: { show: false, value: null },
     time: { show: false, value: "" },
     fun: { show: false, value: [] },
     date: { show: false, value: "" }
   });
+
+  const [loading, setLoading] = useState<boolean>(false)
 
   const [inputs, setInputs] = useState<{
     guest: number;
@@ -114,7 +109,7 @@ export default function BookingPage() {
   },
 
   ]
-  const setSelectedPackage = (selectedPackage: PackageWithFun) => {
+  const setSelectedPackage = (selectedPackage: IPackageFun) => {
 
     setShow(prev => ({ ...prev, package: { ...prev.package, value: selectedPackage, show: false } }));
 
@@ -122,10 +117,10 @@ export default function BookingPage() {
   }
 
   const total = pricing
-    .concat(show.package.value?.selectedFun?.map(item => ({ title: item.title, subtitle: Number(item.price * (item.quantity ?? 1)) })) ?? [])
+    .concat(show.package.value?.selectedAddon?.map(item => ({ title: item.name, subtitle: Number((item.price ?? item.pricePerMin ?? 0) * item.quantity) })) ?? [])
     .reduce((sum, item) => sum + item.subtitle, 0);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!show.package.value) return toast("Please select a package.", { type: "error" });
     if (!inputs.firstname.trim()) return toast("Please enter your first name.", { type: "error" });
     if (!inputs.lastname.trim()) return toast("Please enter your last name.", { type: "error" });
@@ -134,6 +129,28 @@ export default function BookingPage() {
     if (!show.date.value) return toast("Please select an event date.", { type: "error" });
     if (!show.time.value) return toast("Please select an event time.", { type: "error" });
     if (!inputs.guest || inputs.guest < 1) return toast("Please enter the number of guests.", { type: "error" });
+    const data = {
+      firstName: inputs.firstname,
+      lastName: inputs.lastname,
+      email: inputs.email,
+      phone: inputs.phonenumber,
+      date: show.date.value,
+      time: show.time.value,
+      guestCount: inputs.guest,
+      packageId: show.package.value.id,
+      addon: show.package.value.selectedAddon.map(item => item.id),
+      eventDescription: inputs.note
+    }
+
+    try {
+      let req = await axios.post("/api/admin/bookings", data);
+      setLoading(true);
+      console.log(req);
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false);
+    }
   };
 
 
@@ -147,19 +164,33 @@ export default function BookingPage() {
     }
   }, [])
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get('../api/packages');
+        setPackages(res.data.data.packages.map((p: IPackageClient) => ({ ...p, selectedAddon: [] })));
+      } catch (err) {
+        console.error('Error fetching packages:', err);
+      }
+    })()
+  }, [])
+
   return (
-    <div className='font-lato'>
-      <Modal isOpen={show.package.show} children={<PackageModalContent setSelectedPackage={setSelectedPackage} showModal={show.package.show} />} handleClose={() => {
+    <div className='font-lato pb-20 md:pb-20'>
+      <Modal isOpen={show.package.show} children={<PackageModalContent packages={packages} setSelectedPackage={setSelectedPackage} showModal={show.package.show} />} handleClose={() => {
         setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
       }} />
 
       <Modal isOpen={show.fun.show} children={<AddMoreFun onClose={() => {
         setShow(prev => ({ ...prev, fun: { ...prev.fun, show: false } }));
       }}
-        onConfirmFun={(selectedFun) => {
-          setShow(prev => ({ ...prev, package: { ...prev.package, value: prev.package.value ? { ...prev.package.value, selectedFun } : null } }));
+        closeFun={() => {
+          setShow(prev => ({ ...prev, fun: { ...prev.fun, show: false } }));
         }}
-        packageSelectedFun={show.package.value?.selectedFun || []}
+        onConfirmAddon={(selectedAddon) => {
+          setShow(prev => ({ ...prev, package: { ...prev.package, value: prev.package.value ? { ...prev.package.value, selectedAddon } : null } }));
+        }}
+        packageSelectedFun={show.package.value?.selectedAddon || []}
         show={show.fun.show} />}
         handleClose={() => {
           setShow(prev => ({ ...prev, fun: { ...prev.fun, show: false } }));
@@ -211,8 +242,8 @@ export default function BookingPage() {
                     return;
                   }
 
-                  if (Number(e.target.value) > show.package.value.maxPersons) {
-                    toast(`Guest exceeds max guest of ${show.package.value.maxPersons}.`, { type: "error" })
+                  if (Number(e.target.value) > show.package.value.guestLimit) {
+                    toast(`Guest exceeds max guest of ${show.package.value.guestLimit}.`, { type: "error" })
                     return;
                   }
                   setInputs(prev => ({ ...prev, guest: Number(e.target.value) }))
@@ -339,7 +370,7 @@ export default function BookingPage() {
           <div className={`px-5  space-y-3   grid grid-cols-2 text-sm font-lato`}>
             <p className="font-playfair font-bold text-lg text-primaryGreen">Pricing</p>
             <p className="font-playfair font-bold text-lg text-primaryGreen text-right">₦</p>
-            {pricing.concat(show.package.value?.selectedFun?.map(item => ({ title: item.title, subtitle: Number(item.price * (item.quantity ?? 1)) })) ?? []).map((item, index) => (
+            {pricing.concat(show.package.value?.selectedAddon?.map(item => ({ title: item.name, subtitle: Number((item.price ?? item.pricePerMin ?? 0) * item.quantity) })) ?? []).map((item, index) => (
               <React.Fragment key={index}>
                 <p className="text-[#717068]">{item.title}</p>
                 <p className="text-primaryGreen text-right font-bold">{item.subtitle.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
@@ -357,7 +388,12 @@ export default function BookingPage() {
               onClick={handleSubmit}
               className='w-full h-10 bg-primaryGreen text-white font-sen text-sm mt-20 col-span-2'
             >
-              Proceed to  pay
+              {loading ? <motion.div
+                className="h-10 w-10 border-2 border-white/30 border-t-white rounded-full"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+              /> : "Proceed to  pay"}
+
             </button>
           </div>
 

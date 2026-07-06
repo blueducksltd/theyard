@@ -17,6 +17,18 @@ export interface IPackage extends Document {
   extraGuestFee: number;
 }
 
+export interface IPackageClient {
+  id: string;
+  name: string;
+  price: number;
+  weekendPrice?: number;
+  specs: string[];
+  description: string;
+  imageUrl: string;
+  guestLimit: number;
+  extraGuestFee: number;
+}
+
 // Instance methods
 export interface IPackageMethods {
   formatPrice(): string;

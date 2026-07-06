@@ -1,8 +1,8 @@
-import { PackageWithFun } from "@/app/v2/packages/page";
+import { IPackageFun } from "@/app/v2/packages/page";
 import { create } from "zustand";
 interface BookingStore {
-    selectedPackage: PackageWithFun | null;
-    setSelectedPackage: (pkg: PackageWithFun) => void;
+    selectedPackage: IPackageFun | null;
+    setSelectedPackage: (pkg: IPackageFun) => void;
     clearSelectedPackage: () => void;
     selectedDate: Date | null;
     setDate: (date: Date)=> void;
@@ -15,7 +15,7 @@ export const useBookingStore = create<BookingStore>((set) => ({
     selectedPackage: null,
     setDate: (date: Date)=> set({selectedDate: date, selectedPackage: null}),
     selectedDate: null,
-    setSelectedPackage: (pkg: PackageWithFun) => set({
+    setSelectedPackage: (pkg: IPackageFun) => set({
         selectedPackage: pkg,
         selectedDate: null
     }),

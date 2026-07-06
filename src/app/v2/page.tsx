@@ -1,10 +1,8 @@
 "use client";
-import { Inter, Lato, Petit_Formal_Script, Playfair_Display } from "next/font/google";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
 import { Pagination, Autoplay, EffectFade, FreeMode } from "swiper/modules";
-// import { Autoplay, FreeMode } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/free-mode';
 
@@ -15,31 +13,25 @@ import "swiper/css/effect-fade";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { useRef, useState } from "react";
-export const PlayFair = Playfair_Display({
-    subsets: ["latin"],
-    style: ["italic", "normal"],
-    weight: ["400", "700"]
-});
-
-
-export const Lato_Font = Lato({
-    weight: ["700", "400", "300",]
-})
-
+import { useEffect, useRef, useState } from "react";
+import axios from "axios";
+import { IPackage } from "@/types/Package";
+import { IEvent } from "@/types/Event";
+import { IReviewClient } from "@/types/Review";
+import { IGalleryClient } from "@/types/Gallery";
+import { BentoGrid } from "./gallery/page";
+import Loading from "@/components/v2/Loading";
+import ReviewModal from "@/components/v2/home/ReviewModal";
 
 
 
-export const Petit = Petit_Formal_Script({
-  weight: "400",
-  subsets: ["latin"],
-});
 
 
-export const Inter_Font = Inter({
-  subsets: ["latin"],
-  weight: ["200", "400"]
-})
+
+
+
+
+
 
 const slides = [
   {
@@ -83,7 +75,7 @@ const staggerContainer = {
   },
 };
 
-const revealItem = {
+export const revealItem = {
   hidden: { opacity: 0, y: 18, scale: 0.6 },
   visible: { opacity: 1, y: 0, scale: 1 },
 };
@@ -118,91 +110,67 @@ export default function Home() {
     },
   ];
 
-  const packages: { image: string; title: string; subtitle: string }[] = [
-    {
-      image: "movie_night.jpg",
-      title: "Movie Night",
-      subtitle: "Romantic setup for you  and your special someone."
-    },
-    {
-      image: "movie_night.jpg",
-      title: "Movie Night",
-      subtitle: "Romantic setup for you  and your special someone."
-    },
-    {
-      image: "movie_night.jpg",
-      title: "Movie Night",
-      subtitle: "Romantic setup for you  and your special someone."
-    },
-    {
-      image: "movie_night.jpg",
-      title: "Movie Night",
-      subtitle: "Romantic setup for you  and your special someone."
-    }
-  ]
+  const [packages, setPackages] = useState<IPackage[]>([]);
 
-  const testimonails: { name: string; testimony: string }[] = [
-    {
-      name: "Chiamaka & Femi",
-      testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
-    },
-    {
-      name: "Chiamaka & Femi",
-      testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
-    },
-    {
-      name: "Chiamaka & Femi",
-      testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
-    },
-    {
-      name: "Chiamaka & Femi",
-      testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
-    }
-  ]
+  // const testimonails: { name: string; testimony: string }[] = [
+  //   {
+  //     name: "Chiamaka & Femi",
+  //     testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
+  //   },
+  //   {
+  //     name: "Chiamaka & Femi",
+  //     testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
+  //   },
+  //   {
+  //     name: "Chiamaka & Femi",
+  //     testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
+  //   },
+  //   {
+  //     name: "Chiamaka & Femi",
+  //     testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
+  //   }
+  // ]
 
-  const services: { title: string; subtitle: string; cta: string; image: string; }[] = [
-    { title: "Picnic Spaces", subtitle: "Relax in nature with our charming picnic setups.", cta: "Book a space now", image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg" },
-    { title: "Picnic Spaces", subtitle: "Relax in nature with our charming picnic setups.", cta: "Book a space now", image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg" },
-    { title: "Picnic Spaces", subtitle: "Relax in nature with our charming picnic setups.", cta: "Book a space now", image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg" },
-    { title: "Picnic Spaces", subtitle: "Relax in nature with our charming picnic setups.", cta: "Book a space now", image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg" },
-    { title: "Picnic Spaces", subtitle: "Relax in nature with our charming picnic setups.", cta: "Book a space now", image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg" },
-    { title: "Picnic Spaces", subtitle: "Relax in nature with our charming picnic setups.", cta: "Book a space now", image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg" }
+  const [events, setEvents] = useState<IEvent[]>([]);
+  const [testimonials, setTestimonials] = useState<IReviewClient[]>([]);
+  const [gallery, setGallery] = useState<IGalleryClient[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  ];
-  const events: { title: string; subtitle: string; date: string; image: string; }[] = [
-    {
-      title: "Summer Tech Expo",
-      subtitle: "We don't just provide a venue; we create Flexible spaces, unique experiences, your way.",
-      date: "2026-07-15",
-      image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg"
-    },
-    {
-      title: "Startup Networking Night",
-      subtitle: "We don't just provide a venue; we create Flexible spaces, unique experiences, your way.",
-      date: "2026-08-02",
-      image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg"
-    },
-    {
-      title: "Design Thinking Workshop",
-      subtitle: "We don't just provide a venue; we create Flexible spaces, unique experiences, your way.",
-      date: "2026-08-18",
-      image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg"
-    },
-    {
-      title: "Community Hackathon",
-      subtitle: "We don't just provide a venue; we create Flexible spaces, unique experiences, your way.",
-      date: "2026-09-05",
-      image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg"
-    },
-    {
-      title: "Digital Marketing Summit",
-      subtitle: "We don't just provide a venue; we create Flexible spaces, unique experiences, your way.",
-      date: "2026-09-22",
-      image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg"
-    },
-  ];
+  const [showModal, setShowModal] = useState(false);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        document.body.style.overflow = "hidden"; // Disable scrolling while loading
+        const [
+          packagesRes,
+          eventsRes,
+          testimonialsRes,
+          galleryRes,
+        ] = await Promise.all([
+          axios.get(`/api/packages`),
+          axios.get(`/api/events`),
+          axios.get(`/api/reviews`),
+          axios.get(`/api/gallery`),
+        ]);
 
+        setPackages(packagesRes.data.data.packages);
+        setEvents(eventsRes.data.data.events);
+        setTestimonials(testimonialsRes.data.data.reviews);
+        setGallery(galleryRes.data.data.gallery);
+      } catch (err) {
+        console.error("Failed to load home page data ❌", err);
+      } finally {
+        document.body.style.overflow = "auto"; // Re-enable scrolling
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  if (isLoading) {
+
+    return <Loading />
+  }
   return (
     <div >
       <div className="bg-black h-screen relative">
@@ -257,7 +225,7 @@ export default function Home() {
             </span>
             <h1 className={`text-white text-6xl font-playfair-display`}>
               Memorable, exciting, joyful, and historic{" "}
-              <span className={`${Petit.className} text-primaryBrown`}>
+              <span className={`font-petit text-primaryBrown`}>
                 moments
               </span>
             </h1>
@@ -285,7 +253,7 @@ export default function Home() {
           transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
         >
           <span className="font-bold">Where Serenity Meets</span>{" "} <br />
-          <span className={`${Petit.className} text-primaryBrown`}>
+          <span className={`font-petit text-primaryBrown`}>
             celebration
           </span>
 
@@ -336,14 +304,14 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
-     
 
-        <div
-          className="relative h-20 translate-y-5"
-          style={{
-            background: "url(/images/trees_design.png) top / cover repeat-x",
-          }}
-        ></div>
+
+      <div
+        className="relative h-20 translate-y-5"
+        style={{
+          background: "url(/images/trees_design.png) top / cover repeat-x",
+        }}
+      ></div>
 
       <div className="bg-[#EEE8DE] px-5 md:px-0 md:pl-10 py-10 grid grid-cols-1 md:grid-cols-4 gap-10">
         <motion.div
@@ -367,7 +335,7 @@ export default function Home() {
             variants={revealItem}
             transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           >
-            Every Moment <br /> is <span className={`${Petit.className} text-primaryBrown`}>special </span>
+            Every Moment <br /> is <span className={`font-petit text-primaryBrown`}>special </span>
           </motion.h1>
 
           <motion.p
@@ -382,7 +350,7 @@ export default function Home() {
             variants={revealItem}
             transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Link href={"/"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white w-fit">
+            <Link href={"/v2/packages"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white w-fit">
               View Packages
               <ArrowRight />
             </Link>
@@ -422,28 +390,30 @@ export default function Home() {
               swiperRef.current = swiper;
             }}
           >
-            {packages.map((item, index) => (
+            {packages.slice(0, 4).map((item, index) => (
               <SwiperSlide key={index} className="h-full">
-                <motion.div
-                  className="h-full relative text-white p-4 flex items-end"
-                  variants={revealItem}
-                  initial={shouldReduceMotion ? false : "hidden"}
-                  whileInView={shouldReduceMotion ? undefined : "visible"}
-                  viewport={{ once: true, amount: 0.2 }}
-                  transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <div className="relative z-20 flex flex-col gap-4">
-                    <div className="flex flex-col gap-1 w-[80%] md:w-full">
-                      <p className={`font-playfair-display text-xl font-semibold`}>{item.title}</p>
-                      <p className={`${Inter_Font.className} text-sm`}>{item.subtitle}</p>
+                <Link href={`/v2/packages/`} className="h-full">
+                  <motion.div
+                    className="h-full relative text-white p-4 flex items-end"
+                    variants={revealItem}
+                    initial={shouldReduceMotion ? false : "hidden"}
+                    whileInView={shouldReduceMotion ? undefined : "visible"}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <div className="relative z-20 flex flex-col w-full gap-4 justify-end self-stretch">
+                      <div className="flex flex-col gap-1 w-[80%] md:w-full">
+                        <p className="font-playfair-display text-xl font-semibold">{item.name}</p>
+                        <p className="font-inter text-sm h-5 ">{item.description.length > 100 ? item.description.slice(0, 100) + "..." : item.description}</p>
+                      </div>
+                      <div className="flex w-full justify-end">
+                        <Image width={30} height={30} alt="" src={"/images/arrow-right.png"} />
+                      </div>
                     </div>
-                    <div className="flex justify-end">
-                      <Image width={30} height={30} alt="" src={"/images/arrow-right.png"} />
-                    </div>
-                  </div>
-                  <Image src={"/images/" + item.image} fill alt="" className="object-cover" />
-                  <div className="w-full h-full left-0 top-0 bg-black/40 absolute"></div>
-                </motion.div>
+                    <Image src={item.imageUrl} fill alt="" className="object-cover" />
+                    <div className="w-full h-full left-0 top-0 bg-black/40 absolute"></div>
+                  </motion.div>
+                </Link>
               </SwiperSlide>
             ))}
           </Swiper>
@@ -463,9 +433,13 @@ export default function Home() {
 
               <p className={`font-lato text-[#5A5A53] md:mt-2 `}>See what our clients say about us...</p>
             </div>
-            <Link href={"/"} className={" border-[1.4px] py-2 px-6  border-primaryGreen text-primaryGreen font-semibold" + Lato_Font.className}>
+            <button
+              type="button"
+              onClick={() => setShowModal(true)}
+              className={"border-[1.4px] py-2 px-6 border-primaryGreen text-primaryGreen font-semibold font-lato cursor-pointer"}
+            >
               Write a review
-            </Link>
+            </button>
           </div>
 
 
@@ -489,10 +463,10 @@ export default function Home() {
               swiperRef.current = swiper;
             }}
           >
-            {testimonails.map((testimony, index) => (
+            {testimonials.map((testimony, index) => (
               <SwiperSlide key={index} className="relative w-full h-full">
-                <div className={"bg-white md:bg-[#EEE8DE] p-10 grid gap-6  font-inter" }>
-                  <p>{testimony.testimony}</p>
+                <div className={"bg-white md:bg-[#EEE8DE] p-10 grid gap-6  font-inter"}>
+                  <p>{testimony.comment}</p>
                   <p className="font-semibold">{testimony.name}</p>
                 </div>
               </SwiperSlide>
@@ -563,33 +537,36 @@ export default function Home() {
 
           <motion.div
             className="grid grid-cols-1 md:grid-cols-4 gap-4"
-            initial={shouldReduceMotion ? false : "hidden"}
-            whileInView={shouldReduceMotion ? undefined : "visible"}
-            viewport={{ once: true, amount: 0.2 }}
-            variants={staggerContainer}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          // initial={shouldReduceMotion ? false : "hidden"}
+          // whileInView={shouldReduceMotion ? undefined : "visible"}
+          // viewport={{ once: true, amount: 0.2 }}
+          // variants={staggerContainer}
+          // transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            {services.slice(0,4).map((service, index) => (
+            {packages.slice(4, 8).map((service, index) => (
               <motion.div
                 key={index}
-                className={"border border-[#E9D9C0]/50 text-[#F6F6F6] p-3 grid gap-2  font-inter" }
-                variants={revealItem}
+                className={"border border-[#E9D9C0]/50 text-[#F6F6F6] p-3 grid gap-2  font-inter "}
+                // variants={revealItem}
                 transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div className="h-50 relative">
-                  <Image src={service.image} fill alt="" className="object-cover" />
+                  <Image src={service.imageUrl} fill alt="" className="object-cover" />
                 </div>
 
-                <div className="grid gap-2">
-                  <p className={`font-semibold text-lg font-playfair-display`}>{service.title}</p>
-                  <p className={`font-lato text-[#FEF6EB] text-sm font-light`}>{service.subtitle}</p>
-                  <p className={`font-lato text-white/50 text-xs mt-6`}>{service.cta}</p>
+                <div className="grid gap-2 ">
+                  <p className="font-semibold text-lg font-playfair-display truncate">
+                    {service.name}
+                  </p>
+                  <p className="font-lato text-[#FEF6EB] text-sm font-light  h-20">
+                    {service.description?.length > 100 ? service.description.slice(0, 100) + "..." : service.description}
+                  </p>
                 </div>
               </motion.div>
             ))}
           </motion.div>
 
-          
+
 
         </div>
 
@@ -607,7 +584,7 @@ export default function Home() {
               variants={revealItem}
               transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
             >
-              Join our celebrating <span className={`${Petit.className} text-primaryBrown capitalize font-light`}>events </span>
+              Join our celebrating <span className={`font-petit text-primaryBrown capitalize font-light`}>events </span>
             </motion.h1>
 
             <motion.div
@@ -629,26 +606,27 @@ export default function Home() {
             variants={staggerContainer}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            {events.slice(0, 3).map((event, index) => (
-              <motion.div
-                className={"p-3 grid gap-2  font-inter" }
+            {events.slice(0, 3).map((event, index) => {
+
+              return <motion.div
+                className={"p-3 grid gap-2  font-inter"}
                 key={index}
                 variants={revealItem}
                 transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div className="h-50 relative">
-                  <Image src={event.image} fill alt="" className="object-cover" />
+                  <Image src={event.images[0]} fill alt="" className="object-cover" />
                 </div>
 
                 <div className="grid gap-1">
                   <p className={`font-semibold text-lg font-playfair-display text-primaryGreen`}>{event.title}</p>
-                  <p className={`font-lato text-[#4B6450] text-sm font-light`}>{event.subtitle}</p>
+                  <p className={`font-lato text-[#4B6450] text-sm font-light`}>{event.description}</p>
                   <p className={`font-lato text-primaryGreen text-sm mt-6 font-medium`}>
                     {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}
                   </p>
                 </div>
               </motion.div>
-            ))}
+            })}
           </motion.div>
 
 
@@ -705,7 +683,7 @@ export default function Home() {
                 variants={revealItem}
                 transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               >
-                unForgettable <span className={`${Petit.className} text-primaryBrown`}>Moments </span>
+                unForgettable <span className={`font-petit text-primaryBrown`}>Moments </span>
               </motion.h1>
 
               <motion.p
@@ -728,57 +706,22 @@ export default function Home() {
             </motion.div>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-6 gap-2 md:gap-3"
-            initial={shouldReduceMotion ? false : "hidden"}
-            whileInView={shouldReduceMotion ? undefined : "visible"}
-            viewport={{ once: true, amount: 0.2 }}
-            variants={staggerContainer}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <motion.div className="col-span-6 md:row-span-2 md:col-span-2 relative rounded-lg bg-white flex items-center justify-center min-h-50 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}>
-              <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </motion.div>
+          <BentoGrid images={gallery.map((item) => item.imageUrl)} isMotion={true} />
 
-            <motion.div className="col-span-6 md:col-span-1 relative flex items-center justify-center min-h-40 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
-              <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </motion.div>
-            <motion.div className="col-span-6 md:col-span-1 relative flex items-center justify-center min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}>
-              <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </motion.div>
-
-            <motion.div className="col-span-6 md:col-span-1 relative hidden md:flex items-center justify-center min-h-40 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}>
-              <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </motion.div>
-
-            <motion.div className="col-span-6 md:col-span-1 relative hidden md:flex items-center justify-center min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.22, ease: [0.22, 1, 0.36, 1] }}>
-              <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-            </motion.div>
-
-            <div className="col-span-6 md:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-              <motion.div className="relative flex items-center justify-center min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.26, ease: [0.22, 1, 0.36, 1] }}>
-                <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-              </motion.div>
-
-              <motion.div className="relative flex items-center justify-center min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}>
-                <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-              </motion.div>
-
-              <motion.div className="relative flex items-center justify-center col-span-2 md:col-span-1 min-h-30 md:min-h-36.25" variants={revealItem} transition={{ duration: 0.55, delay: 0.34, ease: [0.22, 1, 0.36, 1] }}>
-                <Image src={"https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg"} fill alt="" className="object-cover rounded-lg" />
-              </motion.div>
-            </div>
-          </motion.div>
         </div>
 
 
       </div>
 
+      <ReviewModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmitted={(review) => setTestimonials((prev) => [review, ...prev])}
+      />
 
 
 
 
-   
     </div>
   );
 }

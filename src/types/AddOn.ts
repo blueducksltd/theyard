@@ -13,9 +13,20 @@ export interface IAddOn extends Document {
   updatedAt: Date;
 }
 
-export interface IAddOnMethods {}
+export interface IAddOnModelClient {
+  id: string;
+  name: string;
+  category: AddOnCategory;
+  description?: string;
+  price?: number;
+  pricePerMin?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-export interface IAddOnModel extends Model<IAddOn, IAddOnMethods> {}
+export interface IAddOnMethods { }
+
+export interface IAddOnModel extends Model<IAddOn, IAddOnMethods> { }
 
 export type SafeAddOn = {
   id: string;
