@@ -9,6 +9,18 @@ export interface IAddOn extends Document {
   description?: string;
   price?: number;
   pricePerMin?: number;
+  imageUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IAddOnModelClient {
+  id: string;
+  name: string;
+  category: AddOnCategory;
+  description?: string;
+  price?: number;
+  pricePerMin?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +47,7 @@ export type SafeAddOn = {
   description?: string;
   price?: number;
   pricePerMin?: number;
+  imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -47,6 +60,7 @@ export function sanitizeAddOn(addOn: IAddOn): SafeAddOn {
     description: addOn.description,
     price: addOn.price,
     pricePerMin: addOn.pricePerMin,
+    imageUrl: addOn.imageUrl,
     createdAt: addOn.createdAt,
     updatedAt: addOn.updatedAt,
   };
@@ -59,6 +73,7 @@ export const CreateAddOnDTO = z
     description: z.string().optional(),
     price: z.number().optional(),
     pricePerMin: z.number().optional(),
+    imageUrl: z.string().url().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.category === "food" && typeof data.price !== "number") {
@@ -92,6 +107,7 @@ export const UpdateAddOnDTO = z.object({
   description: z.string().optional(),
   price: z.number().optional(),
   pricePerMin: z.number().optional(),
+  imageUrl: z.string().url().optional(),
 });
 
 export type CreateAddOnInput = z.infer<typeof CreateAddOnDTO>;

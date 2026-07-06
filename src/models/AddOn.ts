@@ -12,6 +12,7 @@ const AddOnSchema = new Schema<IAddOn, IAddOnModel, IAddOnMethods>(
     description: { type: String },
     price: { type: Number },
     pricePerMin: { type: Number },
+    imageUrl: { type: String },
   },
   { timestamps: true },
 );
