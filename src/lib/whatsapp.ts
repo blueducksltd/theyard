@@ -2,7 +2,6 @@ import { connectDB } from "@/lib/db";
 import Booking from "@/models/Booking";
 import { format } from "date-fns";
 import { ICustomer } from "@/types/Customer";
-import { ISpace } from "@/types/Space";
 import { IPackage } from "@/types/Package";
 
 export async function sendBookingWhatsApp(bookingId: string) {
@@ -10,7 +9,6 @@ export async function sendBookingWhatsApp(bookingId: string) {
     await connectDB();
     const booking = await Booking.findById(bookingId)
       .populate("customer")
-      .populate("space")
       .populate("package");
 
     if (!booking) {
@@ -19,7 +17,6 @@ export async function sendBookingWhatsApp(bookingId: string) {
     }
 
     const customer = booking.customer as unknown as ICustomer;
-    const space = booking.space as unknown as ISpace;
     const pkg = booking.package as unknown as IPackage;
 
     const formattedDate = format(new Date(booking.eventDate), "eeee, MMMM do, yyyy");
@@ -28,7 +25,6 @@ export async function sendBookingWhatsApp(bookingId: string) {
       `Hello *${customer.firstname} ${customer.lastname}*,\n\n` +
       `We have received your booking request! To finalize your reservation, please proceed with the payment.\n\n` +
       `*Booking Details:*\n` +
-      `• *Space:* ${space.name}\n` +
       `• *Package:* ${pkg.name}\n` +
       `• *Date:* ${formattedDate}\n` +
       `• *Guests:* ${booking.guestCount}\n` +
@@ -55,7 +51,6 @@ export async function sendBookingConfirmedWhatsApp(bookingId: string) {
     await connectDB();
     const booking = await Booking.findById(bookingId)
       .populate("customer")
-      .populate("space")
       .populate("package");
 
     if (!booking) {
@@ -64,7 +59,6 @@ export async function sendBookingConfirmedWhatsApp(bookingId: string) {
     }
 
     const customer = booking.customer as unknown as ICustomer;
-    const space = booking.space as unknown as ISpace;
     const pkg = booking.package as unknown as IPackage;
 
     const formattedDate = format(new Date(booking.eventDate), "eeee, MMMM do, yyyy");
@@ -73,7 +67,6 @@ export async function sendBookingConfirmedWhatsApp(bookingId: string) {
       `Hello *${customer.firstname} ${customer.lastname}*,\n\n` +
       `Your payment has been verified, and your booking is officially *Confirmed*! We are excited to host your event.\n\n` +
       `*Booking Details:*\n` +
-      `• *Space:* ${space.name}\n` +
       `• *Package:* ${pkg.name}\n` +
       `• *Date:* ${formattedDate}\n` +
       `• *Guests:* ${booking.guestCount}\n` +

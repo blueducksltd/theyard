@@ -4,7 +4,6 @@ import { confirmOrCancelBookings, getBookings } from "@/util";
 import { useEffect, useState } from "react";
 import moment from "moment";
 import { ICustomer } from "@/types/Customer";
-import { ISpace } from "@/types/Space";
 import { IEvent } from "@/types/Event";
 import { IPackage } from "@/types/Package";
 import { toast } from "react-toastify";
@@ -12,7 +11,6 @@ import { toast } from "react-toastify";
 interface IPageBooking {
   id: string;
   customer: ICustomer["id"];
-  space: ISpace["id"];
   event: IEvent["id"];
   package: IPackage["id"];
   eventDate: Date;
@@ -308,7 +306,7 @@ export default function BookingContent() {
                       Name...
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
-                      Space
+                      Event
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
                       Package
@@ -353,7 +351,7 @@ export default function BookingContent() {
                         {booking.event?.title}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.space.name}
+                        {booking.event?.title || "N/A"}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
                         {booking.package.name}

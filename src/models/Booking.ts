@@ -10,7 +10,6 @@ import { startOfDay, endOfDay } from "date-fns";
 const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
   {
     customer: { type: Types.ObjectId, ref: "Customer", required: true },
-    space: { type: Types.ObjectId, ref: "Space" },
     event: { type: Types.ObjectId, ref: "Event" },
     package: { type: Types.ObjectId, ref: "Package", required: true },
     eventDate: { type: Date, required: true },
@@ -22,23 +21,6 @@ const BookingSchema = new Schema<IBooking, IBookingModel, IBookingMethods>(
   },
   { timestamps: true }
 );
-
-
-BookingSchema.statics.isDoubleBooked = async function (
-  spaceId: string,
-  eventDate: Date
-): Promise<boolean> {
-  const dayStart = startOfDay(eventDate);
-  const dayEnd = endOfDay(eventDate);
-
-  const count = await this.countDocuments({
-    space: spaceId,
-    eventDate: { $gte: dayStart, $lte: dayEnd },
-    status: { $ne: "cancelled" }
-  });
-
-  return count > 0;
-};
 
 
 BookingSchema.statics.findByDateRange = async function (start: Date, end?: Date): Promise<IBooking[]> {
@@ -66,7 +48,6 @@ BookingSchema.statics.filter = async function (
   const sortDirection = direction.toUpperCase() === "ASC" ? 1 : -1;
   return this.find(filter).sort({ [sort]: sortDirection })
     .populate("customer")
-    .populate("space")
     .populate("event")
     .populate("package")
 }

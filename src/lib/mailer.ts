@@ -6,7 +6,6 @@ import SMTPTransport from "nodemailer/lib/smtp-transport";
 import { connectDB } from "@/lib/db";
 import Booking from "@/models/Booking";
 import { format } from "date-fns";
-import { ISpace } from "@/types/Space";
 import { IPackage } from "@/types/Package";
 
 const transporter = nodemailer.createTransport({
@@ -22,7 +21,6 @@ export async function sendBookingEmail(to: string, bookingId: string) {
   await connectDB();
   const booking = await Booking.findById(bookingId)
     .populate("customer")
-    .populate("space")
     .populate("package");
 
   if (!booking) {
@@ -30,7 +28,6 @@ export async function sendBookingEmail(to: string, bookingId: string) {
   }
 
   const customer = booking.customer as unknown as ICustomer;
-  const space = booking.space as unknown as ISpace;
   const pkg = booking.package as unknown as IPackage;
 
   const formattedDate = format(new Date(booking.eventDate), "eeee, MMMM do, yyyy");
@@ -60,16 +57,12 @@ export async function sendBookingEmail(to: string, bookingId: string) {
           <tr>
             <td style="padding: 40px 30px; color: #5a5a53; line-height: 1.6; font-size: 15px;">
               <h2 style="color: #2f433f; margin-top: 0; font-size: 20px;">Hello ${customer.firstname},</h2>
-              <p>Thank you for choosing The Yard. We have received your booking request! To finalize your reservation and secure your space, please complete the payment using the instructions below.</p>
+              <p>Thank you for choosing The Yard. We have received your booking request! To finalize your reservation and secure your booking, please complete the payment using the instructions below.</p>
               
               <!-- Booking Details Card -->
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fdfbf9; border: 1px solid #eeeee6; border-radius: 6px; padding: 20px; margin: 25px 0;">
                 <tr>
                   <td style="padding-bottom: 10px; font-weight: bold; color: #2f433f; border-bottom: 1px solid #eeeee6;" colspan="2">Booking Details</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0 5px 0; color: #888880; width: 40%;">Space:</td>
-                  <td style="padding: 10px 0 5px 0; color: #0f3830; font-weight: bold;">${space.name}</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px 0; color: #888880;">Package:</td>
@@ -145,7 +138,6 @@ export async function sendBookingConfirmedEmail(to: string, bookingId: string) {
   await connectDB();
   const booking = await Booking.findById(bookingId)
     .populate("customer")
-    .populate("space")
     .populate("package");
 
   if (!booking) {
@@ -153,7 +145,6 @@ export async function sendBookingConfirmedEmail(to: string, bookingId: string) {
   }
 
   const customer = booking.customer as unknown as ICustomer;
-  const space = booking.space as unknown as ISpace;
   const pkg = booking.package as unknown as IPackage;
 
   const formattedDate = format(new Date(booking.eventDate), "eeee, MMMM do, yyyy");
@@ -189,10 +180,6 @@ export async function sendBookingConfirmedEmail(to: string, bookingId: string) {
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fdfbf9; border: 1px solid #eeeee6; border-radius: 6px; padding: 20px; margin: 25px 0;">
                 <tr>
                   <td style="padding-bottom: 10px; font-weight: bold; color: #2f433f; border-bottom: 1px solid #eeeee6;" colspan="2">Booking Details</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0 5px 0; color: #888880; width: 40%;">Space:</td>
-                  <td style="padding: 10px 0 5px 0; color: #0f3830; font-weight: bold;">${space.name}</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px 0; color: #888880;">Package:</td>

@@ -3,7 +3,6 @@ import { Document } from "mongoose";
 import { Model } from "mongoose";
 import { z } from "zod";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
-import { ISpace, SafeSpace, sanitizeSpace } from "./Space";
 import { IEvent, SafeEvent, sanitizeEvent } from "./Event";
 import { IPackage, SafePackage, sanitizePackage } from "./Package";
 
@@ -12,7 +11,6 @@ import { IPackage, SafePackage, sanitizePackage } from "./Package";
 // -----------------------------
 export interface IBooking extends Document, IBookingMethods {
   customer: ICustomer["id"];
-  space?: ISpace["id"];
   event?: IEvent["id"];
   package: IPackage["id"];
   eventDate: Date;
@@ -28,16 +26,11 @@ export interface IBooking extends Document, IBookingMethods {
 // Instance methods
 export interface IBookingMethods {
   eventDetails(): Promise<IEvent | null>;
-  spaceDetails(): Promise<ISpace | null>;
   customerDetails(): Promise<ICustomer | null>;
 }
 
 // Statics
 export interface IBookingModel extends Model<IBooking, IBookingMethods> {
-  isDoubleBooked(
-    spaceId: string,
-    eventDate: Date,
-  ): Promise<boolean>;
   filter(
     filter: Record<string, string>,
     sort: string,
@@ -45,7 +38,6 @@ export interface IBookingModel extends Model<IBooking, IBookingMethods> {
     admin?: boolean,
   ): Promise<IBooking[]>;
   findByCustomer(customerId: ICustomer["id"]): Promise<IBooking[]>;
-  findBySpace(spaceId: ISpace["id"]): Promise<IBooking[]>;
   findByDateRange(start: Date, end?: Date): Promise<IBooking[]>;
 }
 
@@ -59,7 +51,6 @@ export type SafeBooking = {
   status: string;
   totalPrice: number;
   customer: SafeCustomer | null;
-  space: SafeSpace | null;
   event: SafeEvent | null;
   package: SafePackage | null;
   createdAt: Date;
@@ -76,7 +67,6 @@ export function sanitizeBooking(booking: IBooking): SafeBooking {
     status: booking.status,
     totalPrice: booking.totalPrice,
     customer: booking.customer ? sanitizeCustomer(booking.customer) : null,
-    space: booking.space ? sanitizeSpace(booking.space) : null,
     event: booking.event ? sanitizeEvent(booking.event) : null,
     package: booking.package ? sanitizePackage(booking.package) : null,
     createdAt: booking.createdAt,
