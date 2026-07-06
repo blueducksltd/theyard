@@ -14,7 +14,7 @@ interface IPageBooking {
   name: string;
   date: string;
   time: string;
-  space: string;
+  packageName: string;
   duration: string;
 }
 
@@ -141,7 +141,7 @@ export default function HomeContent() {
               >
                 <div className="w-full flex justify-between">
                   <h2 className="font-semibold text-yard-primary leading-6 tracking-[0.5px]">
-                    {booking.space}
+                    {booking.packageName}
                   </h2>
                   <Image
                     src={"/icons/arrow-up-right.svg"}
