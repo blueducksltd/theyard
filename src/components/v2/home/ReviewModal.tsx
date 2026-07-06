@@ -211,7 +211,7 @@ export default function ReviewModal({
                                     disabled={!canSubmit}
                                     whileHover={canSubmit ? { y: -1 } : undefined}
                                     whileTap={canSubmit ? { scale: 0.97 } : undefined}
-                                    className="font-sen min-w-[160px] min-h-[44px] px-6 rounded-full bg-[#007AFF] text-white font-medium text-[14px] shadow-[0_8px_20px_-6px_rgba(0,122,255,0.5)] hover:shadow-[0_10px_24px_-6px_rgba(0,122,255,0.6)] transition-shadow disabled:opacity-40 disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
+                                    className="font-sen min-w-40 min-h-11 px-6 rounded-full bg-[#007AFF] text-white font-medium text-[14px] shadow-[0_8px_20px_-6px_rgba(0,122,255,0.5)] hover:shadow-[0_10px_24px_-6px_rgba(0,122,255,0.6)] transition-shadow disabled:opacity-40 disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
                                 >
                                     <AnimatePresence mode="wait" initial={false}>
                                         {status === "idle" && (

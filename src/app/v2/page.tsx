@@ -463,9 +463,11 @@ export default function Home() {
               swiperRef.current = swiper;
             }}
           >
-            {testimonials.map((testimony, index) => (
+            {[...testimonials].sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            ).map((testimony, index) => (
               <SwiperSlide key={index} className="relative w-full h-full">
-                <div className={"bg-white md:bg-[#EEE8DE] p-10 grid gap-6  font-inter"}>
+                <div className={"bg-white md:bg-[#EEE8DE] p-10 h-full flex flex-col justify-between gap-6 font-inter"}>
                   <p>{testimony.comment}</p>
                   <p className="font-semibold">{testimony.name}</p>
                 </div>
