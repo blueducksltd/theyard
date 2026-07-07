@@ -1,7 +1,5 @@
-import { Document } from "mongoose";
+import { Document, Model } from "mongoose";
 import z from "zod";
-import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
-import { Model } from "mongoose";
 
 // Document fields
 export interface IEvent extends Document {
@@ -42,7 +40,9 @@ export interface IEventClient {
 }
 
 // Instance methods
-export interface IEventMethods { }
+export interface IEventMethods {
+  [key: string]: never;
+}
 
 // Statics
 export interface IEventModel extends Model<IEvent, IEventMethods> {
@@ -114,6 +114,7 @@ export const CreateEventAdminDTO = z
     childPrice: z.number().optional(),
     public: z.boolean().optional().default(false),
     location: z.string().optional(),
+    customerId: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if ((data.audienceType === "adults" || data.audienceType === "both") && (data.adultPrice === undefined || data.adultPrice < 0)) {
@@ -140,8 +141,8 @@ export const SignUpEventDTO = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().min(1, "Phone number is required"),
   email: z.string().email("Invalid email address"),
-  adultTickets: z.number().int().min(0).optional(),
-  childTickets: z.number().int().min(0).optional(),
+  adultsComing: z.number().int().min(0).optional(),
+  childrenComing: z.number().int().min(0).optional(),
 });
 
 export type SignUpEventInput = z.infer<typeof SignUpEventDTO>;

@@ -5,8 +5,8 @@ export interface ISignUp extends Document {
   name: string;
   phone: string;
   email: string;
-  adultTickets?: number;
-  childTickets?: number;
+  adultsComing?: number;
+  childrenComing?: number;
   createdAt: Date;
 }
 
@@ -28,10 +28,10 @@ const SignUpSchema = new Schema<ISignUp>({
     type: String,
     required: true,
   },
-  adultTickets: {
+  adultsComing: {
     type: Number,
   },
-  childTickets: {
+  childrenComing: {
     type: Number,
   },
   createdAt: {
