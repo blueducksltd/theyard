@@ -458,7 +458,7 @@ export default function Home() {
             threshold={5}
             resistance={true}
             resistanceRatio={0.85}
-            className="w-full h-full"
+  className="w-full h-60" // fixed height instead of h-full
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
             }}
@@ -610,9 +610,9 @@ export default function Home() {
           >
             {events.slice(0, 3).map((event, index) => {
 
-              return <motion.div
+              return <Link href={"/v2/events"} key={index}>
+              <motion.div
                 className={"p-3 grid gap-2  font-inter"}
-                key={index}
                 variants={revealItem}
                 transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
               >
@@ -627,31 +627,12 @@ export default function Home() {
                     {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}
                   </p>
                 </div>
-              </motion.div>
+              </motion.div></Link>
             })}
           </motion.div>
 
 
-          <Swiper
-            modules={[Autoplay, FreeMode]}
-            slidesPerView={3}
-            spaceBetween={16}
-            loop={true}
-            freeMode={true}
-            grabCursor={true}
-            simulateTouch={true}
-            touchRatio={1}
-            touchAngle={45}
-            threshold={5}
-            resistance={true}
-            resistanceRatio={0.85}
-            className="w-full h-full"
-            onSwiper={(swiper) => {
-              swiperRef.current = swiper;
-            }}
-          >
-
-          </Swiper>
+        
         </div>
 
         <div

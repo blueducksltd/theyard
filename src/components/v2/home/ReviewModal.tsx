@@ -167,7 +167,7 @@ export default function ReviewModal({
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Enter your name"
                                     disabled={isBusy}
-                                    className="font-sen w-full h-[52px] rounded-2xl px-4 bg-[#F2F2F4] text-[15px] text-[#1D1D1F] placeholder:text-[#A1A1A6] outline-none border border-transparent transition-all duration-200 focus:bg-white focus:border-[#007AFF]/50 focus:ring-4 focus:ring-[#007AFF]/12 disabled:opacity-60"
+                                    className="font-sen w-full h-[52px] rounded-2xl px-4 bg-[#F2F2F4] text-[15px] text-[#1D1D1F] placeholder:text-[#A1A1A6] outline-none border border-transparent transition-all duration-200 focus:bg-white focus:border-primaryGreen/50 focus:ring-4 focus:ring-primaryGreen/12 disabled:opacity-60"
                                 />
                             </div>
 
@@ -185,7 +185,7 @@ export default function ReviewModal({
                                         disabled={isBusy}
                                         rows={4}
                                         maxLength={COMMENT_LIMIT}
-                                        className="font-sen w-full min-h-[120px] resize-none rounded-2xl px-4 py-3.5 bg-[#F2F2F4] text-[15px] leading-relaxed text-[#1D1D1F] placeholder:text-[#A1A1A6] outline-none border border-transparent transition-all duration-200 focus:bg-white focus:border-[#007AFF]/50 focus:ring-4 focus:ring-[#007AFF]/12 disabled:opacity-60"
+                                        className="font-sen w-full min-h-[120px] resize-none rounded-2xl px-4 py-3.5 bg-[#F2F2F4] text-[15px] leading-relaxed text-[#1D1D1F] placeholder:text-[#A1A1A6] outline-none border border-transparent transition-all duration-200 focus:bg-white focus:border-primaryGreen/50 focus:ring-4 focus:ring-primaryGreen/12 disabled:opacity-60"
                                     />
                                     <span className="pointer-events-none absolute bottom-3 right-4 font-sen text-[11px] text-[#A1A1A6]">
                                         {comment.length}/{COMMENT_LIMIT}
@@ -211,7 +211,7 @@ export default function ReviewModal({
                                     disabled={!canSubmit}
                                     whileHover={canSubmit ? { y: -1 } : undefined}
                                     whileTap={canSubmit ? { scale: 0.97 } : undefined}
-                                    className="font-sen min-w-40 min-h-11 px-6 rounded-full bg-[#007AFF] text-white font-medium text-[14px] shadow-[0_8px_20px_-6px_rgba(0,122,255,0.5)] hover:shadow-[0_10px_24px_-6px_rgba(0,122,255,0.6)] transition-shadow disabled:opacity-40 disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
+                                    className="font-sen min-w-40 min-h-11 px-6 rounded-full bg-primaryGreen text-white font-medium text-[14px] shadow-[0_8px_20px_-6px_rgba(0,122,255,0.5)] hover:shadow-[0_10px_24px_-6px_rgba(0,122,255,0.6)] transition-shadow disabled:opacity-40 disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
                                 >
                                     <AnimatePresence mode="wait" initial={false}>
                                         {status === "idle" && (

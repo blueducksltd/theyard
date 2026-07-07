@@ -2,12 +2,15 @@
 
 import FilterCategory from '@/components/v2/FilterCategory';
 import Modal from '@/components/v2/Modal';
-import { AddMoreFun, type SelectedFun } from '@/app/v2/packages/page';
+import { AddMoreFun, type SelectedAddon } from '@/app/v2/packages/page';
 import Image from 'next/image';
 import { motion, useReducedMotion } from 'motion/react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BadgeCheck, X } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { IEventClient } from '@/types/Event';
+import axios from '@/util/axios';
+import Loading from '@/components/v2/Loading';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -16,17 +19,10 @@ export type Filter = (typeof filters)[number];
 
 type EventPrice = { children: number; adult: number };
 
-type Event = {
-    image: string;
-    title: string;
-    description: string;
-    date: string;
-    filter: Filter;
-    price: EventPrice;
-    includes: string[];
-};
 
-type EventWithFun = Event & { selectedFun: SelectedFun[] };
+export interface IEvent extends IEventClient {
+    selectedAddon: SelectedAddon[];
+}
 
 type Step = 'overview' | 'form' | 'summary';
 
@@ -47,53 +43,6 @@ function formatNaira(value: number): string {
 
 // ── Static Data ────────────────────────────────────────────────────────
 
-const EVENTS: Event[] = [
-    {
-        image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg",
-        title: "Tech Innovators Summit 2026",
-        description: "A gathering of developers, founders, and tech enthusiasts.",
-        date: "2026-07-15",
-        filter: "Upcoming",
-        price: { children: 1000, adult: 1500 },
-        includes: [
-            "Reserved seating",
-            "Welcome drinks",
-            "Networking session",
-            "Speaker sessions access",
-            "Event goodie bag",
-        ],
-    },
-    {
-        image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg",
-        title: "Summer Coding Bootcamp",
-        description: "An intensive workshop covering React, Next.js, and TypeScript.",
-        date: "2026-06-28",
-        filter: "Ongoing",
-        price: { children: 1000, adult: 1500 },
-        includes: [
-            "Full workshop access",
-            "Hands-on project materials",
-            "Lunch & refreshments",
-            "Certificate of completion",
-            "Mentorship session",
-        ],
-    },
-    {
-        image: "https://images.pexels.com/photos/4577574/pexels-photo-4577574.jpeg",
-        title: "Startup Pitch Night",
-        description: "Early-stage startups present their ideas to investors.",
-        date: "2026-05-20",
-        filter: "Passed",
-        price: { children: 1000, adult: 1500 },
-        includes: [
-            "Pitch slot (5 mins)",
-            "Investor panel feedback",
-            "Networking cocktail hour",
-            "Presentation coaching",
-            "Event recording access",
-        ],
-    },
-];
 
 const EMPTY_INPUTS: FormInputs = {
     firstname: '',
@@ -127,9 +76,9 @@ const PANEL_HIDDEN = "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-n
 // ── EventModalContent ───────────────────────────────────────────────────
 
 interface EventModalContentProps {
-    event: EventWithFun;
+    event: IEvent;
     onClose: () => void;
-    onConfirmFun: (selectedFun: SelectedFun[]) => void;
+    onConfirmFun: (selectedFun: SelectedAddon[]) => void;
 }
 
 function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentProps) {
@@ -143,13 +92,13 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
     const eventDate = useMemo(() => new Date(event.date), [event.date]);
 
     const packageTotal = useMemo(
-        () => event.price.adult * inputs.adults + event.price.children * inputs.children,
-        [event.price, inputs.adults, inputs.children]
+        () => event.adultPrice! * inputs.adults + event.childPrice! * inputs.children,
+        [inputs.adults, inputs.children]
     );
 
     const funTotal = useMemo(
-        () => event.selectedFun.reduce((sum, item) => sum + item.price * item.quantity, 0),
-        [event.selectedFun]
+        () => event.selectedAddon.reduce((sum, item) => sum + (item.price ?? item.pricePerMin ?? 0) * item.quantity, 0),
+        [event.selectedAddon]
     );
 
     const total = packageTotal + funTotal;
@@ -166,8 +115,10 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
 
     const pricingRows = useMemo(() => [
         { label: "Base ticket", value: packageTotal },
-        ...event.selectedFun.map((item) => ({ label: item.title, value: item.price * item.quantity })),
-    ], [packageTotal, event.selectedFun]);
+        ...event.selectedAddon.map((item) => ({ label: item.name, value: (item.price ?? item.pricePerMin ?? 0) * item.quantity })),
+    ], [packageTotal, event.selectedAddon
+
+    ]);
 
     // step === s AND AddMoreFun is not overlaying
     const isVisible = (s: Step) => step === s && !showAddFun;
@@ -178,7 +129,7 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
             <div className={`${PANEL_BASE} ${isVisible('overview') ? `${PANEL_VISIBLE} min-h-100` : PANEL_HIDDEN}`}>
                 <div className="h-40 relative shrink-0">
                     <Image
-                        src={event.image}
+                        src={event.images[0]}
                         fill
                         alt={event.title}
                         className="object-cover object-center rounded"
@@ -198,17 +149,17 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
                     <h1 className="font-bold text-primaryGreen">{event.title}</h1>
                     <div className="flex items-center gap-3">
                         <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                            <b>{formatNaira(event.price.children)}</b> Children
+                            <b>{formatNaira(event.childPrice!)}</b> Children
                         </span>
                         <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                            <b>{formatNaira(event.price.adult)}</b> Adult
+                            <b>{formatNaira(event.adultPrice!)}</b> Adult
                         </span>
                     </div>
                 </div>
 
                 <p className="font-lato text-sm text-[#8C8273] italic">What we'll do</p>
                 <div className="h-30 overflow-auto flex flex-col gap-2 text-[#8C8273] text-sm">
-                    {[...event.includes, ...event.selectedFun.map((f) => f.title)].map((item) => (
+                    {[...(event.includes ?? []), ...event.selectedAddon.map((f) => f.name)].map((item) => (
                         <div key={item} className="flex items-center gap-2">
                             <BadgeCheck size={14} />
                             <p className="font-lato">{item}</p>
@@ -237,9 +188,10 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
             {/* ── ADD MORE FUN overlay — sibling, not absolute-positioned ── */}
             <AddMoreFun
                 show={showAddFun}
-                onClose={handleHideAddFun}
-                onConfirmFun={onConfirmFun}
-                packageSelectedFun={event.selectedFun}
+                onClose={onClose}
+                closeFun={handleHideAddFun}
+                onConfirmAddon={onConfirmFun}
+                packageSelectedFun={event.selectedAddon}
             />
 
             {/* ── STEP 2: Registration Form ── */}
@@ -309,8 +261,12 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
                         type="button"
                         className="p-2 bg-primaryGreen text-white cursor-pointer"
                         onClick={() => {
+                            if (!inputs.firstname.trim()) return toast("Please enter your first name.", { type: "error" });
+                            if (!inputs.lastname.trim()) return toast("Please enter your last name.", { type: "error" });
+                            if (!inputs.email.trim()) return toast("Please enter your email address.", { type: "error" });
+                            if (!inputs.phone.trim()) return toast("Please enter your phone number.", { type: "error" });
                             if (inputs.adults === 0 && inputs.children === 0) {
-                                toast("You must select number for adult ", {type: "error"})
+                                toast("You must select number for adult ", { type: "error" })
                                 return;
                             }
 
@@ -383,9 +339,10 @@ export default function EventsPage() {
     const [activeFilter, setActiveFilter] = useState<Filter>(filters[0]);
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const [modalOpen, setModalOpen] = useState(false);
-    const [eventsWithFun, setEventsWithFun] = useState<EventWithFun[]>(() =>
-        EVENTS.map((event) => ({ ...event, selectedFun: [] }))
-    );
+
+
+    const [events, setEvents] = useState<IEvent[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const handleOpenModal = useCallback((index: number) => {
         setSelectedIndex(index);
@@ -396,21 +353,39 @@ export default function EventsPage() {
         setModalOpen(false);
     }, []);
 
-    const handleConfirmFun = useCallback((selectedFun: SelectedFun[]) => {
+    const handleConfirmFun = useCallback((selectedAddon: SelectedAddon[]) => {
         if (selectedIndex === null) return;
-        setEventsWithFun((prev) => {
+        setEvents((prev) => {
             const next = [...prev];
-            next[selectedIndex] = { ...next[selectedIndex], selectedFun };
+            next[selectedIndex] = { ...next[selectedIndex], selectedAddon };
             return next;
         });
     }, [selectedIndex]);
 
     const filteredEvents = useMemo(
-        () => EVENTS.filter((item) => item.filter === activeFilter || activeFilter === "All"),
-        [activeFilter]
+        () => events,
+        [activeFilter, events]
     );
 
-    const selectedEvent = selectedIndex !== null ? eventsWithFun[selectedIndex] : null;
+    const selectedEvent = selectedIndex !== null ? events[selectedIndex] : null;
+    useEffect(() => {
+        (async () => {
+            try {
+                document.body.style.overflow = "hidden"; // Disable scrolling while loading
+                const req = await axios.get("../api/events");
+                setEvents(req.data.data.events)
+            } catch (err) {
+                console.error(err)
+            } finally {
+                document.body.style.overflow = "auto"; // Re-enable scrolling
+                setIsLoading(false);
+            }
+        })()
+    }, [])
+
+    if (isLoading) {
+        return <Loading />
+    }
 
     return (
         <div className="pt-10 pb-20 md:pb-40">
@@ -449,16 +424,16 @@ export default function EventsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 px-5 py-10 md:p-20">
                 {filteredEvents.map((event) => {
-                    const originalIndex = EVENTS.indexOf(event);
+                    const originalIndex = events.indexOf(event);
                     return (
                         <div
-                            key={event.title}
+                            key={originalIndex}
                             className="p-3 grid gap-2 font-inter cursor-pointer"
                             onClick={() => handleOpenModal(originalIndex)}
                         >
                             <div className="h-50 relative">
                                 <Image
-                                    src={event.image}
+                                    src={event.images[0]}
                                     fill
                                     alt={event.title}
                                     className="object-cover"

@@ -166,6 +166,28 @@
   margin-right: 20px;
 }
 
+/* Infinite footer trees marquee: the track holds two identical halves,
+   so translating exactly -50% lands on a pixel-identical frame (seamless loop). */
+.trees-marquee {
+  animation: trees-marquee 120s linear infinite;
+  will-change: transform;
+}
+
+@keyframes trees-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trees-marquee {
+    animation: none;
+  }
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

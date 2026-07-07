@@ -22,8 +22,27 @@ export interface IEvent extends Document {
   location: string;
 }
 
+export interface IEventClient {
+  title: string;
+  description: string;
+  slug: string;
+  public: boolean;
+  date: Date;
+  images: string[];
+  time: {
+    start: string; // "14:00"
+    end: string; // "18:00"
+  };
+  audienceType: "children" | "adults" | "both";
+  adultPrice?: number;
+  childPrice?: number;
+  status: "active" | "completed" | "cancelled" | "pending";
+  location: string;
+  includes: []
+}
+
 // Instance methods
-export interface IEventMethods {}
+export interface IEventMethods { }
 
 // Statics
 export interface IEventModel extends Model<IEvent, IEventMethods> {

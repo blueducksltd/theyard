@@ -11,20 +11,30 @@ import { SlSocialFacebook } from 'react-icons/sl';
 
 export default function Footer() {
     const pathname = usePathname();
-    const [bgColor, setBgColor] = useState<string>("");
 
 
     return (
         <footer className={`relative`}>
             <div
-                className="absolute h-45 w-full left-0 -top-15 -translate-y-1/2 flex overflow-x-auto overflow-y-hidden"
-                style={{
-                    // background: "url(/images/trees_design_footer.png) top / cover",
-                }}
+                aria-hidden="true"
+                className="absolute h-45 w-full left-0 -top-15 -translate-y-1/2 overflow-hidden pointer-events-none"
             >
-                <Image src={"/images/trees_design_footer.svg"} alt='' width={1000} height={1000} className='object-cover shrink-0' />
-                <Image src={"/images/trees_design_footer.svg"} alt='' width={1000} height={1000} className='object-cover shrink-0' />
-
+                <div className="trees-marquee flex h-full w-max">
+                    {[0, 1].map((half) => (
+                        <div key={half} className="flex h-full shrink-0">
+                            {Array.from({ length: 4 }, (_, i) => (
+                                <Image
+                                    key={i}
+                                    src={"/images/trees_design_footer.svg"}
+                                    alt=""
+                                    width={1000}
+                                    height={1000}
+                                    className="h-full w-120 max-w-none object-cover shrink-0"
+                                />
+                            ))}
+                        </div>
+                    ))}
+                </div>
             </div>
 
 

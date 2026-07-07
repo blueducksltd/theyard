@@ -37,7 +37,7 @@ export interface SelectedFun extends FunItem {
 }
 
 export interface PackageWithFun extends Package {
-    selectedFun: SelectedFun[];
+    selectedFun: SelectedAddon[];
 }
 
 export interface IPackageFun extends IPackageClient {
