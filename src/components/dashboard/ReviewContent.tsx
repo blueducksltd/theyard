@@ -281,7 +281,7 @@ export default function ReviewContent() {
                       className="w-[114px] h-[35px] flex items-center justify-center border-[1px] border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
                       onClick={() => {
                         setAction({
-                          id: comment._id as string,
+                          id: comment._id as unknown as string,
                           status: "ignore",
                         });
                         setConfModal(true);
@@ -295,7 +295,7 @@ export default function ReviewContent() {
                       className="w-[114px] h-[35px] items-center flex justify-center border-[#8C5C5C] bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
                       onClick={() => {
                         setAction({
-                          id: comment._id as string,
+                          id: comment._id as unknown as string,
                           status: "publish",
                         });
                         setConfModal(true);

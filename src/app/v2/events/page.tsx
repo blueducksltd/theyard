@@ -96,7 +96,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
     const handleHideAddFun = useCallback(() => setShowAddFun(false), []);
 
     const eventDate = useMemo(() => new Date(event.date), [event.date]);
-  
+
     const packageTotal = useMemo(
         () => (event.adultPrice ?? 0) * inputs.adults + (event.childPrice ?? 0) * inputs.children,
         [event.adultPrice, event.childPrice, inputs.adults, inputs.children]
@@ -141,7 +141,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
                         email: inputs.email,
                         adultsComing: inputs.adults ?? null,
                         childrenComing: inputs.children ?? null,
-                        addons: event.selectedAddon.map(item=> item.id)
+                        addons: event.selectedAddon.map(item => item.id)
                     });
                     toast.success("Event Booked Successfully");
 

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
 import { IEvent, SafeEvent, sanitizeEvent } from "./Event";
 import { IPackage, SafePackage, sanitizePackage } from "./Package";
+import { SafeSpace, sanitizeSpace } from "./Space";
 
 // -----------------------------
 // TypeScript interface
@@ -13,6 +14,7 @@ export interface IBooking extends Document, IBookingMethods {
   customer: ICustomer["id"];
   event?: IEvent["id"];
   package: IPackage["id"];
+  space?: any;
   eventDate: Date;
   guestCount: number;
   time?: string;
@@ -53,6 +55,7 @@ export type SafeBooking = {
   customer: SafeCustomer | null;
   event: SafeEvent | null;
   package: SafePackage | null;
+  space: SafeSpace | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -69,6 +72,7 @@ export function sanitizeBooking(booking: IBooking): SafeBooking {
     customer: booking.customer ? sanitizeCustomer(booking.customer) : null,
     event: booking.event ? sanitizeEvent(booking.event) : null,
     package: booking.package ? sanitizePackage(booking.package) : null,
+    space: booking.space ? sanitizeSpace(booking.space) : null,
     createdAt: booking.createdAt,
     updatedAt: booking.updatedAt,
   };
@@ -119,6 +123,7 @@ export const CreateBookingDto = z.object({
   packageId: z.string({
     error: "field `packageId` is required",
   }),
+  spaceId: z.string().optional(),
   time: z.string().optional(),
   addon: z.array(z.string()).optional(),
   eventDescription: z.string().optional(),
@@ -154,6 +159,7 @@ export const UpdateBookingDto = z.object({
     .optional(),
   guestCount: z.coerce.number().optional(),
   packageId: z.string().optional(),
+  spaceId: z.string().optional(),
   time: z.string().optional(),
   addon: z.array(z.string()).optional(),
   eventType: z

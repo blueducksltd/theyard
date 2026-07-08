@@ -119,6 +119,34 @@ export const getDashboardData = async () => {
   return response.data;
 };
 
+// Create Event
+export const createEvent = async (data: FormData) => {
+  const response = await axios.post(`/admin/events`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Get add-ons
+export const getAddons = async () => {
+  const response = await axios.get(`/admin/addons`);
+  return response.data;
+};
+
+// Create add-on
+export const createAddon = async (data: FormData) => {
+  const response = await axios.post(`/admin/addons`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Get Event Registrations
+export const getEventRegistrations = async (eventId: string) => {
+  const response = await axios.get(`/events/${eventId}/register`);
+  return response.data;
+};
+
 export const publishOrIgnoreReview = async (data: {
   id?: string;
   status: string;

@@ -9,7 +9,7 @@ export interface IEvent extends Document {
   public: boolean;
   date: Date;
   images: string[];
-  time: {
+  time?: {
     start: string; // "14:00"
     end: string; // "18:00"
   };
@@ -19,6 +19,7 @@ export interface IEvent extends Document {
   childPrice?: number;
   status: "active" | "completed" | "cancelled" | "pending";
   location: string;
+  customer?: any;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -134,6 +135,7 @@ export const CreateEventAdminDTO = z
     location: z.string().optional(),
     customerId: z.string().optional(),
     activities: z.array(z.string().min(1, "Activity cannot be empty")).optional(),
+    images: z.array(z.string()).optional(),
   })
   .superRefine((data, ctx) => {
     if ((data.audienceType === "adults" || data.audienceType === "both") && (data.adultPrice === undefined || data.adultPrice < 0)) {

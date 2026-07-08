@@ -37,6 +37,7 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
       enum: ["active", "completed", "cancelled", "pending"],
       default: "pending"
     },
+    customer: { type: Schema.Types.ObjectId, ref: "Customer" },
     location: { type: String, required: true }
   },
   { timestamps: true }

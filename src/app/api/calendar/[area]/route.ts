@@ -41,7 +41,7 @@ export const GET = errorHandler<{ params: { area: string } }>(
             // Day-based availability - a space is either available or unavailable for the whole day
             const spacesWithAvailability = spaces.map((space: ISpace) => {
                 const isBooked = bookings.some(
-                    (b) => b.space.toString() === space.id
+                    (b) => b.space?.toString() === space.id
                 );
 
                 return {
@@ -92,7 +92,7 @@ export const GET = errorHandler<{ params: { area: string } }>(
                 // A space is "available" if it has no bookings for this day
                 const statuses = spaces.map((space: ISpace) => {
                     const spaceBookings = dayBookings.filter(
-                        (b) => b.space.toString() === space.id
+                        (b) => b.space?.toString() === space.id
                     );
 
                     // Day-based: if any booking exists, space is unavailable for the whole day

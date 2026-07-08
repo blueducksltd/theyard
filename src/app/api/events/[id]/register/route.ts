@@ -20,7 +20,7 @@ const RegisterEventDTO = z.object({
 
 type RegisterEventInput = z.infer<typeof RegisterEventDTO>;
 
-export const POST = errorHandler(async (request: NextRequest, context) => {
+export const POST = errorHandler<{ params: { id: string } }>(async (request: NextRequest, context) => {
   await connectDB();
 
   const { id } = await context.params;
@@ -71,7 +71,7 @@ export const POST = errorHandler(async (request: NextRequest, context) => {
   }, 201);
 });
 
-export const GET = errorHandler(async (request: NextRequest, context) => {
+export const GET = errorHandler<{ params: { id: string } }>(async (request: NextRequest, context) => {
   await connectDB();
 
   const payload = requireAuth(request);

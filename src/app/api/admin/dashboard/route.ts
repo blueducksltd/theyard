@@ -46,7 +46,7 @@ export const GET = errorHandler(
             title: event.title,
             name: event.customer ? `${event.customer.firstname} ${event.customer.lastname}` : "N/A",
             date: event.date,
-            duration: getDuration(event.time.start, event.time.end)
+            duration: getDuration(event.time?.start, event.time?.end)
         }));
 
 
@@ -84,9 +84,13 @@ export const GET = errorHandler(
 
 )
 
-function getDuration(startTime: string, endTime: string): string {
+function getDuration(startTime?: string, endTime?: string): string {
+    if (!startTime || !endTime) return "N/A";
     const [startHour, startMinute] = startTime.split(":").map(Number);
     const [endHour, endMinute] = endTime.split(":").map(Number);
+    if (isNaN(startHour) || isNaN(startMinute) || isNaN(endHour) || isNaN(endMinute)) {
+        return "N/A";
+    }
     const start = new Date(0, 0, 0, startHour, startMinute);
     const end = new Date(0, 0, 0, endHour, endMinute);
     const diff = (end.getTime() - start.getTime()) / 1000 / 60; // difference in minutes

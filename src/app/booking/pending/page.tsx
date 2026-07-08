@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Modal from "@/components/Modal";
 import { IBooking } from "@/types/Booking";
 import { getBookings, getBookingsByDate, getPackages } from "@/util";
+import { generateSlots } from "@/lib/util";
 import { IPackage } from "@/types/Package";
 import { toast } from "react-toastify";
 import { loadFromLS, saveToLS } from "@/util/helper";
@@ -19,9 +20,7 @@ interface IProps {
 interface IBookSpace {
   id: string;
   name: string;
-  slots: {
-    [time: string]: "available" | "unavailable";
-  };
+  status: "available" | "unavailable";
 }
 
 const Page = ({ searchParams }: IProps) => {
@@ -55,7 +54,7 @@ const Page = ({ searchParams }: IProps) => {
         const bookingsByDateRes = await getBookingsByDate(date);
         const packagesRes = await getPackages(); // Fetch packages data
         setBookingData(bookings.data.bookings);
-        setBookingsByDate(bookingsByDateRes.data.spaces);
+        setBookingsByDate(bookingsByDateRes.data.spaces ?? []);
         setPackages(packagesRes.data.packages); // Set packages data
       } catch (error) {
         console.error("Error fetching bookings:", error);
@@ -81,10 +80,7 @@ const Page = ({ searchParams }: IProps) => {
     router.push(`/booking/checkout`);
   };
 
-  const timeSlots =
-    bookingsByDate.length > 0
-      ? Object.keys(bookingsByDate[0].slots).sort()
-      : [];
+  const timeSlots = generateSlots("09:00", "18:00");
 
   if (loading) {
     return (
@@ -156,8 +152,7 @@ const Page = ({ searchParams }: IProps) => {
                     </div>
 
                     {bookingsByDate.map((space) => {
-                      const status = space.slots[time];
-                      const isAvailable = status === "available";
+                      const isAvailable = space.status === "available";
 
                       return (
                         <div

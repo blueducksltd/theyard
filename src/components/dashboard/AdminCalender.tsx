@@ -3,13 +3,31 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { IBooking } from "@/types/Booking";
-import { getPackages } from "@/util";
+import { getPackages, createEvent, getEvents, getEventRegistrations } from "@/util";
 import { IPackage } from "@/types/Package";
 import { saveToLS } from "@/util/helper";
 import moment from "moment";
+import Modal from "../Modal";
+import { toast } from "react-toastify";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
+type EventDateCategory = "active" | "upcoming" | "past";
+
+const EVENT_DATE_CATEGORY_ORDER: Record<EventDateCategory, number> = {
+  active: 0,
+  upcoming: 1,
+  past: 2,
+};
+
+const getEventDateCategory = (date: Date | string | null | undefined): EventDateCategory => {
+  if (!date) return "past";
+  const eventDate = moment(date).startOf("day");
+  const today = moment().startOf("day");
+  if (eventDate.isSame(today, "day")) return "active";
+  if (eventDate.isAfter(today)) return "upcoming";
+  return "past";
+};
 
 interface CalendarProps {
   initialDate?: Date;
@@ -30,7 +48,170 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [packages, setPackages] = useState<IPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState({});
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // New event tabs, lists, and registration modal states
+  const [activeTab, setActiveTab] = useState<"calendar" | "list">("calendar");
+  const [events, setEvents] = useState<any[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [registrations, setRegistrations] = useState<any[]>([]);
+  const [isRegModalOpen, setIsRegModalOpen] = useState(false);
+  const [isRegLoading, setIsRegLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const [inputs, setInputs] = useState<Record<string, any>>({
+    title: "",
+    description: "",
+    date: "",
+    time: "",
+    audienceType: "both",
+    adultPrice: "",
+    childPrice: "",
+    public: true,
+    location: "The Yard",
+    activities: ""
+  });
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    const val = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    setInputs((prev) => ({
+      ...prev,
+      [name]: val,
+    }));
+  };
+
   const router = useRouter();
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
+  const handleOpenRegistrations = async (event: any) => {
+    setSelectedEvent(event);
+    setIsRegModalOpen(true);
+    setIsRegLoading(true);
+    setRegistrations([]);
+    try {
+      const res = await getEventRegistrations(event.id || event._id);
+      if (res.success) {
+        setRegistrations(res.data.registrations || []);
+      }
+    } catch (err) {
+      console.error("Failed to load registrations:", err);
+    } finally {
+      setIsRegLoading(false);
+    }
+  };
+
+  const handleCreateEvent = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const toastId = toast.loading("Creating event, please wait...", {
+      position: "bottom-right",
+    });
+
+    try {
+      const formData = new FormData();
+      formData.append("title", inputs.title);
+      formData.append("description", inputs.description || "");
+      formData.append("date", inputs.date);
+      formData.append("time", inputs.time);
+      formData.append("audienceType", inputs.audienceType);
+      formData.append("public", String(!!inputs.public));
+      formData.append("location", inputs.location || "The Yard");
+      formData.append("activities", inputs.activities || "");
+
+      if (inputs.audienceType === "adults" || inputs.audienceType === "both") {
+        const adultPrice = Number(inputs.adultPrice);
+        if (!Number.isFinite(adultPrice) || adultPrice < 0) {
+          toast.update(toastId, {
+            render: "Please enter a valid adult ticket price.",
+            type: "error",
+            isLoading: false,
+            autoClose: 5000,
+          });
+          return;
+        }
+        formData.append("adultPrice", String(adultPrice));
+      }
+      if (inputs.audienceType === "children" || inputs.audienceType === "both") {
+        const childPrice = Number(inputs.childPrice);
+        if (!Number.isFinite(childPrice) || childPrice < 0) {
+          toast.update(toastId, {
+            render: "Please enter a valid child ticket price.",
+            type: "error",
+            isLoading: false,
+            autoClose: 5000,
+          });
+          return;
+        }
+        formData.append("childPrice", String(childPrice));
+      }
+      if (imageFile) {
+        formData.append("images", imageFile);
+      }
+
+      const response = await createEvent(formData);
+
+      if (response.success) {
+        toast.update(toastId, {
+          render: "Event created successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 5000,
+        });
+
+        setIsCreateModalOpen(false);
+        setImageFile(null);
+        setImagePreview(null);
+        setInputs({
+          title: "",
+          description: "",
+          date: "",
+          time: "",
+          audienceType: "both",
+          adultPrice: "",
+          childPrice: "",
+          public: false,
+          location: "The Yard",
+          activities: ""
+        });
+
+        // Refresh events list
+        const evRes = await getEvents();
+        if (evRes.success) setEvents(evRes.data.events || []);
+
+        router.refresh();
+      } else {
+        toast.update(toastId, {
+          render: response.message || "Failed to create event.",
+          type: "error",
+          isLoading: false,
+          autoClose: 5000,
+        });
+      }
+    } catch (error: any) {
+      console.error(error);
+      const errMsg = error.response?.data?.message || error.message || "An error occurred.";
+      toast.update(toastId, {
+        render: errMsg,
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    }
+  };
 
   const months: string[] = [
     "JANUARY",
@@ -248,110 +429,259 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     })();
   }, []);
 
+  // Load all events for list view
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await getEvents();
+        if (res.success) setEvents(res.data.events || []);
+      } catch (e) {
+        console.error("Failed to load events:", e);
+      }
+    })();
+  }, []);
+
+  const sortedEvents = useMemo(() => {
+    return [...events].sort((a, b) => {
+      const categoryA = getEventDateCategory(a.date);
+      const categoryB = getEventDateCategory(b.date);
+
+      if (EVENT_DATE_CATEGORY_ORDER[categoryA] !== EVENT_DATE_CATEGORY_ORDER[categoryB]) {
+        return EVENT_DATE_CATEGORY_ORDER[categoryA] - EVENT_DATE_CATEGORY_ORDER[categoryB];
+      }
+
+      const dateA = moment(a.date);
+      const dateB = moment(b.date);
+
+      if (categoryA === "past") {
+        return dateB.valueOf() - dateA.valueOf();
+      }
+
+      return dateA.valueOf() - dateB.valueOf();
+    });
+  }, [events]);
+
   return (
-    <main className="flex-1 py-4 flex justify-center">
-      <div
-        className={`w-[646px] md:${calenderWidth} p-6 rounded-lg shadow-2xl`}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+    <main className="flex-1 py-4 px-5 flex flex-col gap-4 w-full overflow-y-auto">
+
+      {/* ── Header row: Tabs + Create Button ── */}
+      <div className="flex items-center justify-between">
+        {/* Tab Switcher */}
+        <div className="flex items-center bg-[#EDF0EE] rounded2px p-1 gap-1">
           <button
-            onClick={() => navigateMonth(-1)}
-            className="w-9 h-9 bg-[#EDF0EE] p-2 rounded2px group relative overflow-hidden"
-            aria-label="Previous month"
+            onClick={() => setActiveTab("calendar")}
+            className={`px-5 py-2 text-sm font-medium font-sen leading-6 tracking-[0.4px] rounded2px transition-all duration-300 relative overflow-hidden ${activeTab === "calendar"
+              ? "bg-yard-primary text-white shadow-sm"
+              : "text-yard-primary hover:bg-[#C7CFC9]"
+              }`}
           >
-            <img
-              src={"/icons/arrow-left.svg"}
-              alt="arrow icon"
-              className="w-5 h-5 z-40 relative"
-            />
-            <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            📅 Calendar View
           </button>
-
-          <h2 className="text-[16px] font-bold text-[#3C5040] leading-[26px] tracking-[0.4px]">
-            {months[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </h2>
-
           <button
-            onClick={() => navigateMonth(1)}
-            className="w-9 h-9 bg-[#EDF0EE] p-2 rounded2px group relative overflow-hidden"
-            aria-label="Next month"
+            onClick={() => setActiveTab("list")}
+            className={`px-5 py-2 text-sm font-medium font-sen leading-6 tracking-[0.4px] rounded2px transition-all duration-300 ${activeTab === "list"
+              ? "bg-yard-primary text-white shadow-sm"
+              : "text-yard-primary hover:bg-[#C7CFC9]"
+              }`}
           >
-            <img
-              src={"/icons/arrow-right.svg"}
-              alt="arrow icon"
-              className="w-5 h-5 z-40 relative"
-            />
-            <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            📋 All Events
           </button>
         </div>
 
-        {/* Day names */}
-        <div className="grid grid-cols-7 gap-1 mb-4">
-          {dayNames.map((day: string) => (
-            <div
-              key={day}
-              className="text-center text-sm font-semibold text-[#2D3C30] py-2 leading-[22px]"
-            >
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Calendar grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((day: number | null, index: number) => {
-            const dateKey = getDateKey(day);
-            const status = dateKey ? getDateStatus(dateKey) : null;
-            const bookingCount = dateKey ? getBookingCount(dateKey) : 0;
-            const todayDate = isToday(day);
-            const pastDay = isPastDay(day);
-
-            return (
-              <div
-                key={index}
-                onClick={() => handleDateClick(day!, status!)}
-                className={`relative h-20 flex items-center justify-center duration-10 rounded-sm group overflow-hidden cursor-pointer ${todayDate ? "bg-[#C7CFC9]" : null}`}
-              >
-                {day && (
-                  <>
-                    <div className="flex flex-col gap-2 items-center">
-                      <button
-                        className="w-full h-full flex items-center justify-center text-[#33322F] rounded z-40 font-semibold text-2xl leading-8 tracking-[0.1px]"
-                        aria-label={`Select ${day}`}
-                      >
-                        {day}
-                      </button>
-                      {bookingCount > 0 && (
-                        <small className="text-yard-primary text-[10px] leading-[100%] tracking-[0.5px] italic font-medium z-40">
-                          {bookingCount} booking{bookingCount !== 1 ? "s" : ""}
-                        </small>
-                      )}
-                      <div className="absolute top-0 -left-0 bg-[#E4E8E5] group-hover:w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
+        {/* Create Event Button */}
+        <div
+          onClick={() => setIsCreateModalOpen(true)}
+          className="w-max h-10 items-center flex rounded2px border-[1px] border-[#999999] px-4 gap-2.5 group relative overflow-hidden cursor-pointer bg-white"
+        >
+          <img src={"/icons/add.svg"} className="w-4 h-4 z-40 relative" alt="Add Icon" />
+          <p className="z-40 text-yard-primary text-[16px] font-medium font-sen leading-6 tracking-[0.5px]">
+            Create Event
+          </p>
+          <div className="absolute top-0 left-0 bg-[#E4E8E5] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
         </div>
       </div>
-      {/*<Modal isOpen={isModalOpen}>
+
+      {/* ── CALENDAR VIEW ── */}
+      {activeTab === "calendar" && (
+        <div className="flex justify-center">
+          <div className={`w-full md:${calenderWidth} p-6 rounded-lg shadow-2xl`}>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <button
+                onClick={() => navigateMonth(-1)}
+                className="w-9 h-9 bg-[#EDF0EE] p-2 rounded2px group relative overflow-hidden"
+                aria-label="Previous month"
+              >
+                <img
+                  src={"/icons/arrow-left.svg"}
+                  alt="arrow icon"
+                  className="w-5 h-5 z-40 relative"
+                />
+                <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+              </button>
+
+              <h2 className="text-[16px] font-bold text-[#3C5040] leading-[26px] tracking-[0.4px]">
+                {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </h2>
+
+              <button
+                onClick={() => navigateMonth(1)}
+                className="w-9 h-9 bg-[#EDF0EE] p-2 rounded2px group relative overflow-hidden"
+                aria-label="Next month"
+              >
+                <img
+                  src={"/icons/arrow-right.svg"}
+                  alt="arrow icon"
+                  className="w-5 h-5 z-40 relative"
+                />
+                <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+              </button>
+            </div>
+
+            {/* Day names */}
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {dayNames.map((day: string) => (
+                <div
+                  key={day}
+                  className="text-center text-sm font-semibold text-[#2D3C30] py-2 leading-[22px]"
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar grid */}
+            <div className="grid grid-cols-7 gap-1">
+              {days.map((day: number | null, index: number) => {
+                const dateKey = getDateKey(day);
+                const status = dateKey ? getDateStatus(dateKey) : null;
+                const bookingCount = dateKey ? getBookingCount(dateKey) : 0;
+                const todayDate = isToday(day);
+                const pastDay = isPastDay(day);
+
+                return (
+                  <div
+                    key={index}
+                    onClick={() => handleDateClick(day!, status!)}
+                    className={`relative h-20 flex items-center justify-center duration-10 rounded-sm group overflow-hidden cursor-pointer ${todayDate ? "bg-[#C7CFC9]" : null}`}
+                  >
+                    {day && (
+                      <>
+                        <div className="flex flex-col gap-2 items-center">
+                          <button
+                            className="w-full h-full flex items-center justify-center text-[#33322F] rounded z-40 font-semibold text-2xl leading-8 tracking-[0.1px]"
+                            aria-label={`Select ${day}`}
+                          >
+                            {day}
+                          </button>
+                          {bookingCount > 0 && (
+                            <small className="text-yard-primary text-[10px] leading-[100%] tracking-[0.5px] italic font-medium z-40">
+                              {bookingCount} booking{bookingCount !== 1 ? "s" : ""}
+                            </small>
+                          )}
+                          <div className="absolute top-0 -left-0 bg-[#E4E8E5] group-hover:w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── EVENTS LIST VIEW ── */}
+      {activeTab === "list" && (
+        <div className="w-full">
+          {events.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#EDF0EE] flex items-center justify-center text-3xl">📅</div>
+              <p className="text-yard-primary font-semibold font-sen text-lg">No events yet</p>
+              <p className="text-[#666] text-sm">Click "Create Event" to schedule your first event.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {sortedEvents.map((event: any) => {
+                const eventDate = event.date ? new Date(event.date) : null;
+                const formattedDate = eventDate
+                  ? eventDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+                  : "—";
+                const dateCategory = getEventDateCategory(event.date);
+                const dateCategoryStyles: Record<EventDateCategory, string> = {
+                  active: "bg-green-100 text-green-700",
+                  upcoming: "bg-blue-100 text-blue-700",
+                  past: "bg-gray-100 text-gray-600",
+                };
+                return (
+                  <div
+                    key={event._id || event.id}
+                    className="w-full bg-white border border-[#E4E8E5] rounded-lg px-5 py-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer group"
+                    onClick={() => handleOpenRegistrations(event)}
+                  >
+                    {/* Image */}
+                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-[#EDF0EE] flex items-center justify-center">
+                      {event.images && event.images[0] ? (
+                        <img src={event.images[0]} alt={event.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-2xl">🎪</span>
+                      )}
+                    </div>
+
+                    {/* Event Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-playfair font-bold text-yard-primary text-base leading-6 truncate group-hover:underline">
+                        {event.title}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        <span className="text-xs text-[#555] font-sen">📅 {formattedDate}</span>
+                        {event.location && (
+                          <span className="text-xs text-[#555] font-sen">📍 {event.location}</span>
+                        )}
+                        {event.audienceType && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-[#EDF0EE] text-yard-primary font-medium font-sen capitalize">
+                            {event.audienceType}
+                          </span>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium font-sen capitalize ${dateCategoryStyles[dateCategory]}`}>
+                          {dateCategory}
+                        </span>
+                        {/* <span className={`text-xs px-2 py-0.5 rounded-full font-medium font-sen capitalize ${event.status === "confirmed"
+                          ? "bg-green-100 text-green-700"
+                          : event.status === "cancelled"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                          }`}>
+                          {event.status || "pending"}
+                        </span> */}
+                      </div>
+                    </div>
+
+                    {/* CTA */}
+                    <div className="flex-shrink-0 flex items-center gap-2">
+                      <span className="text-xs text-[#999] font-sen hidden sm:block">View registrations</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yard-primary opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200">
+                        <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Create Event Modal */}
+      <Modal isOpen={isCreateModalOpen}>
         <section className="w-full">
           <div className="w-full flex items-center justify-between">
-            <div className="title flex flex-col items-end">
-              <h1 className="font-playfair text-xl md:text-[28px] text-yard-primary font-bold leading-9 tracking-[-0.1px]">
-                Select preferred package
-              </h1>
-              <img
-                src={"/line.svg"}
-                alt="Line"
-                className="-mt-3 w-40 md:mr-0 md:w-52 "
-              />
-            </div>
+            <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary font-playfair">
+              Create Event
+            </h2>
             <div
               className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => setIsCreateModalOpen(false)}
             >
               <img
                 src={"/icons/cancel.svg"}
@@ -362,132 +692,327 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             </div>
           </div>
         </section>
-        <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5">
-          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm">
-            <input type="radio" className="mt-2" />
-            <div>
-              <h2 className="font-bold text-xl font-playfair">
-                Picnic Package
-              </h2>
-              <p className="text-[#717068] text-sm">
-                Perfect for casual gatherings or date days.
-              </p>
+        <hr className="w-full h-[1px] bg-[#E4E8E5] border-0 my-5" />
+
+        {/*Form*/}
+        <form
+          className="w-full flex flex-col gap-5 max-h-[70vh] overflow-y-auto pr-2"
+          onSubmit={handleCreateEvent}
+        >
+          {/* Title */}
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full input-group flex flex-col gap-3">
+              <label htmlFor="title" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Event Title *
+              </label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                value={inputs.title}
+                onChange={handleInputChange}
+                placeholder="Enter event title"
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
             </div>
           </div>
 
-          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm">
-            <input type="radio" className="mt-2" />
-            <div>
-              <h2 className="font-bold text-xl font-playfair">
-                Intimate Event Package
-              </h2>
-              <p className="text-[#717068] text-sm">
-                Ideal for birthdays, proposals, or family celebrations.
-              </p>
+          {/* Description */}
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full input-group flex flex-col gap-3">
+              <label htmlFor="description" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={inputs.description}
+                onChange={handleInputChange}
+                placeholder="Enter event description"
+                rows={3}
+                className="w-full rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] resize-none"
+              />
             </div>
           </div>
 
-          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm">
-            <input type="radio" className="mt-2" />
-            <div>
-              <h2 className="font-bold text-xl font-playfair">
-                Full Party Package
-              </h2>
-              <p className="text-[#717068] text-sm">
-                All features of Picnic + Intimate Event. Perfect for larger
-                celebrations.
-              </p>
+          {/* Date & Time */}
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+              <label htmlFor="date" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Event Date *
+              </label>
+              <input
+                type="date"
+                id="date"
+                name="date"
+                required
+                value={inputs.date}
+                onChange={handleInputChange}
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
+            </div>
+
+            <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+              <label htmlFor="time" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Start Time *
+              </label>
+              <input
+                type="time"
+                id="time"
+                name="time"
+                required
+                value={inputs.time}
+                onChange={handleInputChange}
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
             </div>
           </div>
 
-          <div className="md:w-[554px] border-[1px] border-[#E4E8E5] px-3 py-4 md:px-5 md:py-6 flex items-start gap-3 rounded-sm">
-            <input type="radio" className="mt-2" />
-            <div>
-              <h2 className="font-bold text-xl font-playfair">
-                Special Custom Package
-              </h2>
-              <p className="text-[#8F4546] text-sm">Shut down the Yard!!!</p>
+          {/* Audience Type & Location */}
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+              <label htmlFor="audienceType" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Audience *
+              </label>
+              <select
+                id="audienceType"
+                name="audienceType"
+                value={inputs.audienceType}
+                onChange={handleInputChange}
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] bg-white"
+              >
+                <option value="both">Both (Adults & Children)</option>
+                <option value="adults">Adults Only</option>
+                <option value="children">Children Only</option>
+              </select>
+            </div>
+
+            <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+              <label htmlFor="location" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Location
+              </label>
+              <input
+                type="text"
+                id="location"
+                name="location"
+                value={inputs.location}
+                onChange={handleInputChange}
+                placeholder="The Yard"
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
             </div>
           </div>
-          <Link
-            href={"/booking/checkout"}
-            className="w-full md:w-[554px] flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden"
+
+          {/* Prices (Conditional) */}
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            {(inputs.audienceType === "adults" || inputs.audienceType === "both") && (
+              <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+                <label htmlFor="adultPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                  Adult Ticket Price (₦) *
+                </label>
+                <input
+                  type="number"
+                  id="adultPrice"
+                  name="adultPrice"
+                  required
+                  min={0}
+                  value={inputs.adultPrice}
+                  onChange={handleInputChange}
+                  placeholder="0.00"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            )}
+
+            {(inputs.audienceType === "children" || inputs.audienceType === "both") && (
+              <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+                <label htmlFor="childPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                  Child Ticket Price (₦) *
+                </label>
+                <input
+                  type="number"
+                  id="childPrice"
+                  name="childPrice"
+                  required
+                  min={0}
+                  value={inputs.childPrice}
+                  onChange={handleInputChange}
+                  placeholder="0.00"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Activities */}
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full input-group flex flex-col gap-3">
+              <label htmlFor="activities" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Activities (comma-separated)
+              </label>
+              <input
+                type="text"
+                id="activities"
+                name="activities"
+                value={inputs.activities}
+                onChange={handleInputChange}
+                placeholder="e.g. Picnic, Board games, Music, Networking"
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
+            </div>
+          </div>
+
+          {/* Event Image Upload */}
+          <div className="form-group flex flex-col gap-3">
+            <label className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+              Event Image (optional)
+            </label>
+            <label
+              htmlFor="event-image-upload"
+              className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-300 ${imagePreview ? "border-yard-primary bg-[#EDF0EE]" : "border-[#BFBFBF] bg-[#FAFAFA] hover:border-yard-primary hover:bg-[#EDF0EE]"
+                }`}
+            >
+              {imagePreview ? (
+                <img src={imagePreview} alt="Preview" className="h-full w-full object-cover rounded-lg" />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-center px-4">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#999]">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <p className="text-sm text-[#666] font-sen">Click to upload or drag &amp; drop</p>
+                  <p className="text-xs text-[#999] font-sen">PNG, JPG, WEBP up to 5MB</p>
+                </div>
+              )}
+              <input
+                id="event-image-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
+            </label>
+            {imageFile && (
+              <div className="flex items-center justify-between text-sm text-[#555] font-sen bg-[#EDF0EE] rounded px-3 py-2">
+                <span className="truncate max-w-[80%]">{imageFile.name}</span>
+                <button
+                  type="button"
+                  onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  className="text-red-500 font-medium hover:text-red-700 flex-shrink-0 ml-2"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Visibility (Checkbox) */}
+          <div className="form-group flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="public"
+              name="public"
+              hidden={true}
+              checked={inputs.public}
+              onChange={handleInputChange}
+              className="checkbox checkbox-sm border-2 border-yard-primary checked:border-yard-dark-primary checked:text-yard-dark-primary cursor-pointer"
+            />
+            {/* <label htmlFor="public" className="leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen cursor-pointer select-none">
+              Make event public (visible on the homepage/gallery)
+            </label> */}
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3 cursor-pointer py-4"
           >
-            <span className="z-40">Select package</span>
+            <span className="z-40 font-sen font-semibold text-[16px] leading-[26px]">Create Event</span>
             <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-          </Link>
-        </div>
+          </button>
+        </form>
       </Modal>
 
-      <Modal isOpen={unavailableModal}>
+      {/* ── Event Registrations Popup Modal ── */}
+      <Modal isOpen={isRegModalOpen}>
         <section className="w-full">
-          <div className="w-full flex items-center justify-end">
+          <div className="w-full flex items-center justify-between">
+            <div className="flex flex-col">
+              <h2 className="font-semibold text-xl leading-8 tracking-[0.1px] text-yard-primary font-playfair">
+                {selectedEvent?.title || "Event"}
+              </h2>
+              <p className="text-sm text-[#666] font-sen mt-0.5">
+                Registered Attendees
+              </p>
+            </div>
             <div
               className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-              onClick={() => setUnavailableModal(false)}
+              onClick={() => { setIsRegModalOpen(false); setSelectedEvent(null); setRegistrations([]); }}
             >
-              <img
-                src={"/icons/cancel.svg"}
-                alt="Close Icon"
-                className="z-40"
-              />
+              <img src={"/icons/cancel.svg"} alt="Close Icon" className="z-40" />
               <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
             </div>
           </div>
         </section>
-        <div className="w-full flex flex-col justify-center items-center mt-5 md:mt-8 md:my-5 gap-5">
-          <div className="title flex flex-col items-end">
-            <h1 className="font-playfair text-xl md:text-[28px] text-yard-red font-bold leading-9 tracking-[-0.1px]">
-              Ouch! Spot Unavailable
-            </h1>
-            <img
-              src={"/line.svg"}
-              alt="Line"
-              className="-mt-3 w-40 md:mr-0 md:w-38"
-            />
-          </div>
-          <p className="text-[#5A5A53] leading-6">
-            Please this day is not available
-          </p>
-          <button
-            onClick={() => setUnavailableModal(false)}
-            className="text-yard-primary font-medium font-sen cursor-pointer"
-          >
-            Please select another day
-          </button>
-        </div>
-      </Modal>*/}
+        <hr className="w-full h-[1px] bg-[#E4E8E5] border-0 my-4" />
 
-      {/*<Modal isOpen={pendingModal}>
-            <section className="w-full">
-              <div className="w-full flex items-center justify-between">
-                <div className="title flex flex-col items-end">
-                  <h1 className="font-playfair text-xl md:text-[28px] text-yard-red font-bold leading-9 tracking-[-0.1px]">
-                    Pending
-                  </h1>
-                  <img
-                    src={"/about-line.svg"}
-                    alt="Line"
-                    className="-mt-3 w-20 md:mr-0 md:w-28"
-                  />
-                </div>
-                <div
-                  className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-                  onClick={() => setPendingModal(false)}
-                >
-                  <img
-                    src={"/icons/cancel.svg"}
-                    alt="Close Icon"
-                    className="z-40"
-                  />
-                  <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
-                </div>
-              </div>
-            </section>
-            <div className="w-full flex flex-col items-center mt-5 md:my-5 md:ml-10 gap-5">
-              <p>...</p>
+        <div className="w-full max-h-[60vh] overflow-y-auto flex flex-col gap-2">
+          {isRegLoading ? (
+            <div className="flex flex-col items-center justify-center py-14 gap-3">
+              <div className="w-8 h-8 border-4 border-yard-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-sm text-[#666] font-sen">Loading registrations...</p>
             </div>
-          </Modal>*/}
+          ) : registrations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-14 gap-3 text-center">
+              <div className="w-14 h-14 rounded-full bg-[#EDF0EE] flex items-center justify-center text-2xl">👥</div>
+              <p className="text-yard-primary font-semibold font-sen">No registrations yet</p>
+              <p className="text-sm text-[#999] font-sen">No one has registered for this event yet.</p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-[#555] font-sen mb-2">{registrations.length} attendee{registrations.length !== 1 ? "s" : ""} registered</p>
+              {registrations.map((reg: any, idx: number) => {
+                const name = reg.name || `${reg.firstname || ""} ${reg.lastname || ""}`.trim() || "Guest";
+                const email = reg.email || reg.customerEmail || "";
+                const phone = reg.phone || reg.customerPhone || "";
+                const adults = reg.adults ?? reg.adultCount ?? null;
+                const children = reg.children ?? reg.childCount ?? null;
+                return (
+                  <div key={reg._id || idx} className="flex items-center gap-4 p-3 rounded-lg border border-[#E4E8E5] bg-white hover:bg-[#FAFAFA] transition-colors">
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-yard-primary flex items-center justify-center text-white font-bold font-sen text-sm flex-shrink-0">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium font-sen text-[#1A1A1A] text-sm leading-5 truncate">{name}</p>
+                      <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                        {email && <span className="text-xs text-[#666] font-sen truncate">{email}</span>}
+                        {phone && <span className="text-xs text-[#999] font-sen">{phone}</span>}
+                      </div>
+                    </div>
+
+                    {/* Ticket counts */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {adults !== null && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-[#EDF0EE] text-yard-primary font-sen font-medium">
+                          {adults} adult{adults !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                      {children !== null && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-[#EDF0EE] text-yard-primary font-sen font-medium">
+                          {children} child{children !== 1 ? "ren" : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      </Modal>
     </main>
   );
 };

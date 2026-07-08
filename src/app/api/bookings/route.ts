@@ -45,6 +45,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
       date: form.get("date") as CreateBookingInput["date"],
       guestCount: Number(form.get("guestCount")) as CreateBookingInput["guestCount"],
       packageId: form.get("packageId") as CreateBookingInput["packageId"],
+      spaceId: form.get("spaceId") as CreateBookingInput["spaceId"] ?? undefined,
       time: form.get("time") as CreateBookingInput["time"] ?? undefined,
       addon: form.getAll("addon").map((item) => item as string) as CreateBookingInput["addon"],
       eventDescription: form.get(
@@ -61,6 +62,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
       date: body.date,
       guestCount: body.guestCount,
       packageId: body.packageId,
+      spaceId: body.spaceId,
       time: body.time,
       addon: Array.isArray(body.addon) ? body.addon : body.addon ? [body.addon] : undefined,
       eventDescription: body.eventDescription,
@@ -203,6 +205,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
   const booking = await Booking.create({
     customer: customer.id,
     package: _package.id,
+    space: body.spaceId,
     eventDate: bookingDate,
     guestCount,
     time: body.time,
