@@ -141,7 +141,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
                         email: inputs.email,
                         adultsComing: inputs.adults ?? null,
                         childrenComing: inputs.children ?? null,
-                        addons: event.selectedAddon
+                        addons: event.selectedAddon.map(item=> item.id)
                     });
                     toast.success("Event Booked Successfully");
 
@@ -457,7 +457,6 @@ export default function EventsPage() {
         return <Loading />
     }
 
-    console.log(events);
 
     return (
         <div className="pt-10 pb-20 md:pb-40">
