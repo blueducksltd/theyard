@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-// import "./globals.css";
 import Header from "@/components/v2/Header";
 import Footer from "@/components/v2/Footer";
-import { Toaster } from "sonner";
 
 
 
@@ -19,7 +16,6 @@ export default function RootLayout({
 }>) {
   return (
     <div>
-      <Toaster />
       <Header />
       <div className="bg-[#F6F2EC]">
 

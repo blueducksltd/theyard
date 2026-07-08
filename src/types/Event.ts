@@ -21,16 +21,16 @@ export interface IEvent extends Document {
 }
 
 export interface IEventClient {
+  id: string;
   title: string;
   description: string;
   slug: string;
   public: boolean;
   date: Date;
   images: string[];
-  time: {
-    start: string; // "14:00"
-    end: string; // "18:00"
-  };
+  endTime: string;
+  startTime: string;
+ 
   audienceType: "children" | "adults" | "both";
   adultPrice?: number;
   childPrice?: number;
