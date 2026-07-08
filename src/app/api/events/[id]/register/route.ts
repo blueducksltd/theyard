@@ -4,6 +4,7 @@ import APIError from "@/lib/errors/APIError";
 import { errorHandler } from "@/lib/errors/ErrorHandler";
 import Event from "@/models/Event";
 import SignUp from "@/models/SignUp";
+import AddOn from "@/models/AddOn";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth, requireRole } from "@/lib/auth";
@@ -14,6 +15,7 @@ const RegisterEventDTO = z.object({
   email: z.string().trim().email("Invalid email address"),
   adultsComing: z.coerce.number().int().min(0, "Adults count cannot be negative"),
   childrenComing: z.coerce.number().int().min(0, "Children count cannot be negative"),
+  addons: z.array(z.string().trim().min(1, "Addon id cannot be empty")).optional().default([]),
 });
 
 type RegisterEventInput = z.infer<typeof RegisterEventDTO>;
@@ -28,7 +30,16 @@ export const POST = errorHandler(async (request: NextRequest, context) => {
     throw APIError.BadRequest("Request body is required");
   }
 
-  const data = RegisterEventDTO.parse(payload as RegisterEventInput);
+  const addonIds = Array.isArray((payload as { addons?: unknown }).addons)
+    ? (payload as { addons: string[] }).addons
+    : Array.isArray((payload as { addonIds?: unknown }).addonIds)
+      ? (payload as { addonIds: string[] }).addonIds
+      : [];
+
+  const data = RegisterEventDTO.parse({
+    ...payload,
+    addons: addonIds,
+  } as RegisterEventInput);
 
   const event = await Event.findOne({
     $or: [{ _id: id }, { slug: id }],
@@ -38,6 +49,13 @@ export const POST = errorHandler(async (request: NextRequest, context) => {
     throw APIError.NotFound("Event not found");
   }
 
+  if (data.addons.length > 0) {
+    const foundAddons = await AddOn.find({ _id: { $in: data.addons } });
+    if (foundAddons.length !== data.addons.length) {
+      throw APIError.BadRequest("One or more selected add-ons are invalid");
+    }
+  }
+
   const registration = await SignUp.create({
     eventId: event._id,
     name: data.name,
@@ -45,6 +63,7 @@ export const POST = errorHandler(async (request: NextRequest, context) => {
     email: data.email,
     adultsComing: data.adultsComing,
     childrenComing: data.childrenComing,
+    addons: data.addons,
   });
 
   return APIResponse.success("Event registration successful", {

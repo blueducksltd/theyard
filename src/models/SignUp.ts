@@ -7,6 +7,7 @@ export interface ISignUp extends Document {
   email: string;
   adultsComing?: number;
   childrenComing?: number;
+  addons?: Schema.Types.ObjectId[];
   createdAt: Date;
 }
 
@@ -33,6 +34,10 @@ const SignUpSchema = new Schema<ISignUp>({
   },
   childrenComing: {
     type: Number,
+  },
+  addons: {
+    type: [{ type: Schema.Types.ObjectId, ref: "AddOn" }],
+    default: [],
   },
   createdAt: {
     type: Date,
