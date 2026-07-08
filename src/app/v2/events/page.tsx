@@ -2,23 +2,22 @@
 
 import FilterCategory from '@/components/v2/FilterCategory';
 import Modal from '@/components/v2/Modal';
-import { AddMoreFun, type SelectedAddon } from '@/app/v2/packages/page';
+import { AddMoreFun, formatNaira, type SelectedAddon } from '@/app/v2/packages/page';
 import Image from 'next/image';
-import { motion, useReducedMotion } from 'motion/react';
+import { motion } from 'motion/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { BadgeCheck, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { IEventClient } from '@/types/Event';
 import axios from '@/util/axios';
 import Loading from '@/components/v2/Loading';
+import EmptyState from '@/components/v2/EmptyState';
+import { initiatePayment } from '@/util/payment';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
 const filters = ["All", "Ongoing", "Upcoming", "Passed"] as const;
 export type Filter = (typeof filters)[number];
-
-type EventPrice = { children: number; adult: number };
-
 
 export interface IEvent extends IEventClient {
     selectedAddon: SelectedAddon[];
@@ -33,12 +32,6 @@ interface FormInputs {
     email: string;
     children: number;
     adults: number;
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────
-
-function formatNaira(value: number): string {
-    return value.toLocaleString("en-NG", { style: "currency", currency: "NGN" });
 }
 
 // ── Static Data ────────────────────────────────────────────────────────
@@ -68,9 +61,12 @@ const FORM_FIELDS: Array<{
     ];
 
 // ── Panel transition helpers ────────────────────────────────────────────
-// Width lives only in PANEL_VISIBLE so it doesn't conflict with w-0 in PANEL_HIDDEN.
-const PANEL_BASE = "bg-white p-5 flex flex-col gap-3 transition-all duration-300";
-const PANEL_VISIBLE = "opacity-100 scale-100 w-100 md:w-140";
+// Width and padding live only in PANEL_VISIBLE: a hidden panel must occupy
+// zero layout space (w-0 h-0 AND no padding), otherwise the border-box
+// padding keeps it 40px wide/tall and pushes the visible panel off-center
+// inside the modal's centered flex column.
+const PANEL_BASE = "bg-white flex flex-col gap-3 transition-all duration-300";
+const PANEL_VISIBLE = "p-5 opacity-100 scale-100 w-100 max-w-[calc(100vw-2rem)] md:w-140";
 const PANEL_HIDDEN = "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none";
 
 // ── EventModalContent ───────────────────────────────────────────────────
@@ -81,10 +77,11 @@ interface EventModalContentProps {
     onConfirmFun: (selectedFun: SelectedAddon[]) => void;
 }
 
-function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentProps) {
+const EventModalContent = React.memo(function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentProps) {
     const [step, setStep] = useState<Step>('overview');
     const [showAddFun, setShowAddFun] = useState(false);
     const [inputs, setInputs] = useState<FormInputs>(EMPTY_INPUTS);
+    const [loading, setLoading] = useState(false);
 
     // Stable ref so AddMoreFun (React.memo'd) doesn't re-render on every keystroke.
     const handleHideAddFun = useCallback(() => setShowAddFun(false), []);
@@ -92,8 +89,8 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
     const eventDate = useMemo(() => new Date(event.date), [event.date]);
 
     const packageTotal = useMemo(
-        () => event.adultPrice! * inputs.adults + event.childPrice! * inputs.children,
-        [inputs.adults, inputs.children]
+        () => (event.adultPrice ?? 0) * inputs.adults + (event.childPrice ?? 0) * inputs.children,
+        [event.adultPrice, event.childPrice, inputs.adults, inputs.children]
     );
 
     const funTotal = useMemo(
@@ -116,12 +113,25 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
     const pricingRows = useMemo(() => [
         { label: "Base ticket", value: packageTotal },
         ...event.selectedAddon.map((item) => ({ label: item.name, value: (item.price ?? item.pricePerMin ?? 0) * item.quantity })),
-    ], [packageTotal, event.selectedAddon
-
-    ]);
+    ], [packageTotal, event.selectedAddon]);
 
     // step === s AND AddMoreFun is not overlaying
     const isVisible = (s: Step) => step === s && !showAddFun;
+
+    const handleSubmit = () => {
+        setLoading(true);
+        initiatePayment(
+            inputs.email,
+            total,
+            async () => {
+                // TODO: POST the event booking to the API once the endpoint is ready.
+                toast.success("Transaction successful");
+                setLoading(false);
+                onClose();
+            },
+            () => setLoading(false)
+        );
+    };
 
     return (
         <>
@@ -148,18 +158,23 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
                 <div className="flex flex-wrap flex-col md:flex-row md:items-center md:justify-between gap-3 py-2 font-playfair">
                     <h1 className="font-bold text-primaryGreen">{event.title}</h1>
                     <div className="flex items-center gap-3">
-                        <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                            <b>{formatNaira(event.childPrice!)}</b> Children
-                        </span>
-                        <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                            <b>{formatNaira(event.adultPrice!)}</b> Adult
-                        </span>
+                        {
+                            event.childPrice && <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
+                                <b>{formatNaira(event.childPrice!)}</b> Children
+                            </span>
+                        }
+                        {
+                            event.adultPrice && <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
+                                <b>{formatNaira(event.adultPrice!)}</b> Adult
+                            </span>
+                        }
                     </div>
                 </div>
 
-                <p className="font-lato text-sm text-[#8C8273] italic">What we'll do</p>
+                <p className="font-lato text-sm text-[#8C8273] italic">What we&apos;ll do</p>
                 <div className="h-30 overflow-auto flex flex-col gap-2 text-[#8C8273] text-sm">
-                    {[...(event.includes ?? []), ...event.selectedAddon.map((f) => f.name)].map((item) => (
+                    {/* Set dedupes an addon whose name also appears in `includes` (duplicate React keys) */}
+                    {[...new Set([...(event.includes ?? []), ...event.selectedAddon.map((f) => f.name)])].map((item) => (
                         <div key={item} className="flex items-center gap-2">
                             <BadgeCheck size={14} />
                             <p className="font-lato">{item}</p>
@@ -188,7 +203,6 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
             {/* ── ADD MORE FUN overlay — sibling, not absolute-positioned ── */}
             <AddMoreFun
                 show={showAddFun}
-                onClose={onClose}
                 closeFun={handleHideAddFun}
                 onConfirmAddon={onConfirmFun}
                 packageSelectedFun={event.selectedAddon}
@@ -236,6 +250,7 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
                                                 : e.target.value,
                                         } as FormInputs))
                                     }
+                                    // readOnly={key==="children" && !event.childPrice || key === "adults" && !event.adultPrice}
                                 />
                             </div>
                         </div>
@@ -317,21 +332,26 @@ function EventModalContent({ event, onClose, onConfirmFun }: EventModalContentPr
                     ))}
 
                     <div className="col-span-2 border-t border-gray-200 mt-2 pt-3 flex justify-between font-semibold text-primaryGreen text-sm">
-                        <p>Total</p>
+                        <p>Total </p>
                         <p>{total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     </div>
 
                     <button
                         type="button"
-                        className="col-span-2 h-10 bg-primaryGreen text-white font-sen text-sm"
+                        className="col-span-2 h-10 bg-primaryGreen text-white font-sen text-sm cursor-pointer flex items-center justify-center"
+                        onClick={handleSubmit}
                     >
-                        Proceed to pay
+                        {loading ? <motion.div
+                            className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                        /> : "Proceed to  pay"}
                     </button>
                 </div>
             </div>
         </>
     );
-}
+});
 
 // ── Page ───────────────────────────────────────────────────────────────
 
@@ -362,25 +382,48 @@ export default function EventsPage() {
         });
     }, [selectedIndex]);
 
-    const filteredEvents = useMemo(
-        () => events,
-        [activeFilter, events]
-    );
+    // Pair each event with its original index so the modal/addon handlers
+    // keep targeting the right entry even when the list is filtered.
+    const filteredEvents = useMemo(() => {
+        const indexed = events.map((event, index) => ({ event, index }));
+        if (activeFilter === "All") return indexed;
+
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const endOfToday = new Date(startOfToday);
+        endOfToday.setDate(endOfToday.getDate() + 1);
+
+        return indexed.filter(({ event }) => {
+            const date = new Date(event.date);
+            if (activeFilter === "Ongoing") return date >= startOfToday && date < endOfToday;
+            if (activeFilter === "Upcoming") return date >= endOfToday;
+            return date < startOfToday; // Passed
+        });
+    }, [activeFilter, events]);
 
     const selectedEvent = selectedIndex !== null ? events[selectedIndex] : null;
     useEffect(() => {
+        let cancelled = false;
+        document.body.style.overflow = "hidden"; // Disable scrolling while loading
         (async () => {
             try {
-                document.body.style.overflow = "hidden"; // Disable scrolling while loading
                 const req = await axios.get("../api/events");
-                setEvents(req.data.data.events)
+                if (cancelled) return;
+                const resEvents: IEvent[] = req.data.data.events
+                setEvents(resEvents.map(item => ({ ...item, selectedAddon: [] })))
             } catch (err) {
                 console.error(err)
             } finally {
-                document.body.style.overflow = "auto"; // Re-enable scrolling
-                setIsLoading(false);
+                if (!cancelled) {
+                    document.body.style.overflow = ""; // Re-enable scrolling
+                    setIsLoading(false);
+                }
             }
         })()
+        return () => {
+            cancelled = true;
+            document.body.style.overflow = "";
+        };
     }, [])
 
     if (isLoading) {
@@ -393,7 +436,7 @@ export default function EventsPage() {
                 {selectedEvent && (
                     // key forces a fresh mount (and state reset) when a different event is opened
                     <EventModalContent
-                        key={selectedIndex}
+                        key={selectedEvent.slug}
                         event={selectedEvent}
                         onClose={handleCloseModal}
                         onConfirmFun={handleConfirmFun}
@@ -423,13 +466,18 @@ export default function EventsPage() {
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 px-5 py-10 md:p-20">
-                {filteredEvents.map((event) => {
-                    const originalIndex = events.indexOf(event);
+                {filteredEvents.length === 0 && (
+                    <EmptyState
+                        title="No Events"
+                        message="There are no events at the moment. Please check back soon for upcoming celebrations."
+                    />
+                )}
+                {filteredEvents.map(({ event, index }) => {
                     return (
                         <div
-                            key={originalIndex}
+                            key={event.slug}
                             className="p-3 grid gap-2 font-inter cursor-pointer"
-                            onClick={() => handleOpenModal(originalIndex)}
+                            onClick={() => handleOpenModal(index)}
                         >
                             <div className="h-50 relative">
                                 <Image

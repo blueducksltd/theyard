@@ -158,7 +158,7 @@ export function BentoGrid({ images, isMotion }: { images: string[], isMotion?: b
 
     return (
         <>
-            <div className="grid grid-cols-6 auto-rows-[minmax(145px,1fr)] gap-3 p-5 md:p-10">
+            <div className="grid grid-cols-6 auto-rows-[minmax(145px,1fr)] gap-3 p-0 md:p-10">
                 {images.map((img, i) => {
                     const tile = layout[i];
                     return isMotion ? (
@@ -282,42 +282,6 @@ export function BentoGrid({ images, isMotion }: { images: string[], isMotion?: b
     );
 }
 
-// const gallery: { image: string; category: (typeof filters)[number] }[] = [{
-//     image: "https://images.pexels.com/photos/34230681/pexels-photo-34230681.jpeg",
-//     category: "Date Night",
-
-// },
-// {
-//     image: "https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg",
-//     category: "Birthdays",
-
-// },
-// {
-//     image: "https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg",
-//     category: "Birthdays",
-
-// },
-// {
-//     image: "https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg",
-//     category: "Birthdays",
-
-// },
-// {
-//     image: "https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg",
-//     category: "Proposals",
-
-// },
-// {
-//     image: "https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg",
-//     category: "Picnics",
-
-// },
-// {
-//     image: "https://images.pexels.com/photos/10071290/pexels-photo-10071290.jpeg",
-//     category: "Private Dining",
-
-// }
-// ]
 export default function GalleryPage() {
     const shouldReduceMotion = useReducedMotion();
     const [filters, setFilters] = useState<string[]>([]);

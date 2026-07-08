@@ -157,7 +157,7 @@ export default function Home() {
         setPackages(packagesRes.data.data.packages);
         setEvents(eventsRes.data.data.events);
         setTestimonials(testimonialsRes.data.data.reviews);
-        setGallery(galleryRes.data.data.gallery);
+        setGallery(galleryRes.data.data.gallery.slice(0, 10));
       } catch (err) {
         console.error("Failed to load home page data ❌", err);
       } finally {
@@ -458,7 +458,7 @@ export default function Home() {
             threshold={5}
             resistance={true}
             resistanceRatio={0.85}
-  className="w-full h-60" // fixed height instead of h-full
+            className="w-full h-60" // fixed height instead of h-full
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
             }}
@@ -611,28 +611,28 @@ export default function Home() {
             {events.slice(0, 3).map((event, index) => {
 
               return <Link href={"/v2/events"} key={index}>
-              <motion.div
-                className={"p-3 grid gap-2  font-inter"}
-                variants={revealItem}
-                transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="h-50 relative">
-                  <Image src={event.images[0]} fill alt="" className="object-cover" />
-                </div>
+                <motion.div
+                  className={"p-3 grid gap-2  font-inter"}
+                  variants={revealItem}
+                  transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="h-50 relative">
+                    <Image src={event.images[0]} fill alt="" className="object-cover" />
+                  </div>
 
-                <div className="grid gap-1">
-                  <p className={`font-semibold text-lg font-playfair-display text-primaryGreen`}>{event.title}</p>
-                  <p className={`font-lato text-[#4B6450] text-sm font-light`}>{event.description}</p>
-                  <p className={`font-lato text-primaryGreen text-sm mt-6 font-medium`}>
-                    {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}
-                  </p>
-                </div>
-              </motion.div></Link>
+                  <div className="grid gap-1">
+                    <p className={`font-semibold text-lg font-playfair-display text-primaryGreen`}>{event.title}</p>
+                    <p className={`font-lato text-[#4B6450] text-sm font-light`}>{event.description}</p>
+                    <p className={`font-lato text-primaryGreen text-sm mt-6 font-medium`}>
+                      {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}
+                    </p>
+                  </div>
+                </motion.div></Link>
             })}
           </motion.div>
 
 
-        
+
         </div>
 
         <div

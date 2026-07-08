@@ -3,7 +3,7 @@
 import HeaderTextComp from "@/components/v2/HeaderTextComp";
 import Modal from "@/components/v2/Modal";
 import { useBookingStore } from "@/store/bookingStore";
-import { BadgeCheck, Check, Minus, Plus, X } from "lucide-react";
+import { BadgeCheck, Check, Minus, PackageX, Plus, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { IPackageClient } from "@/types/Package";
 import axios from "@/util/axios";
 import Loading from "@/components/v2/Loading";
+import EmptyState from "@/components/v2/EmptyState";
 import { AddOnCategory, IAddOnModelClient } from "@/types/AddOn";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -75,6 +76,9 @@ export const ModalContent = React.memo(function ModalContent({
 }: ModalContentProps) {
     const [showAddFun, setShowAddFun] = useState(false);
 
+    // Stable ref so AddMoreFun (React.memo'd) doesn't re-render on every parent render.
+    const handleHideAddFun = useCallback(() => setShowAddFun(false), []);
+
     const totalSelectedAddons = useMemo(() => {
         return selectedPackage.selectedAddon.reduce(
             (sum, item) => sum + (item.price ?? item.pricePerMin ?? 0) * item.quantity,
@@ -87,9 +91,11 @@ export const ModalContent = React.memo(function ModalContent({
     const router = useRouter();
     return (
         <>
+            {/* Padding lives in the visible branch only: a hidden panel with p-5 still
+                occupies a 40px border-box and pushes the modal content off-center. */}
             <div
-                className={`bg-white p-5 space-y-3 transition-all duration-300 ${!showAddFun
-                    ? "opacity-100 scale-100 w-100 md:w-120 min-h-100"
+                className={`bg-white space-y-3 transition-all duration-300 ${!showAddFun
+                    ? "p-5 opacity-100 scale-100 w-100 max-w-[calc(100vw-2rem)] md:w-120 min-h-100"
                     : "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none"
                     }`}
             >
@@ -125,8 +131,9 @@ export const ModalContent = React.memo(function ModalContent({
 
                 <p className="font-lato text-sm text-[#8C8273] italic">Includes</p>
                 <div className="grid gap-2 my-5 text-[#8C8273] h-30 overflow-auto text-sm">
-                    {selectedPackage.specs
-                        .concat(selectedPackage.selectedAddon.map((item) => item.name))
+                    {/* Set dedupes an addon whose name also appears in specs (duplicate React keys) */}
+                    {[...new Set(selectedPackage.specs
+                        .concat(selectedPackage.selectedAddon.map((item) => item.name)))]
                         .map((include) => (
                             <div key={include} className="flex items-center gap-2">
                                 <BadgeCheck size={14} />
@@ -158,8 +165,7 @@ export const ModalContent = React.memo(function ModalContent({
 
             <AddMoreFun
                 show={showAddFun}
-                onClose={onClose}
-                closeFun={() => setShowAddFun(false)}
+                closeFun={handleHideAddFun}
                 onConfirmAddon={onConfirmAddon}
                 packageSelectedFun={selectedPackage.selectedAddon}
             />
@@ -171,21 +177,23 @@ export const ModalContent = React.memo(function ModalContent({
 
 interface AddMoreFunProps {
     show: boolean;
-    onClose: () => void;
     onConfirmAddon: (selectedAddon: SelectedAddon[]) => void;
     closeFun: () => void;
     packageSelectedFun: SelectedAddon[];
 }
 
+// Module-level cache: AddMoreFun remounts every time a modal opens, and without
+// this each mount refired the same GET /api/admin/addons request.
+let addonsCache: IAddOnModelClient[] | null = null;
+
 export const AddMoreFun = React.memo(function AddMoreFun({
     show,
-    onClose,
     onConfirmAddon,
     closeFun,
     packageSelectedFun,
 }: AddMoreFunProps) {
     const [selectedTab, setSelectedTab] = useState<FunItem["category"]>(TABS[0]);
-    const [addons, setAddons] = useState<IAddOnModelClient[]>([]);
+    const [addons, setAddons] = useState<IAddOnModelClient[]>(() => addonsCache ?? []);
     const [selections, setSelections] = useState<Map<string, number>>(() => {
         const map = new Map<string, number>();
         for (const item of packageSelectedFun) {
@@ -279,21 +287,26 @@ export const AddMoreFun = React.memo(function AddMoreFun({
     }, [addons, selections, onConfirmAddon, closeFun]);
 
     useEffect(() => {
+        if (addonsCache) return; // already seeded from cache in useState
+        let cancelled = false;
         (async () => {
             try {
                 const res = await axios.get("../api/admin/addons");
-
-                setAddons(res.data.data.addOns);
+                addonsCache = res.data.data.addOns;
+                if (!cancelled) setAddons(res.data.data.addOns);
             } catch (err) {
                 console.error("Error fetching add-ons:", err);
             }
         })()
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     return (
         <div
-            className={`bg-white p-5 space-y-3 transition-all duration-300 flex flex-col justify-between ${show
-                ? "opacity-100 scale-100 w-100 md:w-140 min-h-120"
+            className={`bg-white space-y-3 transition-all duration-300 flex flex-col justify-between ${show
+                ? "p-5 opacity-100 scale-100 w-100 max-w-[calc(100vw-2rem)] md:w-140 min-h-120"
                 : "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none"
                 }`}
         >
@@ -468,7 +481,7 @@ export const PackageCard = React.memo(function PackageCard({
                     {
                         isBooking ? <div className="w-full flex items-center gap-3 font-lato">
                             <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                                <b className="font-playfair-display text-sm">{formatNaira(pkg.guestLimit)}</b>/Person
+                                <b className="font-playfair-display text-sm">{formatNaira(pkg.price)}</b>/Person
                             </span>
                             <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
                                 {pkg.guestLimit} {pkg.guestLimit === 1 ? "Person" : "Persons"} <b className="font-playfair-display text-sm">Max</b>
@@ -537,20 +550,26 @@ export default function PackagesPage() {
     );
 
     useEffect(() => {
+        let cancelled = false;
+        document.body.style.overflow = "hidden"; // Disable scrolling while loading
         (async () => {
             try {
-                document.body.style.overflow = "hidden"; // Disable scrolling while loading
-
                 const packagesRes = await axios.get(`../api/packages`);
+                if (cancelled) return;
                 setPackages(packagesRes.data.data.packages.map((p: IPackageClient) => ({ ...p, selectedAddon: [] })));
             } catch (err) {
                 console.error("Error fetching packages:", err);
             } finally {
-                setLoading(false);
-                document.body.style.overflow = "auto"; // Disable scrolling while loading
-
+                if (!cancelled) {
+                    document.body.style.overflow = ""; // Re-enable scrolling
+                    setLoading(false);
+                }
             }
         })()
+        return () => {
+            cancelled = true;
+            document.body.style.overflow = "";
+        };
     }, []);
 
 
@@ -577,9 +596,16 @@ export default function PackagesPage() {
             />
 
             <div className="p-5 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-5">
+                {packages.length === 0 && (
+                    <EmptyState
+                        icon={PackageX}
+                        title="No Packages"
+                        message="There are no packages available at the moment. Please check back soon."
+                    />
+                )}
                 {packages.map((pkg, index) => (
                     <PackageCard
-                        key={pkg.name}
+                        key={pkg.id}
                         pkg={pkg}
                         index={index}
                         onSelect={handleShowPackage}

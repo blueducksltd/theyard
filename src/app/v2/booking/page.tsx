@@ -1,6 +1,7 @@
 "use client";
 import Modal from '@/components/v2/Modal';
-import { ArrowLeft, CalendarDays, ChevronDown } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronDown, PackageX } from 'lucide-react';
+import EmptyState from '@/components/v2/EmptyState';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { AddMoreFun, IPackageFun, PackageCard, SelectedAddon } from '../packages/page';
@@ -11,6 +12,7 @@ import Link from 'next/link';
 import axios from '@/util/axios';
 import { IPackageClient } from '@/types/Package';
 import { motion } from "motion/react";
+import { initiatePayment } from '@/util/payment';
 type ShowState = {
   package: {
     show: boolean;
@@ -32,14 +34,21 @@ type ShowState = {
 
 const PackageModalContent = ({ packages, showModal, setSelectedPackage }: { packages: IPackageFun[], showModal: boolean, setSelectedPackage: (selectedPackage: IPackageFun) => void }) => {
   return <div
-    className={`bg-white p-5 space-y-3 transition-all duration-300 ${showModal
-      ? "opacity-100 scale-100 w-100 h-[70vh] md:w-full md:min-h-100"
+    className={`bg-white space-y-3 transition-all duration-300 ${showModal
+      ? "p-5 opacity-100 scale-100 w-100 max-w-[calc(100vw-2rem)] h-[70vh] md:w-full md:min-h-100"
       : "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none"
       } grid grid-cols-1 md:grid-cols-2 gap-4 h-100 overflow-auto`}>
 
+    {packages.length === 0 && (
+      <EmptyState
+        icon={PackageX}
+        title="No Packages"
+        message="There are no packages available at the moment. Please check back soon."
+      />
+    )}
     {packages.map((pkg, index) => (
       <PackageCard
-        key={pkg.name}
+        key={pkg.id}
         pkg={pkg}
         index={index}
         onSelect={() => {
@@ -51,7 +60,7 @@ const PackageModalContent = ({ packages, showModal, setSelectedPackage }: { pack
 }
 
 export default function BookingPage() {
-  const { selectedPackage, selectedDate } = useBookingStore()
+  const { selectedPackage, selectedDate, clearSelectedPackage, clearDate } = useBookingStore()
   const [packages, setPackages] = useState<IPackageFun[]>([]);
   const [show, setShow] = useState<ShowState>({
     package: { show: false, value: null },
@@ -139,9 +148,6 @@ export default function BookingPage() {
     if (!show.date.value) return toast("Please select an event date.", { type: "error" });
     if (!show.time.value) return toast("Please select an event time.", { type: "error" });
     if (!inputs.guest || inputs.guest < 1) return toast("Please enter the number of guests.", { type: "error" });
-    const formatted = new Intl.DateTimeFormat("en-GB")
-      .format(new Date(show.date.value))
-      .replace(/\//g, "-");
     const data = {
       firstName: inputs.firstname,
       lastName: inputs.lastname,
@@ -154,16 +160,29 @@ export default function BookingPage() {
       addon: show.package.value.selectedAddon.map(item => item.id),
       eventDescription: inputs.note
     }
-    console.log(data);
-    try {
-      let req = await axios.post("/bookings", data);
-      setLoading(true);
-      console.log(req);
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    initiatePayment(inputs.email, total, async () => {
+      try {
+        await axios.post("/bookings", data);
+        toast.success("Transaction successful");
+        clearSelectedPackage();
+        clearDate();
+        setInputs({
+          email: "",
+          guest: 0,
+          firstname: "",
+          phonenumber: "",
+          lastname: "",
+          note: ""
+        });
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false);
+      }
+
+    });
+
   };
 
 
@@ -190,24 +209,25 @@ export default function BookingPage() {
 
   return (
     <div className='font-lato pb-20 md:pb-20'>
-      <Modal isOpen={show.package.show} children={<PackageModalContent packages={packages} setSelectedPackage={setSelectedPackage} showModal={show.package.show} />} handleClose={() => {
+      <Modal isOpen={show.package.show} handleClose={() => {
         setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
-      }} />
+      }}>
+        <PackageModalContent packages={packages} setSelectedPackage={setSelectedPackage} showModal={show.package.show} />
+      </Modal>
 
-      <Modal isOpen={show.fun.show} children={<AddMoreFun onClose={() => {
+      <Modal isOpen={show.fun.show} handleClose={() => {
         setShow(prev => ({ ...prev, fun: { ...prev.fun, show: false } }));
-      }}
-        closeFun={() => {
-          setShow(prev => ({ ...prev, fun: { ...prev.fun, show: false } }));
-        }}
-        onConfirmAddon={(selectedAddon) => {
-          setShow(prev => ({ ...prev, package: { ...prev.package, value: prev.package.value ? { ...prev.package.value, selectedAddon } : null } }));
-        }}
-        packageSelectedFun={show.package.value?.selectedAddon || []}
-        show={show.fun.show} />}
-        handleClose={() => {
-          setShow(prev => ({ ...prev, fun: { ...prev.fun, show: false } }));
-        }} />
+      }}>
+        <AddMoreFun
+          closeFun={() => {
+            setShow(prev => ({ ...prev, fun: { ...prev.fun, show: false } }));
+          }}
+          onConfirmAddon={(selectedAddon) => {
+            setShow(prev => ({ ...prev, package: { ...prev.package, value: prev.package.value ? { ...prev.package.value, selectedAddon } : null } }));
+          }}
+          packageSelectedFun={show.package.value?.selectedAddon || []}
+          show={show.fun.show} />
+      </Modal>
 
       <div className='p-5 md:p-20  grid grid-cols-1 md:grid-cols-3 gap-10 items-center'>
 
@@ -334,7 +354,7 @@ export default function BookingPage() {
 
               <div className={`absolute bg-white z-10 overflow-auto transition-[height] duration-500 ease-in-out ${!show.time.show ? "w-0 h-0 p-0" : "w-full h-30 p-2 "}`}>
                 {Array.from({ length: 15 }).map((_, index) => {
-                  let hour = (index + 8).toLocaleString().padStart(2, "0");
+                  const hour = (index + 8).toLocaleString().padStart(2, "0");
                   return <p key={index} onClick={() => {
                     setShow(prev => ({ ...prev, time: { ...prev.time, value: hour + ":00" } }))
                   }} className='p-3 z-50 hover:bg-black/5'>{hour}:00</p>
@@ -399,10 +419,10 @@ export default function BookingPage() {
             <button
               type="button"
               onClick={handleSubmit}
-              className='w-full h-10 bg-primaryGreen text-white font-sen text-sm mt-20 col-span-2'
+              className='w-full h-10 bg-primaryGreen text-white font-sen text-sm mt-20 col-span-2 flex items-center justify-center'
             >
               {loading ? <motion.div
-                className="h-10 w-10 border-2 border-white/30 border-t-white rounded-full"
+                className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
               /> : "Proceed to  pay"}
