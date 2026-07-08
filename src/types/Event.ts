@@ -19,6 +19,8 @@ export interface IEvent extends Document {
   childPrice?: number;
   status: "active" | "completed" | "cancelled" | "pending";
   location: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface IEventClient {
@@ -65,6 +67,10 @@ export type SafeEvent = {
   slug: string;
   public: boolean;
   date: Date;
+  time: {
+    start: string;
+    end: string;
+  };
   startTime: string;
   endTime: string;
   audienceType: IEvent["audienceType"];
@@ -73,25 +79,33 @@ export type SafeEvent = {
   childPrice?: number;
   location: string;
   status: IEvent["status"];
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export function sanitizeEvent(event: IEvent): SafeEvent {
+  const startTime = event.time?.start || "09:00";
+  const endTime = event.time?.end || "18:00";
+
   return {
     id: event.id,
     title: event.title,
     description: event.description,
-    images: event.images,
+    images: event.images || [],
     slug: event.slug,
     public: event.public,
     date: event.date,
-    startTime: event.time?.start || "09:00",
-    endTime: event.time?.end || "18:00",
+    time: { start: startTime, end: endTime },
+    startTime,
+    endTime,
     audienceType: event.audienceType,
     activities: event.activities || [],
     adultPrice: event.adultPrice,
     childPrice: event.childPrice,
     location: event.location,
     status: event.status,
+    createdAt: event.createdAt,
+    updatedAt: event.updatedAt,
   };
 }
 
