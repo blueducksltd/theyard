@@ -19,6 +19,7 @@ export interface IEvent extends Document {
   childPrice?: number;
   status: "active" | "completed" | "cancelled" | "pending";
   location: string;
+  
 }
 
 export interface IEventClient {
@@ -38,7 +39,6 @@ export interface IEventClient {
   childPrice?: number;
   status: "active" | "completed" | "cancelled" | "pending";
   location: string;
-  includes: []
 }
 
 // Instance methods

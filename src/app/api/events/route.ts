@@ -30,7 +30,6 @@ export const GET = errorHandler(async (request: NextRequest) => {
     const filter = {};
     if (type) Object.assign(filter, { type });
     if (status) Object.assign(filter, { status });
-
     // --- Fetch events ---
     const events = await Event.filter(filter, sort, direction);
     if (!events || events.length === 0)
@@ -57,7 +56,7 @@ export const GET = errorHandler(async (request: NextRequest) => {
 
     // --- Sanitize ---
     const sanitizedEvents = paginatedEvents.map((event) => sanitizeEvent(event));
-
+    console.log(sanitizedEvents);
     // --- Response ---
     return APIResponse.success("Events retrieved successfully", {
         events: sanitizedEvents,

@@ -158,6 +158,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
         );
     };
 
+    console.log(event);
     return (
         <>
             {/* ── STEP 1: Overview ── */}
@@ -199,7 +200,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
                 <p className="font-lato text-sm text-[#8C8273] italic">What we&apos;ll do</p>
                 <div className="h-30 overflow-auto flex flex-col gap-2 text-[#8C8273] text-sm">
                     {/* Set dedupes an addon whose name also appears in `includes` (duplicate React keys) */}
-                    {[...new Set([...(event.includes ?? []), ...event.selectedAddon.map((f) => f.name)])].map((item) => (
+                    {[...new Set([...(event.activities ?? []), ...event.selectedAddon.map((f) => f.name)])].map((item) => (
                         <div key={item} className="flex items-center gap-2">
                             <BadgeCheck size={14} />
                             <p className="font-lato">{item}</p>
@@ -434,7 +435,8 @@ export default function EventsPage() {
             try {
                 const req = await axios.get("../api/events");
                 if (cancelled) return;
-                const resEvents: IEvent[] = req.data.data.events
+                const resEvents: IEvent[] = req.data.data.events;
+                console.log(resEvents);
                 setEvents(resEvents.map(item => ({ ...item, selectedAddon: [] })))
             } catch (err) {
                 console.error(err)
@@ -454,6 +456,8 @@ export default function EventsPage() {
     if (isLoading) {
         return <Loading />
     }
+
+    console.log(events);
 
     return (
         <div className="pt-10 pb-20 md:pb-40">
