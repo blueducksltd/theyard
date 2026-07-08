@@ -57,6 +57,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
     date: new Date(data.date),
     time: { start: data.time, end: data.time },
     audienceType: data.audienceType,
+    activities: data.activities || [],
     adultPrice: data.adultPrice,
     childPrice: data.childPrice,
     status: "pending",

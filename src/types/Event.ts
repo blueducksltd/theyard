@@ -14,6 +14,7 @@ export interface IEvent extends Document {
     end: string; // "18:00"
   };
   audienceType: "children" | "adults" | "both";
+  activities: string[];
   adultPrice?: number;
   childPrice?: number;
   status: "active" | "completed" | "cancelled" | "pending";
@@ -32,6 +33,7 @@ export interface IEventClient {
   startTime: string;
  
   audienceType: "children" | "adults" | "both";
+  activities: string[];
   adultPrice?: number;
   childPrice?: number;
   status: "active" | "completed" | "cancelled" | "pending";
@@ -66,6 +68,7 @@ export type SafeEvent = {
   startTime: string;
   endTime: string;
   audienceType: IEvent["audienceType"];
+  activities: string[];
   adultPrice?: number;
   childPrice?: number;
   location: string;
@@ -84,6 +87,7 @@ export function sanitizeEvent(event: IEvent): SafeEvent {
     startTime: event.time?.start || "09:00",
     endTime: event.time?.end || "18:00",
     audienceType: event.audienceType,
+    activities: event.activities || [],
     adultPrice: event.adultPrice,
     childPrice: event.childPrice,
     location: event.location,
@@ -101,6 +105,7 @@ export const CreateEventDTO = z.object({
   public: z.boolean().optional().default(false),
   images: z.array(z.string()).optional(),
   imageUrls: z.array(z.string()).optional(),
+  activities: z.array(z.string().min(1, "Activity cannot be empty")).optional(),
 });
 
 export const CreateEventAdminDTO = z
@@ -115,6 +120,7 @@ export const CreateEventAdminDTO = z
     public: z.boolean().optional().default(false),
     location: z.string().optional(),
     customerId: z.string().optional(),
+    activities: z.array(z.string().min(1, "Activity cannot be empty")).optional(),
   })
   .superRefine((data, ctx) => {
     if ((data.audienceType === "adults" || data.audienceType === "both") && (data.adultPrice === undefined || data.adultPrice < 0)) {

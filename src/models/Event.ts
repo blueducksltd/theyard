@@ -1,4 +1,4 @@
-import { Schema, models, model, Types } from "mongoose";
+import { Schema, models, model } from "mongoose";
 import {
   IEvent,
   IEventMethods,
@@ -29,6 +29,7 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
       required: true,
       default: "both"
     },
+    activities: [{ type: String }],
     adultPrice: { type: Number },
     childPrice: { type: Number },
     status: {
