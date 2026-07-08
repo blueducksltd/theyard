@@ -69,6 +69,16 @@ const PANEL_BASE = "bg-white flex flex-col gap-3 transition-all duration-300";
 const PANEL_VISIBLE = "p-5 opacity-100 scale-100 w-100 max-w-[calc(100vw-2rem)] md:w-140";
 const PANEL_HIDDEN = "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none";
 
+// Converts a 24-hour "HH:MM" string (e.g. "18:30") to a 12-hour clock ("6:30 PM").
+const formatTime = (time: string) => {
+    const [hourStr, minuteStr = "00"] = time.split(":");
+    const hour = Number(hourStr);
+    if (Number.isNaN(hour)) return time;
+    const period = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minuteStr.padStart(2, "0")} ${period}`;
+};
+
 // ── EventModalContent ───────────────────────────────────────────────────
 
 interface EventModalContentProps {
@@ -82,12 +92,11 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
     const [showAddFun, setShowAddFun] = useState(false);
     const [inputs, setInputs] = useState<FormInputs>(EMPTY_INPUTS);
     const [loading, setLoading] = useState(false);
-
     // Stable ref so AddMoreFun (React.memo'd) doesn't re-render on every keystroke.
     const handleHideAddFun = useCallback(() => setShowAddFun(false), []);
 
     const eventDate = useMemo(() => new Date(event.date), [event.date]);
-
+  
     const packageTotal = useMemo(
         () => (event.adultPrice ?? 0) * inputs.adults + (event.childPrice ?? 0) * inputs.children,
         [event.adultPrice, event.childPrice, inputs.adults, inputs.children]
@@ -107,7 +116,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
             value: `${inputs.adults} ${inputs.adults === 1 ? 'Adult' : 'Adults'}, ${inputs.children} ${inputs.children === 1 ? 'Child' : 'Children'}`,
         },
         { label: "Event Date", value: eventDate.toLocaleDateString("en-US", { dateStyle: "medium" }) },
-        { label: "Event Time", value: eventDate.toLocaleTimeString("en-US", { timeStyle: "short", hour12: true }) },
+        { label: "Event Time", value: `${formatTime(event.startTime)} - ${formatTime(event.endTime)}` },
     ], [event.title, inputs.adults, inputs.children, eventDate]);
 
     const pricingRows = useMemo(() => [
@@ -124,10 +133,26 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
             inputs.email,
             total,
             async () => {
-                // TODO: POST the event booking to the API once the endpoint is ready.
-                toast.success("Transaction successful");
-                setLoading(false);
-                onClose();
+                try {
+                    // TODO: POST the event booking to the API once the endpoint is ready.
+                    await axios.post(`/events/${event.id}/register`, {
+                        name: `${inputs.firstname} ${inputs.lastname}`,
+                        phone: inputs.phone,
+                        email: inputs.email,
+                        adultsComing: inputs.adults ?? null,
+                        childrenComing: inputs.children ?? null,
+                        addons: event.selectedAddon
+                    });
+                    toast.success("Event Booked Successfully");
+
+                } catch (err) {
+                    toast.error("Event Book Failed, Something went wrong");
+
+                    console.error(err)
+                } finally {
+                    setLoading(false);
+                    onClose();
+                }
             },
             () => setLoading(false)
         );
@@ -250,7 +275,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
                                                 : e.target.value,
                                         } as FormInputs))
                                     }
-                                    // readOnly={key==="children" && !event.childPrice || key === "adults" && !event.adultPrice}
+                                    readOnly={key === "children" && !event.childPrice || key === "adults" && !event.adultPrice}
                                 />
                             </div>
                         </div>
