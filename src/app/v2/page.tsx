@@ -22,17 +22,6 @@ import { IGalleryClient } from "@/types/Gallery";
 import { BentoGrid } from "./gallery/page";
 import Loading from "@/components/v2/Loading";
 import ReviewModal from "@/components/v2/home/ReviewModal";
-
-
-
-
-
-
-
-
-
-
-
 const slides = [
   {
     image: "/images/banner.png",
