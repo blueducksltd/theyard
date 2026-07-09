@@ -31,6 +31,7 @@ export function groupBookingsByMonth(bookings: IBooking[], month: Date) {
 }
 
 // For day-based bookings, use default hours
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function combineDateTime(date: Date, _time: string): Date {
     return dayjs(date).hour(9).minute(0).second(0).toDate();
 }

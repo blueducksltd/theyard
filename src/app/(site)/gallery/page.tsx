@@ -298,7 +298,7 @@ export default function GalleryPage() {
         (async () => {
             try {
                 const galleryRes = await axios.get(`/api/gallery`);
-                let gallery: IGalleryClient[] = galleryRes.data.data.gallery;
+                const gallery: IGalleryClient[] = galleryRes.data.data.gallery;
                 setGallery(gallery);
                 setFilters([
                     "All",

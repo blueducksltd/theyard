@@ -184,6 +184,7 @@ export default function Home() {
           onBeforeInit={(swiper) => {
             // Assign the custom pagination element to Swiper
             if (paginationRef.current) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (swiper.params as any).pagination = {
                 ...(typeof swiper.params.pagination === "object" ? swiper.params.pagination : {}),
                 el: paginationRef.current,
@@ -513,7 +514,7 @@ export default function Home() {
                 variants={revealItem}
                 transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               >
-                We don't just provide a venue; we create memorable experiences. Flexible spaces, unique experiences, your way.
+                We don&apos;t just provide a venue; we create memorable experiences. Flexible spaces, unique experiences, your way.
               </motion.p>
             </motion.div>
             <motion.div

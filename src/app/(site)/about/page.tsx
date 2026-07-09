@@ -1,6 +1,6 @@
 "use client";
 import HeaderTextComp from '@/components/v2/HeaderTextComp';
-import { Inter, Lato, Petit_Formal_Script, Playfair_Display, Sen } from 'next/font/google';
+import { Lato, Petit_Formal_Script, Playfair_Display, Sen } from 'next/font/google';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'motion/react';

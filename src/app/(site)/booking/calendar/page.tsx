@@ -3,10 +3,11 @@ import BookingCalendar from '@/components/booking/Calender'
 import { useBookingStore } from '@/store/bookingStore'
 import { IBooking } from '@/types/Booking';
 import { getBookings } from '@/util';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 
-export default function page() {
+export default function BookingCalendarPage() {
     const { setDate } = useBookingStore();
     const router = useRouter();
     const [bookingData, setBookingData] = useState<IBooking[]>([]);
@@ -48,9 +49,11 @@ export default function page() {
                     </h2>
                     <div className="p-6 text-lg flex flex-col gap-5  md:text-sm">
                         <div className="flex items-start gap-3">
-                            <img
+                            <Image
                                 src={"/icons/checkmark.svg"}
                                 alt="Check Icon"
+                                width={16}
+                                height={16}
                                 className="mt-2"
                             />
                             <p className="text-[#717068] ">
@@ -68,9 +71,11 @@ export default function page() {
                         </div>
 
                         <div className="flex items-start gap-3">
-                            <img
+                            <Image
                                 src={"/icons/checkmark.svg"}
                                 alt="Check Icon"
+                                width={16}
+                                height={16}
                                 className="mt-2"
                             />
                             <p className="text-[#717068] ]">
@@ -79,9 +84,11 @@ export default function page() {
                         </div>
 
                         <div className="flex items-start gap-3">
-                            <img
+                            <Image
                                 src={"/icons/checkmark.svg"}
                                 alt="Check Icon"
+                                width={16}
+                                height={16}
                                 className="mt-2"
                             />
                             <p className="text-[#717068]">

@@ -1,5 +1,6 @@
 "use client";
 /* eslint-disable @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { IBooking } from "@/types/Booking";
@@ -598,10 +599,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
               <div className="w-16 h-16 rounded-full bg-[#EDF0EE] flex items-center justify-center text-3xl">📅</div>
               <p className="text-yard-primary font-semibold font-sen text-lg">No events yet</p>
-              <p className="text-[#666] text-sm">Click "Create Event" to schedule your first event.</p>
+              <p className="text-[#666] text-sm">Click &quot;Create Event&quot; to schedule your first event.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {sortedEvents.map((event: any) => {
                 const eventDate = event.date ? new Date(event.date) : null;
                 const formattedDate = eventDate
@@ -971,6 +973,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           ) : (
             <>
               <p className="text-sm text-[#555] font-sen mb-2">{registrations.length} attendee{registrations.length !== 1 ? "s" : ""} registered</p>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {registrations.map((reg: any, idx: number) => {
                 const name = reg.name || `${reg.firstname || ""} ${reg.lastname || ""}`.trim() || "Guest";
                 const email = reg.email || reg.customerEmail || "";

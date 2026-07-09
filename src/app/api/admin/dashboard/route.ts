@@ -7,6 +7,7 @@ import Booking from "@/models/Booking";
 import Event from "@/models/Event";
 import Package from "@/models/Package";
 import Review from "@/models/Review";
+import { ICustomer } from "@/types/Customer";
 import { NextRequest } from "next/server";
 
 
@@ -44,7 +45,7 @@ export const GET = errorHandler(
         const cleanedEvents = events.map(event => ({
             id: event.id,
             title: event.title,
-            name: event.customer ? `${event.customer.firstname} ${event.customer.lastname}` : "N/A",
+            name: event.customer ? `${(event.customer as unknown as ICustomer).firstname} ${(event.customer as unknown as ICustomer).lastname}` : "N/A",
             date: event.date,
             duration: getDuration(event.time?.start, event.time?.end)
         }));

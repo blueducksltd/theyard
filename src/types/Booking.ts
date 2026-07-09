@@ -6,6 +6,7 @@ import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
 import { IEvent, SafeEvent, sanitizeEvent } from "./Event";
 import { IPackage, SafePackage, sanitizePackage } from "./Package";
 import { SafeSpace, sanitizeSpace } from "./Space";
+import { ISpace } from "./Space";
 
 // -----------------------------
 // TypeScript interface
@@ -14,7 +15,7 @@ export interface IBooking extends Document, IBookingMethods {
   customer: ICustomer["id"];
   event?: IEvent["id"];
   package: IPackage["id"];
-  space?: any;
+  space?: unknown;
   eventDate: Date;
   guestCount: number;
   time?: string;
@@ -72,7 +73,7 @@ export function sanitizeBooking(booking: IBooking): SafeBooking {
     customer: booking.customer ? sanitizeCustomer(booking.customer) : null,
     event: booking.event ? sanitizeEvent(booking.event) : null,
     package: booking.package ? sanitizePackage(booking.package) : null,
-    space: booking.space ? sanitizeSpace(booking.space) : null,
+    space: booking.space ? sanitizeSpace(booking.space as unknown as ISpace) : null,
     createdAt: booking.createdAt,
     updatedAt: booking.updatedAt,
   };

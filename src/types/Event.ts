@@ -19,7 +19,7 @@ export interface IEvent extends Document {
   childPrice?: number;
   status: "active" | "completed" | "cancelled" | "pending";
   location: string;
-  customer?: any;
+  customer?: unknown;
   createdAt?: Date;
   updatedAt?: Date;
 }

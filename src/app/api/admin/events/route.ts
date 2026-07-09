@@ -35,6 +35,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
   const contentType = request.headers.get("content-type") ?? "";
   const isMultipart = contentType.includes("multipart/form-data");
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let inputData: any = {};
   let imageUrls: string[] = [];
 
