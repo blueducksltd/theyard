@@ -2,7 +2,7 @@
 
 import FilterCategory from '@/components/v2/FilterCategory';
 import Modal from '@/components/v2/Modal';
-import { AddMoreFun, formatNaira, type SelectedAddon } from '@/app/v2/packages/page';
+import { AddMoreFun, formatNaira, type SelectedAddon } from '@/app/(site)/packages/page';
 import Image from 'next/image';
 import { motion } from 'motion/react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';

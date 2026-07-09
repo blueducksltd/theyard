@@ -80,7 +80,7 @@ export default function page() {
                 <div className='bg-[#FDFBF9] w-full'>
                     <BookingCalendar bookingData={[]} onDateClick={(date) => {
                         setDate(date);
-                        router.push("/v2/booking")
+                        router.push("/booking")
 
                     }} />
                 </div>

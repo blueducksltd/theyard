@@ -1,4 +1,4 @@
-import { IPackageFun } from "@/app/v2/packages/page";
+import { IPackageFun } from "@/app/(site)/packages/page";
 import { create } from "zustand";
 interface BookingStore {
     selectedPackage: IPackageFun | null;

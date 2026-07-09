@@ -233,12 +233,12 @@ export default function BookingPage() {
 
         <div className='md:col-span-2  h-fit'>
           {
-            selectedPackage && <Link className='border-b flex w-fit font-sen text-xs items-center gap-1 text-primaryGreen my-6' href={"/v2/packages"}>
+            selectedPackage && <Link className='border-b flex w-fit font-sen text-xs items-center gap-1 text-primaryGreen my-6' href={"/packages"}>
               <ArrowLeft size={10} /> <span>Back to packages</span>
             </Link>
           }
           {
-            selectedDate && <Link className='border-b flex w-fit font-sen text-xs items-center gap-1 text-primaryGreen my-6' href={"/v2/booking/calendar"}>
+            selectedDate && <Link className='border-b flex w-fit font-sen text-xs items-center gap-1 text-primaryGreen my-6' href={"/booking/calendar"}>
               <ArrowLeft size={10} /> <span>Back to calendar</span>
             </Link>
           }

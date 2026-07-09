@@ -7,14 +7,14 @@ import { usePathname } from "next/navigation";
 import { Calendar, Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
-    { href: "/v2", label: "Home" },
-    { href: "/v2/packages", label: "Packages" },
-    { href: "/v2/events", label: "Events" },
-    { href: "/v2/about", label: "About" },
+    { href: "/", label: "Home" },
+    { href: "/packages", label: "Packages" },
+    { href: "/events", label: "Events" },
+    { href: "/about", label: "About" },
 
-    { href: "/v2/faqs", label: "FAQs" },
-    { href: "/v2/gallery", label: "Gallery" },
-    { href: "/v2/terms", label: "Our terms" },
+    { href: "/faqs", label: "FAQs" },
+    { href: "/gallery", label: "Gallery" },
+    { href: "/terms", label: "Our terms" },
 ];
 
 export default function Header() {
@@ -63,7 +63,7 @@ export default function Header() {
                     {/* Logo */}
                     <div className="flex items-center justify-center bg-primaryGreen p-1 w-[15%] h-full">
                         <div className="w-14 h-full relative">
-                            <Link href="/v2">
+                            <Link href="/">
                                 <Image
                                     src="/images/logo.png"
                                     fill
@@ -78,7 +78,7 @@ export default function Header() {
                     {/* Right actions */}
                     <div className="flex items-center justify-center gap-x-5 bg-primaryGreen py-1 px-10 h-full relative">
                         <Link
-                            href="/v2/booking/calendar"
+                            href="/booking/calendar"
                             className="relative bg-primaryBrown border border-lightBrown text-xs text-white py-2 px-5 flex items-center gap-3 hover:opacity-90 transition-opacity"
                         >
                             Book Now
@@ -140,7 +140,7 @@ export default function Header() {
 
                 {/* ── MOBILE NAV ── */}
                 <nav className="flex md:hidden items-center justify-between bg-primaryGreen p-2">
-                    <Link href="/v2">
+                    <Link href="/">
                         <Image
                             src="/images/logo.svg"
                             width={100}
@@ -153,7 +153,7 @@ export default function Header() {
 
                     <div className="flex items-center gap-4">
                         <Link
-                            href="/v2/booking/calendar"
+                            href="/booking/calendar"
                             className="bg-primaryBrown border border-lightBrown  text-xs text-white py-2 px-4 flex items-center gap-2 hover:opacity-90 transition-opacity"
                         >
                             Book Now

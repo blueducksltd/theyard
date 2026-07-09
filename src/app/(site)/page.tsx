@@ -350,7 +350,7 @@ export default function Home() {
             variants={revealItem}
             transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Link href={"/v2/packages"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white w-fit">
+            <Link href={"/packages"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white w-fit">
               View Packages
               <ArrowRight />
             </Link>
@@ -392,7 +392,7 @@ export default function Home() {
           >
             {packages.slice(0, 4).map((item, index) => (
               <SwiperSlide key={index} className="h-full">
-                <Link href={`/v2/packages/`} className="h-full">
+                <Link href={`/packages/`} className="h-full">
                   <motion.div
                     className="h-full relative text-white p-4 flex items-end"
                     variants={revealItem}
@@ -531,7 +531,7 @@ export default function Home() {
               variants={revealItem}
               transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Link href={"/v2/packages"} className={"border py-2 px-6 bg-white text-primaryGreen font-semibold w-fit font-lato"}>
+              <Link href={"/packages"} className={"border py-2 px-6 bg-white text-primaryGreen font-semibold w-fit font-lato"}>
                 Explore all services
               </Link>
             </motion.div>
@@ -593,7 +593,7 @@ export default function Home() {
               variants={revealItem}
               transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Link href={"/v2/events"} className={"flex gap-2 items-center border-[1.4px] py-2 px-6 bg-white text-primaryGreen font-medium font-lato"}>
+              <Link href={"/events"} className={"flex gap-2 items-center border-[1.4px] py-2 px-6 bg-white text-primaryGreen font-medium font-lato"}>
                 Explore all events
                 <ArrowRight />
               </Link>
@@ -610,7 +610,7 @@ export default function Home() {
           >
             {events.slice(0, 3).map((event, index) => {
 
-              return <Link href={"/v2/events"} key={index}>
+              return <Link href={"/events"} key={index}>
                 <motion.div
                   className={"p-3 grid gap-2  font-inter"}
                   variants={revealItem}
@@ -682,7 +682,7 @@ export default function Home() {
               variants={revealItem}
               transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
             >
-              <Link href={"/v2/gallery"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white w-fit capitalize">
+              <Link href={"/gallery"} className="flex gap-3 bg-primaryGreen py-3 px-6 text-sm items-center text-white w-fit capitalize">
                 View full gallery
                 <ArrowRight />
               </Link>

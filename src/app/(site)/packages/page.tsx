@@ -155,7 +155,7 @@ export const ModalContent = React.memo(function ModalContent({
                         className="p-2 bg-primaryGreen text-white cursor-pointer"
                         onClick={() => {
                             setSelectedPackage(selectedPackage);
-                            router.push("/v2/booking")
+                            router.push("/booking")
                         }}
                     >
                         Book this package
