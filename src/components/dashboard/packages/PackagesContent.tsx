@@ -948,7 +948,6 @@ export default function PackagesContent() {
                   id="guestLimit"
                   name="guestLimit"
                   value={inputs.guestLimit ?? ""}
-                  value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
                   placeholder="Guest Limit (2)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1348,7 +1347,6 @@ export default function PackagesContent() {
                   type="number"
                   id="guestLimit"
                   name="guestLimit"
-                  value={inputs.guestLimit ?? ""}
                   value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
                   placeholder="Guest Limit (2)"
