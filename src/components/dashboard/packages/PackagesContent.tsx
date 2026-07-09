@@ -21,6 +21,17 @@ import Image from "next/image";
 import React, { DragEvent, FormEvent, useEffect } from "react";
 import { toast } from "react-toastify";
 
+const DEFAULT_INPUTS = {
+  name: "",
+  description: "",
+  price: "",
+  guestLimit: "",
+  extraGuestFee: "",
+  specs: "",
+  category: "decoration" as AddOnCategory,
+  pricePerMin: "",
+};
+
 export default function PackagesContent() {
   const [section, setSection] = React.useState<string>("services");
   const [addServiceModal, setAddServiceModal] = React.useState<boolean>(false);
@@ -29,7 +40,7 @@ export default function PackagesContent() {
   const [updatePackageModal, setUpdatePackageModal] = React.useState<boolean>(false);
   const [updateServiceModal, setUpdateServiceModal] = React.useState<boolean>(false);
   const [preview, setPreview] = React.useState<File | undefined>(undefined);
-  const [inputs, setInputs] = React.useState<Record<string, any>>({ category: "decoration" });
+  const [inputs, setInputs] = React.useState<Record<string, any>>({ ...DEFAULT_INPUTS });
   const [packages, setPackages] = React.useState<IPackage[]>([]);
   const [services, setServices] = React.useState<IService[]>([]);
   const [addons, setAddons] = React.useState<SafeAddOn[]>([]);
@@ -50,7 +61,7 @@ export default function PackagesContent() {
   };
 
   const clearInputs = () => {
-    setInputs({ category: "decoration" });
+    setInputs({ ...DEFAULT_INPUTS });
     setPreview(undefined);
   };
 
@@ -744,7 +755,8 @@ export default function PackagesContent() {
                   type="text"
                   id="serviceName"
                   name="serviceName"
-                  onChange={(e) => (inputs.name = e.target.value)}
+                  value={inputs.name ?? ""}
+                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter service name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -762,7 +774,8 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
-                  onChange={(e) => (inputs.description = e.target.value)}
+                  value={inputs.description ?? ""}
+                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -875,7 +888,8 @@ export default function PackagesContent() {
                   type="text"
                   id="packageName"
                   name="packageName"
-                  onChange={(e) => (inputs.name = e.target.value)}
+                  value={inputs.name ?? ""}
+                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter package name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -893,7 +907,8 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
-                  onChange={(e) => (inputs.description = e.target.value)}
+                  value={inputs.description ?? ""}
+                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -932,7 +947,7 @@ export default function PackagesContent() {
                   type="number"
                   id="guestLimit"
                   name="guestLimit"
-                  value={inputs.guestLimit}
+                  value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
                   placeholder="Guest Limit (2)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -975,7 +990,8 @@ export default function PackagesContent() {
                   type="text"
                   id="packageSpecs"
                   name="packageSpecs"
-                  onChange={(e) => (inputs.specs = e.target.value)}
+                  value={inputs.specs ?? ""}
+                  onChange={(e) => setInputs({ ...inputs, specs: e.target.value })}
                   placeholder="games and dates, Game hall special, Game hall special"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -1272,7 +1288,7 @@ export default function PackagesContent() {
                   type="text"
                   id="packageName"
                   name="packageName"
-                  value={inputs.name}
+                  value={inputs.name ?? ""}
                   onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter package name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1291,7 +1307,7 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
-                  value={inputs.description}
+                  value={inputs.description ?? ""}
                   onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1331,7 +1347,7 @@ export default function PackagesContent() {
                   type="number"
                   id="guestLimit"
                   name="guestLimit"
-                  value={inputs.guestLimit}
+                  value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
                   placeholder="Guest Limit (2)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1374,7 +1390,7 @@ export default function PackagesContent() {
                   type="text"
                   id="packageSpecs"
                   name="packageSpecs"
-                  value={inputs.specs}
+                  value={inputs.specs ?? ""}
                   onChange={(e) => setInputs({ ...inputs, specs: e.target.value })}
                   placeholder="games and dates, Game hall special, Game hall special"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1488,7 +1504,7 @@ export default function PackagesContent() {
                   type="text"
                   id="serviceName"
                   name="serviceName"
-                  value={inputs.name}
+                  value={inputs.name ?? ""}
                   onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter service name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1507,7 +1523,7 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
-                  value={inputs.description}
+                  value={inputs.description ?? ""}
                   onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
