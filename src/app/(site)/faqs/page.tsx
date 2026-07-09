@@ -68,7 +68,7 @@ export default function Page() {
     };
 
     return (
-        <div className='pb-20 md:pb-40'>
+        <div className=''>
             <motion.div initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
                 <HeaderTextComp
                 pageName="FAQS"

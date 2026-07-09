@@ -1,12 +1,28 @@
 "use client";
 import BookingCalendar from '@/components/booking/Calender'
 import { useBookingStore } from '@/store/bookingStore'
+import { IBooking } from '@/types/Booking';
+import { getBookings } from '@/util';
 import { useRouter } from 'next/navigation';
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 export default function page() {
     const { setDate } = useBookingStore();
     const router = useRouter();
+    const [bookingData, setBookingData] = useState<IBooking[]>([]);
+    
+  useEffect(() => {
+    (async () => {
+      try {
+
+        setBookingData((await getBookings()).data.bookings)
+
+
+      } catch (err) {
+        console.error('Error fetching packages:', err);
+      }
+    })()
+  }, [])
     return (
         <div className='pb-20 md:pb-40'>
             <div className=' flex flex-col justify-center items-center gap-6 pt-30 pb-10 md:py-20 '>
@@ -78,7 +94,7 @@ export default function page() {
 
                 {/*Calender*/}
                 <div className='bg-[#FDFBF9] w-full'>
-                    <BookingCalendar bookingData={[]} onDateClick={(date) => {
+                    <BookingCalendar bookingData={bookingData} onDateClick={(date) => {
                         setDate(date);
                         router.push("/booking")
 

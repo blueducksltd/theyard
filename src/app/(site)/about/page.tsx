@@ -69,7 +69,7 @@ export default function AboutPage() {
     };
 
     return (
-        <div className='min-h-screen   space-y-10 pb-20 md:pb-40'>
+        <div className='min-h-screen   space-y-10 '>
 
             <motion.div
                 initial={shouldReduceMotion ? false : 'hidden'}

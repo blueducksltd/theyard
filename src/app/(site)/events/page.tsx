@@ -459,7 +459,7 @@ export default function EventsPage() {
 
 
     return (
-        <div className="pt-10 pb-20 md:pb-40">
+        <div className="pt-10 ">
             <Modal isOpen={modalOpen} handleClose={handleCloseModal}>
                 {selectedEvent && (
                     // key forces a fresh mount (and state reset) when a different event is opened

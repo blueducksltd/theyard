@@ -577,7 +577,7 @@ export default function PackagesPage() {
         return <Loading />
     }
     return (
-        <div className="pb-20 md:pb-40">
+        <div className="">
             <Modal handleClose={handleCloseModal} isOpen={modalOpen}>
                 {selectedPackage && (
                     <ModalContent

@@ -13,6 +13,8 @@ import axios from '@/util/axios';
 import { IPackageClient } from '@/types/Package';
 import { motion } from "motion/react";
 import { initiatePayment } from '@/util/payment';
+import { IBooking } from '@/types/Booking';
+import { getBookings } from '@/util';
 type ShowState = {
   package: {
     show: boolean;
@@ -33,6 +35,7 @@ type ShowState = {
 };
 
 const PackageModalContent = ({ packages, showModal, setSelectedPackage }: { packages: IPackageFun[], showModal: boolean, setSelectedPackage: (selectedPackage: IPackageFun) => void }) => {
+
   return <div
     className={`bg-white space-y-3 transition-all duration-300 ${showModal
       ? "p-5 opacity-100 scale-100 w-100 max-w-[calc(100vw-2rem)] h-[70vh] md:w-full md:min-h-100"
@@ -70,6 +73,8 @@ export default function BookingPage() {
   });
 
   const [loading, setLoading] = useState<boolean>(false)
+  const [bookingData, setBookingData] = useState<IBooking[]>([])
+
 
   const [inputs, setInputs] = useState<{
     guest: number;
@@ -194,6 +199,7 @@ export default function BookingPage() {
     if (selectedDate) {
       setShow(prev => ({ ...prev, date: { ...prev.date, value: selectedDate.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
     }
+
   }, [])
 
   useEffect(() => {
@@ -201,6 +207,10 @@ export default function BookingPage() {
       try {
         const res = await axios.get('../api/packages');
         setPackages(res.data.data.packages.map((p: IPackageClient) => ({ ...p, selectedAddon: [] })));
+
+        setBookingData((await getBookings()).data.bookings)
+
+
       } catch (err) {
         console.error('Error fetching packages:', err);
       }
@@ -208,7 +218,7 @@ export default function BookingPage() {
   }, [])
 
   return (
-    <div className='font-lato pb-20 md:pb-20'>
+    <div className='font-lato pb-20 md:pb-2 text-base'>
       <Modal isOpen={show.package.show} handleClose={() => {
         setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
       }}>
@@ -330,14 +340,17 @@ export default function BookingPage() {
 
               <div
                 className={`absolute left-0 -bottom-104 transition-[height] z-100 duration-500 ease-in-out cursor-pointer  justify-center ${show.date.show
-                  ? "w-100 md:w-120 h-100 bg-white overflow-auto shadow-2xl "
+                  ? "w-full md:w-120 h-100 bg-white overflow-auto shadow-2xl "
                   : "w-0 h-0 overflow-hidden delay-0"
                   }`}
                 onClick={e => e.stopPropagation()}
-              >                <BookingCalendar bookingData={[]} onDateClick={(date) => {
-                setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
+              >                
+              <BookingCalendar bookingData={bookingData}
 
-              }} />
+                onDateClick={(date) => {
+                  setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
+
+                }} />
               </div>
             </div>
 

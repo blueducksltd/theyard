@@ -316,7 +316,7 @@ export default function GalleryPage() {
     if (loading) return <Loading />
 
     return (
-        <div className='min-h-screen bg-[#F6F2EC] pb-20 md:pb-40'>
+        <div className='min-h-screen bg-[#F6F2EC] '>
             <motion.div initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}>
                 <HeaderTextComp pageName="Our Gallery" subtitleText="From intimate dates to joyful celebrations, every setup is thoughtfully curated to create memories that last a life time." titleText="A glimpse of unforgettable" titleStyledText="moments" />
             </motion.div>
@@ -327,10 +327,10 @@ export default function GalleryPage() {
                 }} />
             </motion.div>
 
-            <motion.div initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, delay: 0.08, ease: EASE_OUT_EXPO }} className="relative w-full h-full">
+            <motion.div initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, delay: 0.08, ease: EASE_OUT_EXPO }} className="relative w-full h-full px-5 py-10">
 
-            </motion.div>
             <BentoGrid images={filteredGallery.map((item) => item.imageUrl)} isMotion={true} />
+            </motion.div>
 
 
 
