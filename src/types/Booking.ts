@@ -14,7 +14,7 @@ export interface IBooking extends Document, IBookingMethods {
   customer: ICustomer["id"];
   event?: IEvent["id"];
   package: IPackage["id"];
-  space?: any;
+  space?: unknown;
   eventDate: Date;
   guestCount: number;
   time?: string;

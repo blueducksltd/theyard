@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Playfair, Lato, Sen, Petit_Formal_Script, Inter, Playfair_Display } from "next/font/google";
 import { ToastContainer } from "react-toastify";
-// @ts-ignore: CSS side-effect import declaration
+// @ts-expect-error: CSS side-effect import declaration
 
 import "react-toastify/dist/ReactToastify.css";
-// @ts-ignore: CSS side-effect import declaration
+// @ts-expect-error: CSS side-effect import declaration
 
 import "./globals.css";
 

@@ -4,14 +4,12 @@ import { Mail, MapPin, Phone } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { RiInstagramLine, RiTiktokLine, RiWhatsappLine } from 'react-icons/ri';
 import { SlSocialFacebook } from 'react-icons/sl';
 
 
 export default function Footer() {
-    const pathname = usePathname();
-
+    // const pathname = usePathname();
 
     return (
         <footer className={`relative`}>
@@ -75,7 +73,7 @@ export default function Footer() {
 
                             </h1>
                             <p className={`font-lato text-white/50 mt-2 text-sm font-light`}>
-                                At The Yard, we believe every moment is worth celebrating. Whether it's a quiet picnic, a romantic date, or a joyful gathering with friends, our beautiful green spaces and curated setups create memories to cherish forever.
+                                At The Yard, we believe every moment is worth celebrating. Whether it&apos;s a quiet picnic, a romantic date, or a joyful gathering with friends, our beautiful green spaces and curated setups create memories to cherish forever.
                             </p>
 
                         </div>

@@ -23,7 +23,7 @@ export default function Grid() {
     null,
   );
   const [shareUrl, setShareUrl] = React.useState<string>("");
-  const router = useRouter();
+  // const router = useRouter();
 
   const handleGallery = (value: string) => {
     // Remove async, not needed
@@ -37,11 +37,11 @@ export default function Grid() {
     }
   };
 
-  const handleShowImage = (image: IGallery) => {
-    if (image) {
-      saveToLS("selectedGallery", image);
-    }
-  };
+  // const handleShowImage = (image: IGallery) => {
+  //   if (image) {
+  //     saveToLS("selectedGallery", image);
+  //   }
+  // };
 
   React.useEffect(() => {
     (async () => {

@@ -25,20 +25,9 @@ export interface IAddOnModelClient {
   updatedAt: Date;
 }
 
-export interface IAddOnModelClient {
-  id: string;
-  name: string;
-  category: AddOnCategory;
-  description?: string;
-  price?: number;
-  pricePerMin?: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type IAddOnMethods = Record<string, never>;
 
-export interface IAddOnMethods { }
-
-export interface IAddOnModel extends Model<IAddOn, IAddOnMethods> { }
+export type IAddOnModel = Model<IAddOn, IAddOnMethods>;
 
 export type SafeAddOn = {
   id: string;
