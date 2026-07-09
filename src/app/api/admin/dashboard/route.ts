@@ -23,14 +23,14 @@ export const GET = errorHandler(
         //  Bookings stats
         const activeBookings = await Booking.find({ status: "confirmed" }).sort({ createdAt: -1 })
             .populate("event")
-            .populate("space")
+            .populate("package")
             .populate("customer");
         const activeCount = activeBookings.length;
         // Get last 2 active bookings
         const bookings = activeBookings.slice(0, 2);
         const _bookings = bookings.map(booking => ({
             id: booking.id,
-            space: booking.space.name,
+            packageName: booking.package?.name || "N/A",
             name: booking.customer ? `${booking.customer.firstname} ${booking.customer.lastname}` : "N/A",
             date: booking.eventDate,
             guestCount: booking.guestCount,
@@ -46,7 +46,7 @@ export const GET = errorHandler(
             title: event.title,
             name: event.customer ? `${event.customer.firstname} ${event.customer.lastname}` : "N/A",
             date: event.date,
-            duration: getDuration(event.time.start, event.time.end)
+            duration: getDuration(event.time?.start, event.time?.end)
         }));
 
 
@@ -84,9 +84,13 @@ export const GET = errorHandler(
 
 )
 
-function getDuration(startTime: string, endTime: string): string {
+function getDuration(startTime?: string, endTime?: string): string {
+    if (!startTime || !endTime) return "N/A";
     const [startHour, startMinute] = startTime.split(":").map(Number);
     const [endHour, endMinute] = endTime.split(":").map(Number);
+    if (isNaN(startHour) || isNaN(startMinute) || isNaN(endHour) || isNaN(endMinute)) {
+        return "N/A";
+    }
     const start = new Date(0, 0, 0, startHour, startMinute);
     const end = new Date(0, 0, 0, endHour, endMinute);
     const diff = (end.getTime() - start.getTime()) / 1000 / 60; // difference in minutes

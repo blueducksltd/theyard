@@ -30,7 +30,6 @@ export const GET = errorHandler(async (request: NextRequest) => {
     const filter = {};
     if (type) Object.assign(filter, { type });
     if (status) Object.assign(filter, { status });
-
     // --- Fetch events ---
     const events = await Event.filter(filter, sort, direction);
     if (!events || events.length === 0)
@@ -57,7 +56,7 @@ export const GET = errorHandler(async (request: NextRequest) => {
 
     // --- Sanitize ---
     const sanitizedEvents = paginatedEvents.map((event) => sanitizeEvent(event));
-
+    console.log(sanitizedEvents);
     // --- Response ---
     return APIResponse.success("Events retrieved successfully", {
         events: sanitizedEvents,
@@ -93,6 +92,7 @@ const CreateEventDTO = z.object({
     location: z.string().min(1, "Location is required"),
     public: z.boolean().optional().default(false),
     images: z.array(z.string()).optional(),
+    activities: z.array(z.string().min(1, "Activity cannot be empty")).optional(),
 });
 
 type CreateEventInput = z.infer<typeof CreateEventDTO>;
@@ -121,6 +121,27 @@ export const POST = errorHandler(async (request: NextRequest) => {
     }
 
     const _public = form.get("public") === "true";
+    const activitiesValue = form.get("activities");
+    let activities: string[] = [];
+
+    if (activitiesValue) {
+        const raw = String(activitiesValue);
+        if (raw.startsWith("[")) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    activities = parsed.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+                }
+            } catch {
+                activities = [];
+            }
+        } else {
+            activities = raw
+                .split(",")
+                .map((item) => item.trim())
+                .filter(Boolean);
+        }
+    }
 
     // Upload images
     const imageUrls = await Promise.all(
@@ -140,6 +161,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         location: form.get("location") as string,
         public: _public,
         images: imageUrls,
+        activities,
     };
 
     // Validate with Zod
@@ -188,6 +210,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         time: { start: "09:00", end: "18:00" }, // Default day hours
         status: "pending",
         location: data.location,
+        activities: data.activities || [],
     });
 
     await event.populate("customer");

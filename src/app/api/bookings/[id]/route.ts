@@ -32,7 +32,6 @@ export const PUT = errorHandler<{ params: { id: string } }>(
         // ✅ Retrieve the updated booking with all refs populated
         const booking = await Booking.findById(id)
             .populate("customer")
-            .populate("space")
             .populate("event")
             .populate("package");
 

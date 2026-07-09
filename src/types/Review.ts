@@ -12,6 +12,15 @@ export interface IReview extends Document {
     updatedAt: Date;
 }
 
+export interface IReviewClient {
+    id: string;
+    name: string;
+    comment: string;
+    status: IReview["status"];
+    location: string;
+    createdAt: Date;
+}
+
 // Instance methods
 export interface IReviewMethods {
     getReviewOwner(): Promise<ICustomer | null>;

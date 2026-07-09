@@ -14,7 +14,7 @@ interface IPageBooking {
   name: string;
   date: string;
   time: string;
-  space: string;
+  packageName: string;
   duration: string;
 }
 
@@ -85,24 +85,31 @@ export default function HomeContent() {
       position: "bottom-right",
     });
     const fetchData = async () => {
-      const response = await getDashboardData();
-      console.log(response);
-      if (response.success) {
-        setActiveBookings(response.data.dashboard.bookings?.recent);
-        setEvents(response.data.dashboard.events?.upcoming);
-        setPackages(response.data.dashboard.packages?.recent);
-        setReviews(response.data.dashboard.reviews?.latest);
+      try {
+        const response = await getDashboardData();
+        console.log(response);
+        if (response.success) {
+          setActiveBookings(response.data.dashboard.bookings?.recent);
+          setEvents(response.data.dashboard.events?.upcoming);
+          setPackages(response.data.dashboard.packages?.recent);
+          setReviews(response.data.dashboard.reviews?.latest);
 
-        // Set total Numbers
-        setTotalNum({
-          bookings: response.data.dashboard.bookings?.count,
-          events: response.data.dashboard.events?.count,
-          packages: response.data.dashboard.packages?.count,
-          reviews: response.data.dashboard.reviews?.count,
+          // Set total Numbers
+          setTotalNum({
+            bookings: response.data.dashboard.bookings?.count,
+            events: response.data.dashboard.events?.count,
+            packages: response.data.dashboard.packages?.count,
+            reviews: response.data.dashboard.reviews?.count,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+        toast.error("Failed to load dashboard data", {
+          position: "bottom-right",
         });
+      } finally {
+        toast.dismiss(loadingToast);
       }
-
-      toast.dismiss(loadingToast);
     };
 
     fetchData();
@@ -141,7 +148,7 @@ export default function HomeContent() {
               >
                 <div className="w-full flex justify-between">
                   <h2 className="font-semibold text-yard-primary leading-6 tracking-[0.5px]">
-                    {booking.space}
+                    {booking.packageName}
                   </h2>
                   <Image
                     src={"/icons/arrow-up-right.svg"}

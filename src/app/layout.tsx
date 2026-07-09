@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
-import { Playfair, Lato, Sen } from "next/font/google";
+import { Playfair, Lato, Sen, Petit_Formal_Script, Inter, Playfair_Display } from "next/font/google";
 import { ToastContainer } from "react-toastify";
+// @ts-ignore: CSS side-effect import declaration
+
 import "react-toastify/dist/ReactToastify.css";
+// @ts-ignore: CSS side-effect import declaration
+
 import "./globals.css";
+
 
 const sen = Sen({
   variable: "--font-sen",
@@ -15,10 +20,36 @@ const lato = Lato({
   weight: ["100", "300", "400", "700", "900"],
 });
 
+
 const playfair = Playfair({
   variable: "--font-playfair",
   subsets: ["latin"],
 });
+
+
+const playfair_display = Playfair_Display({
+  variable: "--font-playfair-display",
+  subsets: ["latin"],
+  style: ["italic", "normal"],
+  weight: ["400", "700"]
+});
+
+
+
+const petit = Petit_Formal_Script({
+  variable: "--font-petit",
+  weight: "400",
+  subsets: ["latin"],
+});
+
+
+
+const inter = Inter({
+  variable: "--font-inter",
+
+  subsets: ["latin"],
+  weight: ["200", "400"]
+})
 
 export const metadata: Metadata = {
   title: "The Yard",
@@ -137,7 +168,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${sen.variable} ${lato.variable} ${playfair.variable} antialiased`}
+        className={`${sen.variable} ${lato.variable} ${playfair.variable} ${inter.variable} ${petit.variable} ${playfair_display.variable} antialiased`}
       >
         <ToastContainer position="bottom-right" autoClose={6000} />
         {children}

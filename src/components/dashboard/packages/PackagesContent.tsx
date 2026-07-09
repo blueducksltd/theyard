@@ -1,35 +1,49 @@
 "use client";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Modal from "@/components/Modal";
+import { AddOnCategory, SafeAddOn } from "@/types/AddOn";
 import { IPackage } from "@/types/Package";
 import { IService } from "@/types/Service";
-import { ISpace } from "@/types/Space";
 import {
+  createAddon,
   createPackages,
   createServices,
-  createSpace, deletePackages, deleteServices, deleteSpaces,
+  deletePackages,
+  deleteServices,
+  getAddons,
   getPackages,
   getServices,
-  getSpaces, updatePackage, updateService, updateSpace
+  updatePackage,
+  updateService,
 } from "@/util";
 import { compressImage } from "@/util/helper";
 import Image from "next/image";
 import React, { DragEvent, FormEvent, useEffect } from "react";
 import { toast } from "react-toastify";
 
+const DEFAULT_INPUTS = {
+  name: "",
+  description: "",
+  price: "",
+  guestLimit: "",
+  extraGuestFee: "",
+  specs: "",
+  category: "decoration" as AddOnCategory,
+  pricePerMin: "",
+};
+
 export default function PackagesContent() {
   const [section, setSection] = React.useState<string>("services");
   const [addServiceModal, setAddServiceModal] = React.useState<boolean>(false);
   const [addPackageModal, setAddPackageModal] = React.useState<boolean>(false);
-  const [addSpaceModal, setAddSpaceModal] = React.useState<boolean>(false);
+  const [addAddonModal, setAddAddonModal] = React.useState<boolean>(false);
   const [updatePackageModal, setUpdatePackageModal] = React.useState<boolean>(false);
   const [updateServiceModal, setUpdateServiceModal] = React.useState<boolean>(false);
-  const [updateSpaceModal, setUpdateSpaceModal] = React.useState<boolean>(false);
   const [preview, setPreview] = React.useState<File | undefined>(undefined);
-  const [inputs, setInputs] = React.useState<Record<string, any>>({});
+  const [inputs, setInputs] = React.useState<Record<string, any>>({ ...DEFAULT_INPUTS });
   const [packages, setPackages] = React.useState<IPackage[]>([]);
   const [services, setServices] = React.useState<IService[]>([]);
-  const [spaces, setSpaces] = React.useState<ISpace[]>([]);
+  const [addons, setAddons] = React.useState<SafeAddOn[]>([]);
 
   const handleDrop = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -47,8 +61,18 @@ export default function PackagesContent() {
   };
 
   const clearInputs = () => {
-    setInputs({});
-    // setPreview(undefined);
+    setInputs({ ...DEFAULT_INPUTS });
+    setPreview(undefined);
+  };
+
+  const formatAddonPrice = (addon: SafeAddOn) => {
+    if (addon.category === "food" && addon.price != null) {
+      return `₦${addon.price.toLocaleString()}`;
+    }
+    if (addon.category === "game" && addon.pricePerMin != null) {
+      return `₦${addon.pricePerMin.toLocaleString()}/min`;
+    }
+    return null;
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -143,29 +167,18 @@ export default function PackagesContent() {
     }
   };
 
-  const handleSubmitSpace = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmitAddon = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formElement = e.currentTarget;
 
-    const toastId = toast.loading("Adding, please wait...", {
+    const toastId = toast.loading("Adding add-on, please wait...", {
       position: "bottom-right",
     });
 
-    if (preview == null) {
+    const category = inputs.category as AddOnCategory;
+    if (!inputs.name?.trim()) {
       toast.update(toastId, {
-        render: "Please upload an image!",
-        type: "error",
-        isLoading: false,
-        autoClose: 8000,
-      });
-      return;
-    }
-    inputs.image = (await compressImage(preview)) || "null";
-    inputs.pricePerHour = parseInt(inputs.pricePerHour.toString().replace(/[.,]/g, ""))
-
-    if (Object.keys(inputs).length < 7) {
-      toast.update(toastId, {
-        render: "All inputs are needed!",
+        render: "Add-on name is required!",
         type: "error",
         isLoading: false,
         autoClose: 8000,
@@ -173,28 +186,46 @@ export default function PackagesContent() {
       return;
     }
 
-    Object.values(inputs).map((val) => {
-      if (val == "" || val == null) {
-        toast.update(toastId, {
-          render: "All inputs are needed!",
-          type: "error",
-          isLoading: false,
-          autoClose: 8000,
-        });
-        return;
-      }
-    });
+    if (category === "food" && (inputs.price === "" || inputs.price == null)) {
+      toast.update(toastId, {
+        render: "Price is required for food add-ons!",
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+      return;
+    }
+
+    if (category === "game" && (inputs.pricePerMin === "" || inputs.pricePerMin == null)) {
+      toast.update(toastId, {
+        render: "Price per minute is required for game add-ons!",
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+      return;
+    }
 
     const formData = new FormData();
-    Object.entries(inputs).map(([key, value]) => {
-      formData.append(key, value);
-    });
+    formData.append("name", inputs.name.trim());
+    formData.append("category", category);
+    if (inputs.description?.trim()) {
+      formData.append("description", inputs.description.trim());
+    }
+    if (category === "food") {
+      formData.append("price", String(Number(inputs.price)));
+    }
+    if (category === "game") {
+      formData.append("pricePerMin", String(Number(inputs.pricePerMin)));
+    }
+    if (preview) {
+      formData.append("image", preview);
+    }
 
     try {
-      const response = await createSpace(formData);
+      const response = await createAddon(formData);
       if (response.success == true) {
         formElement.reset();
-        // Handle success
         toast.update(toastId, {
           render: `${response.message}`,
           type: "success",
@@ -202,20 +233,17 @@ export default function PackagesContent() {
           autoClose: 8000,
         });
         await fetchData();
-        setAddServiceModal(false);
-        setAddPackageModal(false);
-        setAddSpaceModal(false);
+        setAddAddonModal(false);
         clearInputs();
         return;
-      } else {
-        toast.update(toastId, {
-          render: `${response.message}`,
-          type: "warning",
-          isLoading: false,
-          autoClose: 8000,
-        });
-        return;
       }
+
+      toast.update(toastId, {
+        render: `${response.message}`,
+        type: "warning",
+        isLoading: false,
+        autoClose: 8000,
+      });
     } catch (error) {
       toast.update(toastId, {
         render: `An error occurred. Please try again later. (${error})`,
@@ -288,71 +316,6 @@ export default function PackagesContent() {
     }
   };
 
-  const handleUpdateSpace = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formElement = e.currentTarget;
-
-    const toastId = toast.loading("Adding, please wait...", {
-      position: "bottom-right",
-    });
-
-
-    if (preview && preview !== null) {
-      inputs.image = (await compressImage(preview));
-    }
-    // inputs.pricePerHour = parseInt(inputs.pricePerHour.toString().replace(/[.,]/g, ""))
-
-    Object.values(inputs).map((val) => {
-      if (val == "" || val == null) {
-        toast.update(toastId, {
-          render: "All inputs are needed!",
-          type: "error",
-          isLoading: false,
-          autoClose: 8000,
-        });
-        return;
-      }
-    });
-
-    const formData = new FormData();
-    Object.entries(inputs).map(([key, value]) => {
-      formData.append(key, value);
-    });
-
-    try {
-      const response = await updateSpace(formData, inputs.id);
-      if (response.success == true) {
-        formElement.reset();
-        // Handle success
-        toast.update(toastId, {
-          render: `${response.message}`,
-          type: "success",
-          isLoading: false,
-          autoClose: 8000,
-        });
-        await fetchData();
-        setUpdateSpaceModal(false);
-        clearInputs();
-        return;
-      } else {
-        toast.update(toastId, {
-          render: `${response.message}`,
-          type: "warning",
-          isLoading: false,
-          autoClose: 8000,
-        });
-        return;
-      }
-    } catch (error) {
-      toast.update(toastId, {
-        render: `An error occurred. Please try again later. (${error})`,
-        type: "error",
-        isLoading: false,
-        autoClose: 8000,
-      });
-    }
-  };
-
   const handleDelete = async (id: string) => {
     const toastId = toast.loading("Deleting, please wait...", {
       position: "bottom-right",
@@ -367,9 +330,6 @@ export default function PackagesContent() {
             break;
           case "services":
             res = await deleteServices({ id })
-            break;
-          case "spaces":
-            res = await deleteSpaces({ id })
             break;
           default:
             console.log('default')
@@ -407,15 +367,15 @@ export default function PackagesContent() {
   }
 
   const fetchData = async () => {
-    const [packages, services, spaces] = await Promise.all([
+    const [packages, services, addons] = await Promise.all([
       getPackages(),
       getServices(),
-      getSpaces(),
+      getAddons(),
     ]);
 
     setPackages(packages.data.packages);
     setServices(services.data.services);
-    setSpaces(spaces.data.spaces);
+    setAddons(addons.data.addOns);
   };
 
   useEffect(() => {
@@ -471,16 +431,16 @@ export default function PackagesContent() {
 
             {/*Single Container*/}
             <div
-              className={`w-full px-4 py-5 rounded-sm border-[1px] border-[#C7CFC9] ${section == "spaces" ? "bg-[#E4E8E5]" : "bg-[#FFFFFF]"} flex flex-col gap-4 cursor-pointer duration-700 hover:scale-105 hover:shadow-lg`}
-              onClick={() => setSection("spaces")}
+              className={`w-full px-4 py-5 rounded-sm border-[1px] border-[#C7CFC9] ${section == "addons" ? "bg-[#E4E8E5]" : "bg-[#FFFFFF]"} flex flex-col gap-4 cursor-pointer duration-700 hover:scale-105 hover:shadow-lg`}
+              onClick={() => setSection("addons")}
             >
               <div className="flex justify-between items-center">
                 <h2 className="font-bold text-[52px] leading-9 text-[#66655E]">
-                  {spaces.length}
+                  {addons.length}
                 </h2>
               </div>
               <p className="font-medium leading-[22px] tracking-[0.5px] text-[#737373]">
-                Available Spaces
+                Available Add-ons
               </p>
             </div>
           </div>
@@ -528,11 +488,11 @@ export default function PackagesContent() {
               <li
                 className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
                 onClick={() => {
-                  setSection("spaces");
-                  setAddSpaceModal(true);
+                  setSection("addons");
+                  setAddAddonModal(true);
                 }}
               >
-                <button>Space</button>
+                <button>Add-on</button>
               </li>
             </ul>
           </div>
@@ -667,67 +627,49 @@ export default function PackagesContent() {
         </section>
       )}
 
-      {section == "spaces" && (
+      {section == "addons" && (
         <section className="w-full p-4">
           <div className="flex gap-3 items-center">
             <h2 className="text-[#66655E] font-semibold text-[22px] leading-[30px]">
-              All spaces
+              All add-ons
             </h2>
             <p className="text-[#999999] font-medium leading-[22px] tracking-[0.5px]">
-              {spaces.length} available
+              {addons.length} available
             </p>
           </div>
 
           <div className="grid grid-cols-3 mt-5 gap-5">
-            {spaces.toReversed().map((space) => (
-              <div key={space.id as string} className="flex flex-col gap-3">
-                <div
-                  className="w-full h-[224px] bg-cover bg-center rounded2px"
-                  style={{ backgroundImage: `url(${space.imageUrl})` }}
-                ></div>
-                <div className={'flex items-center justify-between'}>
-                  <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
-                    {space.name}
-                  </h3>
-                  <div className={'flex items-center gap-x-3'}>
-                    <div
-                      onClick={() => {
-                        console.log(space)
-                        setInputs(space)
-                        setUpdateSpaceModal(true)
-                      }}
-                      className={'flex items-center justify-center bg-yard-primary p-2 rounded-lg cursor-pointer hover:scale-105 duration-500 gap-x-2 text-white fonot-medium'}
-                    >
-                      <Image
-                        src={"/icons/password-check.svg"}
-                        width={17}
-                        height={17}
-                        alt="Edit Icon"
-                        className={'invert brightness-0'}
-                      />
-                      <span>Edit</span>
-                    </div>
-                    <div
-                      onClick={() => handleDelete(space.id)}
-                      className={'flex items-center justify-center bg-red-500 p-2 rounded-lg cursor-pointer hover:scale-105 duration-500 gap-x-2 text-white'}
-                    >
-                      <Image
-                        src={"/icons/trash-black.svg"}
-                        width={17}
-                        height={17}
-                        alt="Trash Icon"
-                        className={'invert brightness-0'}
-                      />
-                      <span>Delete</span>
-                    </div>
+            {addons.toReversed().map((addon) => {
+              const priceLabel = formatAddonPrice(addon);
+              return (
+                <div key={addon.id} className="flex flex-col gap-3">
+                  <div
+                    className="w-full h-[224px] bg-cover bg-center rounded2px bg-[#EDF0EE] flex items-center justify-center"
+                    style={addon.imageUrl ? { backgroundImage: `url(${addon.imageUrl})` } : undefined}
+                  >
+                    {!addon.imageUrl && (
+                      <span className="text-4xl">✨</span>
+                    )}
                   </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
+                      {addon.name}
+                    </h3>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#EDF0EE] text-yard-primary font-medium capitalize shrink-0">
+                      {addon.category}
+                    </span>
+                  </div>
+                  {priceLabel && (
+                    <p className="font-semibold text-sm text-yard-primary">
+                      {priceLabel}
+                    </p>
+                  )}
+                  <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999] line-clamp-3">
+                    {addon.description || "No description"}
+                  </p>
                 </div>
-
-                <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
-                  {space.description}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
@@ -813,7 +755,8 @@ export default function PackagesContent() {
                   type="text"
                   id="serviceName"
                   name="serviceName"
-                  onChange={(e) => (inputs.name = e.target.value)}
+                  value={inputs.name ?? ""}
+                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter service name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -831,7 +774,8 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
-                  onChange={(e) => (inputs.description = e.target.value)}
+                  value={inputs.description ?? ""}
+                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -941,10 +885,11 @@ export default function PackagesContent() {
                   Enter package name
                 </label>
                 <input
+                  value={inputs.name || ""}
                   type="text"
                   id="packageName"
                   name="packageName"
-                  onChange={(e) => (inputs.name = e.target.value)}
+                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter package name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -960,9 +905,10 @@ export default function PackagesContent() {
                   Enter description
                 </label>
                 <textarea
+                value={inputs.description || ""}
                   id="desc"
                   name="desc"
-                  onChange={(e) => (inputs.description = e.target.value)}
+                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -1001,7 +947,7 @@ export default function PackagesContent() {
                   type="number"
                   id="guestLimit"
                   name="guestLimit"
-                  value={inputs.guestLimit}
+                  value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
                   placeholder="Guest Limit (2)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1044,9 +990,10 @@ export default function PackagesContent() {
                   type="text"
                   id="packageSpecs"
                   name="packageSpecs"
-                  onChange={(e) => (inputs.specs = e.target.value)}
+                  onChange={(e) => setInputs({ ...inputs, specs: e.target.value })}
                   placeholder="games and dates, Game hall special, Game hall special"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                  value={inputs.specs || ""}
                 />
               </div>
             </div>
@@ -1076,18 +1023,18 @@ export default function PackagesContent() {
         </div>
       </Modal>
 
-      {/*Add space Modal*/}
-      <Modal isOpen={addSpaceModal}>
+      {/*Add add-on Modal*/}
+      <Modal isOpen={addAddonModal}>
         <section className="w-full">
           <div className="w-full flex items-center justify-between">
             <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary">
-              Add a new space
+              Add a new add-on
             </h2>
             <div
               className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
               onClick={() => {
                 clearInputs();
-                setAddSpaceModal(false);
+                setAddAddonModal(false);
               }}
             >
               <Image
@@ -1103,18 +1050,17 @@ export default function PackagesContent() {
         </section>
 
         <div className="w-full flex items-start my-4 2xl:my-8 gap-10">
-          {/*Form*/}
           <form
-            className="w-full flex flex-col gap-5 h-[555px] overflow-y-scroll"
-            onSubmit={(e: FormEvent<HTMLFormElement>) => handleSubmitSpace(e)}
+            className="w-full flex flex-col gap-5 max-h-[70vh] overflow-y-scroll"
+            onSubmit={(e: FormEvent<HTMLFormElement>) => handleSubmitAddon(e)}
           >
             <label
-              htmlFor="media"
+              htmlFor="addonMedia"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               className="bg-cover bg-center"
               style={{
-                backgroundImage: `url(${preview ? URL.createObjectURL(preview) : null})`,
+                backgroundImage: preview ? `url(${URL.createObjectURL(preview)})` : undefined,
               }}
             >
               <div className="flex flex-col h-[200px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
@@ -1129,36 +1075,33 @@ export default function PackagesContent() {
                     <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
                       Choose an image or drag &amp; drop them here
                     </p>
-
                     <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
-                      JPEG &amp; PNG up to 10mb
+                      JPEG &amp; PNG up to 10mb (optional)
                     </p>
                   </>
                 ) : null}
               </div>
               <input
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*"
                 onChange={(e) => setPreview(e.target.files?.[0])}
-                id="media"
+                id="addonMedia"
                 className="hidden"
               />
             </label>
 
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spaceName"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space name
+                <label htmlFor="addonName" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                  Add-on name *
                 </label>
                 <input
                   type="text"
-                  id="spaceName"
-                  name="spaceName"
-                  onChange={(e) => (inputs.name = e.target.value)}
-                  placeholder="Enter space name"
+                  id="addonName"
+                  name="addonName"
+                  value={inputs.name || ""}
+                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
+                  placeholder="e.g. Balloon decoration"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1166,104 +1109,78 @@ export default function PackagesContent() {
 
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="desc"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                <label htmlFor="addonCategory" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                  Category *
+                </label>
+                <select
+                  id="addonCategory"
+                  name="addonCategory"
+                  value={inputs.category || "decoration"}
+                  onChange={(e) => setInputs({ ...inputs, category: e.target.value as AddOnCategory, price: "", pricePerMin: "" })}
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none bg-white"
                 >
-                  Enter description
+                  <option value="decoration">Decoration</option>
+                  <option value="food">Food</option>
+                  <option value="game">Game</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label htmlFor="addonDesc" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                  Description
                 </label>
                 <textarea
-                  id="desc"
-                  name="desc"
-                  onChange={(e) => (inputs.description = e.target.value)}
-                  placeholder="150 words"
-                  className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                ></textarea>
-              </div>
-            </div>
-
-            {/* <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spacePrice"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space price per person
-                </label>
-                <input
-                  type="text"
-                  id="spacePrice"
-                  name="spacePrice"
-                  value={inputs.pricePerHour
-                    ? Number(inputs.pricePerHour.toString().replace(/,/g, "")).toLocaleString()
-                    : ""}
-                  onChange={(e) => setInputs({ ...inputs, pricePerHour: e.target.value })}
-                  placeholder="Space price"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
-              </div>
-            </div> */}
-
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spaceCapacity"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space capacity
-                </label>
-                <input
-                  type="number"
-                  id="spaceCapacity"
-                  name="spaceCapacity"
-                  onChange={(e) => (inputs.capacity = e.target.value)}
-                  placeholder="Space capacity"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                  id="addonDesc"
+                  name="addonDesc"
+                  value={inputs.description || ""}
+                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  placeholder="Short description of the add-on"
+                  className="w-full h-[120px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
             </div>
 
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spaceLocation"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space location{" "}
-                  <small className="italic">(Hall 3, floor 2)</small>
-                </label>
-                <input
-                  type="text"
-                  id="spaceLocation"
-                  name="spaceLocation"
-                  onChange={(e) => (inputs.address = e.target.value)}
-                  placeholder="Space location"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
+            {inputs.category === "food" && (
+              <div className="form-group flex flex-col md:flex-row items-start gap-6">
+                <div className="w-full input-group flex flex-col gap-3">
+                  <label htmlFor="addonPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                    Price (₦) *
+                  </label>
+                  <input
+                    type="number"
+                    id="addonPrice"
+                    name="addonPrice"
+                    min={0}
+                    value={inputs.price ?? ""}
+                    onChange={(e) => setInputs({ ...inputs, price: e.target.value })}
+                    placeholder="0"
+                    className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spaceSpecs"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space specs{" "}
-                  <small className="italic">
-                    (Add a comma to seperate specs)
-                  </small>
-                </label>
-                <input
-                  type="text"
-                  id="spaceSpecs"
-                  name="spaceSpecs"
-                  onChange={(e) => (inputs.specs = e.target.value)}
-                  placeholder="games and dates, Game hall special, Game hall special"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
+            {inputs.category === "game" && (
+              <div className="form-group flex flex-col md:flex-row items-start gap-6">
+                <div className="w-full input-group flex flex-col gap-3">
+                  <label htmlFor="addonPricePerMin" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                    Price per minute (₦) *
+                  </label>
+                  <input
+                    type="number"
+                    id="addonPricePerMin"
+                    name="addonPricePerMin"
+                    min={0}
+                    value={inputs.pricePerMin ?? ""}
+                    onChange={(e) => setInputs({ ...inputs, pricePerMin: e.target.value })}
+                    placeholder="0"
+                    className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="w-full flex items-center gap-5 mt-3">
               <button
@@ -1271,7 +1188,7 @@ export default function PackagesContent() {
                 className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
                 onClick={() => {
                   clearInputs();
-                  setAddPackageModal(false);
+                  setAddAddonModal(false);
                 }}
               >
                 <span className="z-40 font-sen">Cancel</span>
@@ -1282,7 +1199,7 @@ export default function PackagesContent() {
                 type="submit"
                 className="w-full flex justify-center cta-btn bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
               >
-                <span className="z-40 font-sen">Add space</span>
+                <span className="z-40 font-sen">Add add-on</span>
                 <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
               </button>
             </div>
@@ -1371,7 +1288,7 @@ export default function PackagesContent() {
                   type="text"
                   id="packageName"
                   name="packageName"
-                  value={inputs.name}
+                  value={inputs.name || ""}
                   onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter package name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1390,7 +1307,7 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
-                  value={inputs.description}
+                  value={inputs.description || ""}
                   onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1430,7 +1347,7 @@ export default function PackagesContent() {
                   type="number"
                   id="guestLimit"
                   name="guestLimit"
-                  value={inputs.guestLimit}
+                  value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
                   placeholder="Guest Limit (2)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1473,7 +1390,7 @@ export default function PackagesContent() {
                   type="text"
                   id="packageSpecs"
                   name="packageSpecs"
-                  value={inputs.specs}
+                  value={inputs.specs || ""}
                   onChange={(e) => setInputs({ ...inputs, specs: e.target.value })}
                   placeholder="games and dates, Game hall special, Game hall special"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1587,7 +1504,7 @@ export default function PackagesContent() {
                   type="text"
                   id="serviceName"
                   name="serviceName"
-                  value={inputs.name}
+                  value={inputs.name || ""}
                   onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter service name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1606,7 +1523,7 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
-                  value={inputs.description}
+                  value={inputs.description || ""}
                   onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1632,225 +1549,6 @@ export default function PackagesContent() {
                 className="w-full flex justify-center cta-btn bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
               >
                 <span className="z-40 font-sen">Update service</span>
-                <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-              </button>
-            </div>
-          </form>
-        </div>
-      </Modal>
-
-      {/*Update space Modal*/}
-      <Modal isOpen={updateSpaceModal}>
-        <section className="w-full">
-          <div className="w-full flex items-center justify-between">
-            <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary">
-              Update space
-            </h2>
-            <div
-              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-              onClick={() => {
-                clearInputs();
-                setUpdateSpaceModal(false);
-              }}
-            >
-              <Image
-                src={"/icons/cancel.svg"}
-                width={16}
-                height={16}
-                alt="Close Icon"
-                className="z-40"
-              />
-              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
-            </div>
-          </div>
-        </section>
-
-        <div className="w-full flex items-start my-4 2xl:my-8 gap-10">
-          {/*Form*/}
-          <form
-            className="w-full flex flex-col gap-5 h-[555px] overflow-y-scroll"
-            onSubmit={(e: FormEvent<HTMLFormElement>) => handleUpdateSpace(e)}
-          >
-            <label
-              htmlFor="media"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              className="bg-cover bg-center"
-              style={{
-                backgroundImage: `url(${preview ? URL.createObjectURL(preview) : inputs.imageUrl})`,
-              }}
-            >
-              <div className="flex flex-col h-[200px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
-                {preview == undefined ? (
-                  <>
-                    <Image
-                      src={"/icons/upload.svg"}
-                      width={18}
-                      height={18}
-                      alt="Upload Icon"
-                    />
-                    <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
-                      Choose an image or drag &amp; drop them here
-                    </p>
-
-                    <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
-                      JPEG &amp; PNG up to 10mb
-                    </p>
-                  </>
-                ) : null}
-              </div>
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={(e) => setPreview(e.target.files?.[0])}
-                id="media"
-                className="hidden"
-              />
-            </label>
-
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spaceName"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space name
-                </label>
-                <input
-                  type="text"
-                  id="spaceName"
-                  name="spaceName"
-                  value={inputs.name}
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
-                  placeholder="Enter space name"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
-              </div>
-            </div>
-
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="desc"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter description
-                </label>
-                <textarea
-                  id="desc"
-                  name="desc"
-                  value={inputs.description}
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
-                  placeholder="150 words"
-                  className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                ></textarea>
-              </div>
-            </div>
-
-            {/* <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spacePrice"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space price per person
-                </label>
-                <input
-                  type="text"
-                  id="spacePrice"
-                  name="spacePrice"
-                  value={inputs.pricePerHour
-                    ? Number(inputs.pricePerHour.toString().replace(/,/g, "")).toLocaleString()
-                    : ""}
-                  onChange={(e) => setInputs({ ...inputs, pricePerHour: e.target.value })}
-                  placeholder="Space price"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
-              </div>
-            </div> */}
-
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spaceCapacity"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space capacity
-                </label>
-                <input
-                  type="number"
-                  id="spaceCapacity"
-                  name="spaceCapacity"
-                  value={inputs.capacity}
-                  onChange={(e) => setInputs({ ...inputs, capacity: e.target.value })}
-                  placeholder="Space capacity"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
-              </div>
-            </div>
-
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spaceLocation"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space location{" "}
-                  <small className="italic">(Hall 3, floor 2)</small>
-                </label>
-                <input
-                  type="text"
-                  id="spaceLocation"
-                  name="spaceLocation"
-                  value={inputs.address}
-                  onChange={(e) => setInputs({ ...inputs, address: e.target.value })}
-                  placeholder="Space location"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
-              </div>
-            </div>
-
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="spaceSpecs"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter space specs{" "}
-                  <small className="italic">
-                    (Add a comma to seperate specs)
-                  </small>
-                </label>
-                <input
-                  type="text"
-                  id="spaceSpecs"
-                  name="spaceSpecs"
-                  value={inputs.specs}
-                  onChange={(e) => setInputs({ ...inputs, specs: e.target.value })}
-                  placeholder="games and dates, Game hall special, Game hall special"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
-              </div>
-            </div>
-
-            <div className="w-full flex items-center gap-5 mt-3">
-              <button
-                type="button"
-                className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
-                onClick={() => {
-                  clearInputs();
-                  setUpdatePackageModal(false);
-                }}
-              >
-                <span className="z-40 font-sen">Cancel</span>
-                <div className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-              </button>
-
-              <button
-                type="submit"
-                className="w-full flex justify-center cta-btn bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
-              >
-                <span className="z-40 font-sen">Update space</span>
                 <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
               </button>
             </div>

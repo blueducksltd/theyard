@@ -1,4 +1,4 @@
-import { Schema, models, model, Types } from "mongoose";
+import { Schema, models, model } from "mongoose";
 import {
   IEvent,
   IEventMethods,
@@ -11,7 +11,6 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
     title: { type: String, required: true },
     slug: { type: String, required: true },
     description: { type: String },
-    customer: { type: Types.ObjectId, ref: "Customer", required: true },
     images: [{ type: String }],
     // type: {
     //   type: String,
@@ -24,21 +23,36 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
     //   start: { type: String, required: true },
     //   end: { type: String, required: true }
     // },
+    audienceType: {
+      type: String,
+      enum: ["children", "adults", "both"],
+      required: true,
+      default: "both"
+    },
+    activities: [{ type: String }],
+    adultPrice: { type: Number },
+    childPrice: { type: Number },
     status: {
       type: String,
       enum: ["active", "completed", "cancelled", "pending"],
       default: "pending"
     },
+    customer: { type: Schema.Types.ObjectId, ref: "Customer" },
     location: { type: String, required: true }
   },
   { timestamps: true }
 );
 
+EventSchema.virtual("signUps", {
+  ref: "SignUp",
+  localField: "_id",
+  foreignField: "eventId",
+});
+
 EventSchema.statics.filter = async function (filter: Record<string, string>, sort: string, direction: "ASC" | "DESC") {
 
   return this.find(filter)
-    .sort({ [sort]: direction === "ASC" ? 1 : -1 })
-    .populate("customer");
+    .sort({ [sort]: direction === "ASC" ? 1 : -1 });
 }
 
 // Export model

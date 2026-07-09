@@ -3,20 +3,22 @@ import { Document } from "mongoose";
 import { Model } from "mongoose";
 import { z } from "zod";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
-import { ISpace, SafeSpace, sanitizeSpace } from "./Space";
 import { IEvent, SafeEvent, sanitizeEvent } from "./Event";
 import { IPackage, SafePackage, sanitizePackage } from "./Package";
+import { SafeSpace, sanitizeSpace } from "./Space";
 
 // -----------------------------
 // TypeScript interface
 // -----------------------------
 export interface IBooking extends Document, IBookingMethods {
   customer: ICustomer["id"];
-  space: ISpace["id"];
-  event: IEvent["id"];
+  event?: IEvent["id"];
   package: IPackage["id"];
+  space?: any;
   eventDate: Date;
   guestCount: number;
+  time?: string;
+  addon?: string[];
   status: "pending" | "confirmed" | "cancelled";
   totalPrice: number;
   createdAt: Date;
@@ -26,16 +28,11 @@ export interface IBooking extends Document, IBookingMethods {
 // Instance methods
 export interface IBookingMethods {
   eventDetails(): Promise<IEvent | null>;
-  spaceDetails(): Promise<ISpace | null>;
   customerDetails(): Promise<ICustomer | null>;
 }
 
 // Statics
 export interface IBookingModel extends Model<IBooking, IBookingMethods> {
-  isDoubleBooked(
-    spaceId: string,
-    eventDate: Date,
-  ): Promise<boolean>;
   filter(
     filter: Record<string, string>,
     sort: string,
@@ -43,7 +40,6 @@ export interface IBookingModel extends Model<IBooking, IBookingMethods> {
     admin?: boolean,
   ): Promise<IBooking[]>;
   findByCustomer(customerId: ICustomer["id"]): Promise<IBooking[]>;
-  findBySpace(spaceId: ISpace["id"]): Promise<IBooking[]>;
   findByDateRange(start: Date, end?: Date): Promise<IBooking[]>;
 }
 
@@ -52,12 +48,14 @@ export type SafeBooking = {
   id: string;
   eventDate: Date;
   guestCount: number;
+  time?: string;
+  addon?: string[];
   status: string;
   totalPrice: number;
   customer: SafeCustomer | null;
-  space: SafeSpace | null;
   event: SafeEvent | null;
   package: SafePackage | null;
+  space: SafeSpace | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -67,12 +65,14 @@ export function sanitizeBooking(booking: IBooking): SafeBooking {
     id: booking.id,
     eventDate: booking.eventDate,
     guestCount: booking.guestCount,
+    time: booking.time,
+    addon: booking.addon,
     status: booking.status,
     totalPrice: booking.totalPrice,
     customer: booking.customer ? sanitizeCustomer(booking.customer) : null,
-    space: booking.space ? sanitizeSpace(booking.space) : null,
     event: booking.event ? sanitizeEvent(booking.event) : null,
     package: booking.package ? sanitizePackage(booking.package) : null,
+    space: booking.space ? sanitizeSpace(booking.space) : null,
     createdAt: booking.createdAt,
     updatedAt: booking.updatedAt,
   };
@@ -120,19 +120,13 @@ export const CreateBookingDto = z.object({
   guestCount: z.coerce.number({
     error: "field `guestCount` is required",
   }).min(1),
-  spaceId: z.string({
-    error: "field `spaceId` is required",
-  }),
   packageId: z.string({
     error: "field `packageId` is required",
   }),
-  eventTitle: z.string({
-    error: "field `eventTitle` is required",
-  }),
-  // eventType: z.string(),
+  spaceId: z.string().optional(),
+  time: z.string().optional(),
+  addon: z.array(z.string()).optional(),
   eventDescription: z.string().optional(),
-  public: z.boolean().optional().default(false),
-  imagesUrls: z.array(z.string().url()).optional(),
 });
 
 export const UpdateBookingDto = z.object({
@@ -164,9 +158,10 @@ export const UpdateBookingDto = z.object({
     )
     .optional(),
   guestCount: z.coerce.number().optional(),
-  spaceId: z.string().optional(),
   packageId: z.string().optional(),
-  eventTitle: z.string().optional(),
+  spaceId: z.string().optional(),
+  time: z.string().optional(),
+  addon: z.array(z.string()).optional(),
   eventType: z
     .enum(["picnics", "birthdays", "weddings", "corporate", "seasonal"], {
       error:
@@ -174,7 +169,6 @@ export const UpdateBookingDto = z.object({
     })
     .optional(),
   eventDescription: z.string().optional(),
-  public: z.boolean().optional().default(false).optional(),
   status: z
     .enum(["pending", "confirmed", "cancelled"], {
       error: "field `status` is required and must be one of pending,",
