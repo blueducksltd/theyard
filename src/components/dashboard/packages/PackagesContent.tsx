@@ -872,10 +872,11 @@ export default function PackagesContent() {
                   Enter package name
                 </label>
                 <input
+                  value={inputs.name || ""}
                   type="text"
                   id="packageName"
                   name="packageName"
-                  onChange={(e) => (inputs.name = e.target.value)}
+                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter package name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -891,9 +892,10 @@ export default function PackagesContent() {
                   Enter description
                 </label>
                 <textarea
+                value={inputs.description || ""}
                   id="desc"
                   name="desc"
-                  onChange={(e) => (inputs.description = e.target.value)}
+                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -932,7 +934,7 @@ export default function PackagesContent() {
                   type="number"
                   id="guestLimit"
                   name="guestLimit"
-                  value={inputs.guestLimit}
+                  value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
                   placeholder="Guest Limit (2)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -975,9 +977,10 @@ export default function PackagesContent() {
                   type="text"
                   id="packageSpecs"
                   name="packageSpecs"
-                  onChange={(e) => (inputs.specs = e.target.value)}
+                  onChange={(e) => setInputs({ ...inputs, specs: e.target.value })}
                   placeholder="games and dates, Game hall special, Game hall special"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                  value={inputs.specs || ""}
                 />
               </div>
             </div>
@@ -1272,7 +1275,7 @@ export default function PackagesContent() {
                   type="text"
                   id="packageName"
                   name="packageName"
-                  value={inputs.name}
+                  value={inputs.name || ""}
                   onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter package name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1291,7 +1294,7 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
-                  value={inputs.description}
+                  value={inputs.description || ""}
                   onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1331,7 +1334,7 @@ export default function PackagesContent() {
                   type="number"
                   id="guestLimit"
                   name="guestLimit"
-                  value={inputs.guestLimit}
+                  value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
                   placeholder="Guest Limit (2)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1374,7 +1377,7 @@ export default function PackagesContent() {
                   type="text"
                   id="packageSpecs"
                   name="packageSpecs"
-                  value={inputs.specs}
+                  value={inputs.specs || ""}
                   onChange={(e) => setInputs({ ...inputs, specs: e.target.value })}
                   placeholder="games and dates, Game hall special, Game hall special"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1488,7 +1491,7 @@ export default function PackagesContent() {
                   type="text"
                   id="serviceName"
                   name="serviceName"
-                  value={inputs.name}
+                  value={inputs.name || ""}
                   onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
                   placeholder="Enter service name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
@@ -1507,7 +1510,7 @@ export default function PackagesContent() {
                 <textarea
                   id="desc"
                   name="desc"
-                  value={inputs.description}
+                  value={inputs.description || ""}
                   onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
