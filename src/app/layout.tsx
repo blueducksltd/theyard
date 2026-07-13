@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Playfair, Lato, Sen, Petit_Formal_Script, Inter, Playfair_Display } from "next/font/google";
 import { ToastContainer } from "react-toastify";
 
+// @ts-ignore
 import "react-toastify/dist/ReactToastify.css";
-
+// @ts-ignore
 import "./globals.css";
 
 

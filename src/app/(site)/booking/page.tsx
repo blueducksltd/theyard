@@ -4,7 +4,7 @@ import { ArrowLeft, CalendarDays, ChevronDown, PackageX } from 'lucide-react';
 import EmptyState from '@/components/v2/EmptyState';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import { AddMoreFun, IPackageFun, PackageCard, SelectedAddon } from '../packages/page';
+import { AddMoreFun, IPackageFun, ModalContent, PackageCard, SelectedAddon } from '../packages/page';
 import BookingCalendar from '@/components/booking/Calender';
 import { toast } from 'react-toastify';
 import { useBookingStore } from '@/store/bookingStore';
@@ -34,11 +34,30 @@ type ShowState = {
   };
 };
 
-const PackageModalContent = ({ packages, showModal, setSelectedPackage }: { packages: IPackageFun[], showModal: boolean, setSelectedPackage: (selectedPackage: IPackageFun) => void }) => {
+const PackageModalContent = ({ packages, showModal, setSelectedPackage, closePackageModal }: { packages: IPackageFun[], showModal: boolean, setSelectedPackage: (selectedPackage: IPackageFun) => void, closePackageModal: () => void; }) => {
+
+  const [viewing, setViewing] = useState<IPackageFun | null>(null)
+
+  if (viewing) {
+    return <ModalContent
+      selectedPackage={viewing}
+      onClose={() => {
+        setViewing(null)
+      }}
+      onConfirmAddon={(selectedAddon) => {
+        setViewing(prev => prev ? { ...prev, selectedAddon } : prev)
+      }}
+      bookPackage={() => {
+        setSelectedPackage(viewing)
+        setViewing(null)
+        closePackageModal()
+      }}
+    />
+  }
 
   return <div
     className={`bg-white space-y-3 transition-all duration-300 ${showModal
-      ? "p-5 opacity-100 scale-100 w-100 max-w-[calc(100vw-2rem)] h-[70vh] md:w-full md:min-h-100"
+      ? "p-5 opacity-100 scale-100 w-100  h-[70vh] md:w-full md:min-h-100"
       : "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none"
       } grid grid-cols-1 md:grid-cols-2 gap-4 h-100 overflow-auto`}>
 
@@ -55,7 +74,7 @@ const PackageModalContent = ({ packages, showModal, setSelectedPackage }: { pack
         pkg={pkg}
         index={index}
         onSelect={() => {
-          setSelectedPackage(pkg);
+          setViewing(pkg)
         }}
       />
     ))}
@@ -125,7 +144,7 @@ export default function BookingPage() {
   ]
   const setSelectedPackage = (selectedPackage: IPackageFun) => {
 
-    setShow(prev => ({ ...prev, package: { ...prev.package, value: selectedPackage, show: false } }));
+    setShow(prev => ({ ...prev, package: { ...prev.package, value: selectedPackage } }));
 
 
   }
@@ -217,12 +236,19 @@ export default function BookingPage() {
     })()
   }, [])
 
+  const handleSelectedAddon = (selectedAddon: SelectedAddon[]) => {
+    setShow(prev => ({ ...prev, package: { ...prev.package, value: prev.package.value ? { ...prev.package.value, selectedAddon } : null } }));
+
+  }
+
   return (
     <div className='font-lato pb-20 md:pb-2 text-base'>
       <Modal isOpen={show.package.show} handleClose={() => {
         setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
       }}>
-        <PackageModalContent packages={packages} setSelectedPackage={setSelectedPackage} showModal={show.package.show} />
+        <PackageModalContent packages={packages} setSelectedPackage={setSelectedPackage} showModal={show.package.show} closePackageModal={() => {
+          setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
+        }} />
       </Modal>
 
       <Modal isOpen={show.fun.show} handleClose={() => {
@@ -233,7 +259,7 @@ export default function BookingPage() {
             setShow(prev => ({ ...prev, fun: { ...prev.fun, show: false } }));
           }}
           onConfirmAddon={(selectedAddon) => {
-            setShow(prev => ({ ...prev, package: { ...prev.package, value: prev.package.value ? { ...prev.package.value, selectedAddon } : null } }));
+            handleSelectedAddon(selectedAddon)
           }}
           packageSelectedFun={show.package.value?.selectedAddon || []}
           show={show.fun.show} />
@@ -344,13 +370,13 @@ export default function BookingPage() {
                   : "w-0 h-0 overflow-hidden delay-0"
                   }`}
                 onClick={e => e.stopPropagation()}
-              >                
-              <BookingCalendar bookingData={bookingData}
+              >
+                <BookingCalendar bookingData={bookingData}
 
-                onDateClick={(date) => {
-                  setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
+                  onDateClick={(date) => {
+                    setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
 
-                }} />
+                  }} />
               </div>
             </div>
 
@@ -388,7 +414,7 @@ export default function BookingPage() {
 
             <div className='space-y-1 text-sm md:col-span-2'>
               <label htmlFor="package" className='block text-[#1A1A1A]'>Event note/description</label>
-              <textarea value={inputs.note} onChange={e => setInputs(prev => ({ ...prev, note: e.target.value }))} name="" id="" className='block w-full border resize-none outline-none p-3 h-40'></textarea>
+              <textarea placeholder={`Tell us about your event, and we'll prepare a space tailored to your style and preferences`} value={inputs.note} onChange={e => setInputs(prev => ({ ...prev, note: e.target.value }))} name="" id="" className='block w-full border resize-none outline-none p-3 h-40'></textarea>
             </div>
           </div>
 

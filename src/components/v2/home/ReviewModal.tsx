@@ -124,7 +124,7 @@ export default function ReviewModal({
                         aria-modal="true"
                         aria-labelledby="review-modal-title"
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full md:max-w-[560px] max-h-[92vh] overflow-y-auto rounded-t-[24px] md:rounded-[24px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] p-6 md:p-8"
+                        className="w-full md:max-w-140 max-h-[92vh] overflow-y-auto  bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.25)] p-6 md:p-8"
                         initial={{ opacity: 0, y: 40, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 24, scale: 0.97 }}
@@ -147,7 +147,7 @@ export default function ReviewModal({
                                 disabled={isBusy}
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="shrink-0 w-11 h-11 rounded-full bg-[#F2F2F4] hover:bg-[#E8E8EA] flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
+                                className="shrink-0 w-11 h-11  bg-[#F2F2F4] hover:bg-[#E8E8EA] flex items-center justify-center transition-colors disabled:opacity-40 cursor-pointer"
                             >
                                 <X size={18} className="text-[#1D1D1F]" />
                             </motion.button>
@@ -167,7 +167,7 @@ export default function ReviewModal({
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="Enter your name"
                                     disabled={isBusy}
-                                    className="font-sen w-full h-[52px] rounded-2xl px-4 bg-[#F2F2F4] text-[15px] text-[#1D1D1F] placeholder:text-[#A1A1A6] outline-none border border-transparent transition-all duration-200 focus:bg-white focus:border-primaryGreen/50 focus:ring-4 focus:ring-primaryGreen/12 disabled:opacity-60"
+                                    className="font-sen w-full h-13  px-4 bg-[#F2F2F4] text-[15px] text-[#1D1D1F] placeholder:text-[#A1A1A6] outline-none border border-transparent transition-all duration-200 focus:bg-white focus:border-primaryGreen/50 focus:ring-4 focus:ring-primaryGreen/12 disabled:opacity-60"
                                 />
                             </div>
 
@@ -185,7 +185,7 @@ export default function ReviewModal({
                                         disabled={isBusy}
                                         rows={4}
                                         maxLength={COMMENT_LIMIT}
-                                        className="font-sen w-full min-h-[120px] resize-none rounded-2xl px-4 py-3.5 bg-[#F2F2F4] text-[15px] leading-relaxed text-[#1D1D1F] placeholder:text-[#A1A1A6] outline-none border border-transparent transition-all duration-200 focus:bg-white focus:border-primaryGreen/50 focus:ring-4 focus:ring-primaryGreen/12 disabled:opacity-60"
+                                        className="font-sen w-full min-h-30 resize-none px-4 py-3.5 bg-[#F2F2F4] text-[15px] leading-relaxed text-[#1D1D1F] placeholder:text-[#A1A1A6] outline-none border border-transparent transition-all duration-200 focus:bg-white focus:border-primaryGreen/50 focus:ring-4 focus:ring-primaryGreen/12 disabled:opacity-60"
                                     />
                                     <span className="pointer-events-none absolute bottom-3 right-4 font-sen text-[11px] text-[#A1A1A6]">
                                         {comment.length}/{COMMENT_LIMIT}
@@ -201,7 +201,7 @@ export default function ReviewModal({
                                     disabled={isBusy}
                                     whileHover={{ y: -1 }}
                                     whileTap={{ scale: 0.97 }}
-                                    className="font-sen min-w-[44px] min-h-[44px] px-5 rounded-full bg-[#F2F2F4] text-[#1D1D1F] font-medium text-[14px] hover:bg-[#E8E8EA] transition-colors disabled:opacity-40 cursor-pointer"
+                                    className="font-sen min-w-11 min-h-11 px-5  bg-[#F2F2F4] text-[#1D1D1F] font-medium text-[14px] hover:bg-[#E8E8EA] transition-colors disabled:opacity-40 cursor-pointer"
                                 >
                                     Cancel
                                 </motion.button>
@@ -211,7 +211,7 @@ export default function ReviewModal({
                                     disabled={!canSubmit}
                                     whileHover={canSubmit ? { y: -1 } : undefined}
                                     whileTap={canSubmit ? { scale: 0.97 } : undefined}
-                                    className="font-sen min-w-40 min-h-11 px-6 rounded-full bg-primaryGreen text-white font-medium text-[14px] shadow-[0_8px_20px_-6px_rgba(0,122,255,0.5)] hover:shadow-[0_10px_24px_-6px_rgba(0,122,255,0.6)] transition-shadow disabled:opacity-40 disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
+                                    className="font-sen min-w-40 min-h-11 px-6  bg-primaryGreen text-white font-medium text-[14px] shadow-[0_8px_20px_-6px_rgba(0,122,255,0.5)] hover:shadow-[0_10px_24px_-6px_rgba(0,122,255,0.6)] transition-shadow disabled:opacity-40 disabled:shadow-none cursor-pointer flex items-center justify-center gap-2"
                                 >
                                     <AnimatePresence mode="wait" initial={false}>
                                         {status === "idle" && (

@@ -74,7 +74,6 @@ const Page = ({ searchParams }: IProps) => {
 
     const savedBookingDetails = loadFromLS("booking");
     savedBookingDetails["package"] = selectedPackage;
-    console.log(savedBookingDetails);
     // return;
     saveToLS("booking", savedBookingDetails);
     router.push(`/booking/checkout`);

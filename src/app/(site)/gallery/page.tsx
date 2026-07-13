@@ -158,7 +158,7 @@ export function BentoGrid({ images, isMotion }: { images: string[], isMotion?: b
 
     return (
         <>
-            <div className="grid grid-cols-6 auto-rows-[minmax(145px,1fr)] gap-3 p-0 md:p-10">
+            <div className="grid grid-cols-6 auto-rows-[minmax(145px,1fr)] gap-3 p-0 py-10 ">
                 {images.map((img, i) => {
                     const tile = layout[i];
                     return isMotion ? (
@@ -343,7 +343,7 @@ export default function GalleryPage() {
                         </span>
                     </h1>
 
-                    <Link href={"/"} className={`bg-primaryGreen py-3 px-6 text-white text-sm font-sen`}>
+                    <Link href={"/events"} className={`bg-primaryGreen py-3 px-6 text-white text-sm font-sen`}>
                         Join our upcoming event
                     </Link>
                 </div>

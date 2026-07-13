@@ -16,7 +16,6 @@ const Testimonials = () => {
   React.useEffect(() => {
     const fetchReviews = async () => {
       const data = await getReviews();
-      console.log(data);
       setReviews(data.data.reviews);
     };
     fetchReviews();

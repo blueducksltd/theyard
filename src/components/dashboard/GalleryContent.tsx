@@ -430,7 +430,6 @@ export default function GalleryContent() {
     })();
     //clean up
     return () => {
-      console.log("");
     };
   }, [tagInput]);
 

@@ -158,7 +158,6 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
         );
     };
 
-    console.log(event);
     return (
         <>
             {/* ── STEP 1: Overview ── */}

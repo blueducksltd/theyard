@@ -87,7 +87,6 @@ export default function HomeContent() {
     const fetchData = async () => {
       try {
         const response = await getDashboardData();
-        console.log(response);
         if (response.success) {
           setActiveBookings(response.data.dashboard.bookings?.recent);
           setEvents(response.data.dashboard.events?.upcoming);
