@@ -371,7 +371,7 @@ export const AddMoreFun = React.memo(function AddMoreFun({
                             <div className="flex items-center w-full gap-5">
                                 <div className="shrink-0 w-18 h-18 overflow-hidden relative">
                                     <Image
-                                        src="https://images.pexels.com/photos/4989348/pexels-photo-4989348.jpeg"
+                                        src={item.imageUrl}
                                         alt={item.name}
                                         fill
                                         className="object-cover object-center"
