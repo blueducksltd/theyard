@@ -56,7 +56,6 @@ export const GET = errorHandler(async (request: NextRequest) => {
 
     // --- Sanitize ---
     const sanitizedEvents = paginatedEvents.map((event) => sanitizeEvent(event));
-    console.log(sanitizedEvents);
     // --- Response ---
     return APIResponse.success("Events retrieved successfully", {
         events: sanitizedEvents,

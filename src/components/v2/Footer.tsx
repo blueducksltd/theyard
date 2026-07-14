@@ -3,7 +3,6 @@
 import { Mail, MapPin, Phone } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { RiInstagramLine, RiTiktokLine, RiWhatsappLine } from 'react-icons/ri';
 import { SlSocialFacebook } from 'react-icons/sl';
 
@@ -41,7 +40,8 @@ export default function Footer() {
                     <h1 className={`text-primaryBrown text-xl font-playfair-display font-medium text`}>
                         Subscribe to our Newsletter
                     </h1>
-                    <p className={`font-lato text-sm text-center`}>Join our picnic lovers list for updates, offers, and event inspiration.</p>
+                    <p className={`font-lato text-sm text-center`}>Join our picnic lovers list for updates,tips, offers, and event inspiration.
+                    </p>
                     <div className='grid grid-cols-1 md:grid-cols-2 w-full md:w-[60%] mt-10 gap-y-4'>
                         <div className='h-14 border flex items-center p-4'>
                             <input type="text" placeholder='Firstname' className='h-full outline-none' />
@@ -85,16 +85,16 @@ export default function Footer() {
 
                             </p>
 
-                            <Link href={"/"} className={`font-lato`}>
+                            <Link href={"/packages"} className={`font-lato`}>
                                 Packages
                             </Link>
-                            <Link href={"/"} className={`font-lato`}>
+                            <Link href={"/events"} className={`font-lato`}>
                                 Events
                             </Link>
-                            <Link href={"/"} className={`font-lato`}>
+                            <Link href={"/about"} className={`font-lato`}>
                                 About
                             </Link>
-                            <Link href={"/"} className={`font-lato`}>
+                            <Link href={"/gallery"} className={`font-lato`}>
                                 Gallery
                             </Link>
 
@@ -116,24 +116,25 @@ export default function Footer() {
                                 </div>
                                 <p className="">+2347035963434</p>
                             </Link>
-                            <Link
-                                href={"/"}
+                            <a
+                                href={"mailto:booking@picnicattheyard.com)"}
                                 className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <Mail size={16} />
                                 </div>
-                                <p className="">info@theyard.com</p>
-                            </Link>
-                            <Link
-                                href={"/"}
+                                <p className="">booking@picnicattheyard.com</p>
+                            </a>
+                            <a
+                                href={"https://maps.app.goo.gl/PVs15BWxQiazupRf9"}
+                                target='_blank'
                                 className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown shrink-0'>
                                     <MapPin size={16} />
                                 </div>
                                 <p className="">21 Umuawulu Street, Independence Layout, Enugu</p>
-                            </Link>
+                            </a>
 
 
                         </div>
@@ -154,34 +155,39 @@ export default function Footer() {
                                 </div>
                                 <p className="">Whatsapp</p>
                             </Link>
-                            <Link
-                                href={"/"}
+                            <a
+                                href={"https://www.instagram.com/theyardenugu/ "}
+                                target='_blank'
                                 className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <RiInstagramLine size={16} />
                                 </div>
                                 <p className="">Instagram</p>
-                            </Link>
+                            </a>
 
-                            <Link
-                                href={"/"}
+                            <a
+                                href={"https://www.tiktok.com/@theyard.picnicpark "}
+                                target='_blank'
+
                                 className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <RiTiktokLine size={16} />
                                 </div>
                                 <p className="">Tiktok</p>
-                            </Link>
-                            <Link
-                                href={"/"}
+                            </a>
+                            <a
+                                href={"https://www.facebook.com/pages/The%20yard%20picnic%20park,Enugu/507875085748038/about/?ref=page_internal "}
+                                target='_blank'
+
                                 className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <SlSocialFacebook size={16} />
                                 </div>
                                 <p className="">Facebook</p>
-                            </Link>
+                            </a>
 
                         </div>
 
@@ -204,7 +210,10 @@ export default function Footer() {
 
                             <p>© 2026 — Copyright The Yard Picnic Park. All rights reserved.</p>
                         </div>
-                        <Image src={"/images/developed_by_blueducks.svg"} width={80} height={80} alt='Logo' className='object-contain' />
+                        <a href="https://blueducksltd.com/" target='_blank' className='relative z-10'>
+
+                            <Image src={"/images/developed_by_blueducks.svg"} width={80} height={80} alt='Logo' className='object-contain' />
+                        </a>
 
                     </div>
                 </div>

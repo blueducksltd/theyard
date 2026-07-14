@@ -22,7 +22,98 @@ import { IGalleryClient } from "@/types/Gallery";
 import { BentoGrid } from "./gallery/page";
 import Loading from "@/components/v2/Loading";
 import ReviewModal from "@/components/v2/home/ReviewModal";
-const slides = [
+const services: { title: string; subtitle: string; image: string }[] = [
+  {
+    title: "Couple's Escape",
+    subtitle:
+      "A private outdoor experience crafted for romance, relaxation, and meaningful moments.",
+    image: "/images/drive-15.jpg",
+  },
+  {
+    title: "Family Picnic",
+    subtitle:
+      "Quality time in a beautiful setting where families can relax, connect, and create memories.",
+    image: "/images/drive-14.webp",
+  },
+  {
+    title: "Celebration Package",
+    subtitle:
+      "Elegant outdoor setups for birthdays, showers, graduations, and life's special occasions.",
+    image: "/images/drive-11.webp",
+  },
+  {
+    title: "Corporate Retreat",
+    subtitle:
+      "A refreshing venue for team bonding, meetings, workshops, and corporate events.",
+    image: "/images/drive-4.jpg",
+  },
+  {
+    title: "Solo Date",
+    subtitle:
+      "A peaceful escape to unwind, reflect, and enjoy your own company.",
+    image: "/images/drive-7.jpg",
+  },
+  {
+    title: "Romantic Proposal",
+    subtitle:
+      "A beautifully styled setting designed to make your proposal truly unforgettable.",
+    image: "/images/drive-9.webp",
+  },
+  {
+    title: "Photoshoot",
+    subtitle:
+      "Scenic outdoor spaces perfect for capturing timeless moments and stunning portraits.",
+    image: "/images/drive-11.webp",
+  },
+  {
+    title: "Wedding",
+    subtitle:
+      "Celebrate your love in a charming outdoor venue designed for intimate and memorable weddings.",
+    image: "/images/drive-15.jpg",
+  },
+  {
+    title: "Birthday",
+    subtitle:
+      "Make every birthday extraordinary with personalized décor and a vibrant atmosphere.",
+    image: "/images/drive-9.webp",
+  },
+  {
+    title: "Anniversary",
+    subtitle:
+      "Celebrate another chapter of love with a romantic and thoughtfully curated experience.",
+    image: "/images/drive-10.webp",
+  },
+  {
+    title: "Get-Together",
+    subtitle:
+      "Gather friends, family, or colleagues for unforgettable moments in a relaxed outdoor setting.",
+    image: "/images/drive-11.webp",
+  },
+  {
+    title: "Games",
+    subtitle:
+      "Enjoy fun outdoor games and activities that bring people together and create lasting memories.",
+    image: "/images/drive-12.webp",
+  },
+  {
+    title: "Delicacies (Small Chops)",
+    subtitle:
+      "Savor a selection of freshly prepared small chops and delicious treats for every occasion.",
+    image: "/images/drive-8.jpg",
+  },
+  {
+    title: "Mini Workplace",
+    subtitle:
+      "A quiet outdoor workspace where creativity, productivity, and fresh air come together.",
+    image: "/images/drive-13.webp",
+  },
+  {
+    title: "Craft",
+    subtitle:
+      "Express your creativity through hands-on craft experiences in an inspiring natural environment.",
+    image: "/images/drive-7.jpg",
+  },
+]; const slides = [
   {
     image: "/images/banner.png",
     tag: "Welcome to TheYard",
@@ -30,19 +121,19 @@ const slides = [
     highlight: "moments",
   },
   {
-    image: "/images/banner.png",
+    image: "/images/drive-6.jpg",
     tag: "Experience Luxury",
     title: "Unforgettable weddings, corporate events, and",
     highlight: "celebrations",
   },
   {
-    image: "/images/banner.png",
+    image: "/images/drive-3.jpg",
     tag: "Our Spaces",
     title: "Elegant venues designed for your perfect",
     highlight: "occasion",
   },
   {
-    image: "/images/banner.png",
+    image: "/images/drive-11.webp",
     tag: "Book Now",
     title: "Create memories that last a",
     highlight: "lifetime",
@@ -100,26 +191,6 @@ export default function Home() {
   ];
 
   const [packages, setPackages] = useState<IPackage[]>([]);
-
-  // const testimonails: { name: string; testimony: string }[] = [
-  //   {
-  //     name: "Chiamaka & Femi",
-  //     testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
-  //   },
-  //   {
-  //     name: "Chiamaka & Femi",
-  //     testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
-  //   },
-  //   {
-  //     name: "Chiamaka & Femi",
-  //     testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
-  //   },
-  //   {
-  //     name: "Chiamaka & Femi",
-  //     testimony: "The setup was more beautiful than i imagined. My partner was so surprised and  speechless."
-  //   }
-  // ]
-
   const [events, setEvents] = useState<IEvent[]>([]);
   const [testimonials, setTestimonials] = useState<IReviewClient[]>([]);
   const [gallery, setGallery] = useState<IGalleryClient[]>([]);
@@ -375,12 +446,12 @@ export default function Home() {
             resistance={true}
             resistanceRatio={0.85}
             autoplay
-            className=" h-95 w-full"
+            className=" h-120 md:h-95 w-full"
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
             }}
           >
-            {packages.slice(0, 4).map((item, index) => (
+            {services.map((item, index) => (
               <SwiperSlide key={index} className="h-full">
                 <Link href={`/packages/`} className="h-full">
                   <motion.div
@@ -393,14 +464,14 @@ export default function Home() {
                   >
                     <div className="relative z-20 flex flex-col w-full gap-4 justify-end self-stretch">
                       <div className="flex flex-col gap-1 w-[80%] md:w-full">
-                        <p className="font-playfair-display text-xl font-semibold">{item.name}</p>
-                        <p className="font-inter text-sm h-5 ">{item.description.length > 100 ? item.description.slice(0, 100) + "..." : item.description}</p>
+                        <p className="font-playfair-display text-xl font-semibold">{item.title}</p>
+                        <p className="font-inter text-sm h-5 ">{item.subtitle.length > 100 ? item.subtitle.slice(0, 100) + "..." : item.subtitle}</p>
                       </div>
                       <div className="flex w-full justify-end">
                         <Image width={30} height={30} alt="" src={"/images/arrow-right.png"} />
                       </div>
                     </div>
-                    <Image src={item.imageUrl} fill alt="" className="object-cover" />
+                    <Image src={item.image} fill alt="" className="object-cover" />
                     <div className="w-full h-full left-0 top-0 bg-black/40 absolute"></div>
                   </motion.div>
                 </Link>
@@ -656,7 +727,7 @@ export default function Home() {
                 variants={revealItem}
                 transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
               >
-                unForgettable <span className={`font-petit text-primaryBrown`}>Moments </span>
+                Unforgettable <span className={`font-petit text-primaryBrown`}>Moments </span>
               </motion.h1>
 
               <motion.p
@@ -664,8 +735,7 @@ export default function Home() {
                 variants={revealItem}
                 transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
               >
-                From intimate dates to joyful celebrations, every setup is crafted to create lasting memories.
-              </motion.p>
+                Browse the experiences we’ve created              </motion.p>
             </div>
 
             <motion.div

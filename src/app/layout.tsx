@@ -3,8 +3,8 @@ import { Playfair, Lato, Sen, Petit_Formal_Script, Inter, Playfair_Display } fro
 import { ToastContainer } from "react-toastify";
 
 import "react-toastify/dist/ReactToastify.css";
-
 import "./globals.css";
+
 
 
 const sen = Sen({

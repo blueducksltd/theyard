@@ -94,7 +94,6 @@ export default function ReviewContent() {
     id?: string,
     affect?: string,
   ) => {
-    console.log(action);
     const loadingToast = toast.loading("Loading data...", {
       position: "bottom-right",
     });

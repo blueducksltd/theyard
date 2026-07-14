@@ -18,7 +18,7 @@ export default function SiteLayout({
   return (
     <div>
       <Header />
-      <div className="bg-[#F6F2EC]">
+      <div className="bg-[#F6F2EC] pb-40">
 
         {children}
       </div>

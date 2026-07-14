@@ -112,7 +112,6 @@ export default function PackagesContent() {
     }
 
     Object.values(inputs).map((val) => {
-      console.log(val);
       if (val == "" || val == null) {
         toast.update(toastId, {
           render: "All inputs are needed!",
@@ -270,7 +269,6 @@ export default function PackagesContent() {
       inputs.price = inputs.price.toString().replace(/[.,]/g, "");
     }
 
-    console.log(inputs);
 
     const formData = new FormData();
     Object.entries(inputs).map(([key, value]) => {

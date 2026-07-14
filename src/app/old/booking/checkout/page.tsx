@@ -42,7 +42,6 @@ const Page = () => {
     // Check if the date is in the past
     const bookingDateOnly = new Date(new Date(eventDate).setHours(0, 0, 0, 0));
     const todayDateOnly = new Date(new Date().setHours(0, 0, 0, 0));
-    console.log(bookingDateOnly, todayDateOnly);
 
     if (bookingDateOnly < todayDateOnly) {
       toast.error("Booking date cannot be in the past");

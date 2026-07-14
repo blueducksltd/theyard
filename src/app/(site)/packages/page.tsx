@@ -67,12 +67,14 @@ interface ModalContentProps {
     selectedPackage: IPackageFun;
     onClose: () => void;
     onConfirmAddon: (selectedAddon: SelectedAddon[]) => void;
+    bookPackage?: () => void;
 }
 
 export const ModalContent = React.memo(function ModalContent({
     selectedPackage,
     onClose,
     onConfirmAddon,
+    bookPackage
 }: ModalContentProps) {
     const [showAddFun, setShowAddFun] = useState(false);
 
@@ -154,6 +156,10 @@ export const ModalContent = React.memo(function ModalContent({
                         type="button"
                         className="p-2 bg-primaryGreen text-white cursor-pointer"
                         onClick={() => {
+                            if(bookPackage){
+                                bookPackage();
+                                return;
+                            }
                             setSelectedPackage(selectedPackage);
                             router.push("/booking")
                         }}
@@ -577,7 +583,7 @@ export default function PackagesPage() {
         return <Loading />
     }
     return (
-        <div className="pb-20 md:pb-40">
+        <div className="">
             <Modal handleClose={handleCloseModal} isOpen={modalOpen}>
                 {selectedPackage && (
                     <ModalContent
@@ -620,7 +626,7 @@ export default function PackagesPage() {
                         <span className="font-petit text-primaryBrown">Experience</span>
                     </h1>
                     <Link
-                        href="/"
+                        href="/booking/calendar"
                         className="bg-primaryGreen py-3 px-6 text-white text-sm font-sen w-full text-center"
                     >
                         Book your experience

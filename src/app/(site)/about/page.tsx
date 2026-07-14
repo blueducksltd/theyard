@@ -23,21 +23,22 @@ export const Petit = Petit_Formal_Script({
     subsets: ["latin"],
 });
 
-const images: string[] = ["https://images.pexels.com/photos/12896324/pexels-photo-12896324.jpeg", "https://images.pexels.com/photos/12896324/pexels-photo-12896324.jpeg", "https://images.pexels.com/photos/12896324/pexels-photo-12896324.jpeg", "https://images.pexels.com/photos/12896324/pexels-photo-12896324.jpeg"]
+const images: string[] = ["/images/drive-6.jpg", "/images/drive-7.jpg", "/images/drive-10.webp", "/images/drive-12.webp"]
 const experiences: { image: string; title: string; subtitle: string; button: { label: string; url: string; } }[] = [
+
     {
-        image: "https://images.pexels.com/photos/12896324/pexels-photo-12896324.jpeg", title: "Event Space Styling", subtitle: `At The Yard, we bring your events to life with beautiful, custom balloon decorations. 
+        image: "/images/drive-9.webp", title: "Event  Styling", 
+        subtitle: `Transform your vision into a beautifully curated experience with our professional event styling service. Whether you're planning a romantic date, birthday, anniversary, proposal, bridal shower, baby shower, corporate gathering, or intimate wedding, we design every detail to reflect your style and occasion. From elegant décor and themed setups to seating arrangements, lighting, floral accents, and personalized touches, we create memorable spaces that leave lasting impressions.
+`,
 
-                                    From birthdays and anniversaries to corporate events and intimate gatherings, we create designs that match your theme, mood, and style. 
+        button: { label: "Join our upcoming event", url: "/events" }
+    },
 
-                                    Whether you want a playful pop of color, elegant arrangements, or a full statement setup, our team takes care of every detail, making sure your event look effortlessly stunning.`, button: { label: "Join our upcoming event", url: "/" }
+    {
+        image: "/images/drive-15.jpg", title: "Games", subtitle: `Bring energy and excitement to your gathering with our selection of outdoor and indoor games and recreational activities. Perfect for families, friends, couples, and corporate teams, our games encourage laughter, friendly competition, and meaningful connection. Whether you're planning a casual picnic or a team-building event, we provide a fun and engaging atmosphere that makes every visit more enjoyable.`, button: { label: "Join our upcoming event", url: "/events" }
     },
     {
-        image: "https://images.pexels.com/photos/12896324/pexels-photo-12896324.jpeg", title: "Event Space Styling", subtitle: `At The Yard, we bring your events to life with beautiful, custom balloon decorations. 
-
-                                    From birthdays and anniversaries to corporate events and intimate gatherings, we create designs that match your theme, mood, and style. 
-
-                                    Whether you want a playful pop of color, elegant arrangements, or a full statement setup, our team takes care of every detail, making sure your event look effortlessly stunning.`, button: { label: "Join our upcoming event", url: "/" }
+        image: "/images/drive-8.jpg", title: "Delicacies (Small Chops)", subtitle: `Complete your experience with a delicious assortment of freshly prepared small chops and light refreshments. From classic favorites to premium selections, our catering is perfect for picnics, birthdays, proposals, corporate events, and private celebrations. Beautifully presented and made with quality ingredients, our delicacies add the perfect finishing touch to every occasion, ensuring your guests enjoy every bite.`, button: { label: "Join our upcoming event", url: "/events" }
     }
 ]
 
@@ -69,7 +70,7 @@ export default function AboutPage() {
     };
 
     return (
-        <div className='min-h-screen   space-y-10 pb-20 md:pb-40'>
+        <div className='min-h-screen   space-y-10 '>
 
             <motion.div
                 initial={shouldReduceMotion ? false : 'hidden'}
@@ -173,7 +174,7 @@ export default function AboutPage() {
                         </span>
                     </h1>
 
-                    <Link href={"/"} className={`bg-primaryGreen py-3 px-6 text-white text-sm ${SEN.className} w-full text-center`}>
+                    <Link href={"/booking/calendar"} className={`bg-primaryGreen py-3 px-6 text-white text-sm ${SEN.className} w-full text-center`}>
                         Book your experience
                     </Link>
                 </div>

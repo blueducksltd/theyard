@@ -29,7 +29,7 @@ export default function Modal({ isOpen, children, handleClose }: { isOpen: boole
     // animated ancestor (e.g. a framer-motion element with a transform, which
     // becomes the containing block for fixed descendants).
     return createPortal(
-        <div onClick={handleClose} role="dialog" aria-modal="true" className="w-screen top-0 left-0 h-screen fixed bg-black/60 backdrop-blur-[1px] z-100 flex items-center justify-center">
+        <div onClick={handleClose} role="dialog" aria-modal="true" className="w-screen top-0 left-0 h-screen fixed bg-black/60 backdrop-blur-[1px] z-500 flex items-center justify-center">
             {/* No overflow-* here: clipping one axis clips both, which would hide
                 children positioned outside the wrapper (e.g. the lightbox's
                 md:-left-16 / md:-right-16 nav buttons). Panels scroll themselves. */}
