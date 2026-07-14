@@ -3,7 +3,6 @@
 import { Mail, MapPin, Phone } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { RiInstagramLine, RiTiktokLine, RiWhatsappLine } from 'react-icons/ri';
 import { SlSocialFacebook } from 'react-icons/sl';
 
