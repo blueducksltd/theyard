@@ -139,6 +139,8 @@ const Footer = () => {
                 Contact
               </h3>
 
+              
+
               <Link
                 href={"tel:+2349018257388"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-center gap-2 group relative w-max"

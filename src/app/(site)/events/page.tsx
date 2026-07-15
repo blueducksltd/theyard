@@ -411,19 +411,39 @@ export default function EventsPage() {
     // keep targeting the right entry even when the list is filtered.
     const filteredEvents = useMemo(() => {
         const indexed = events.map((event, index) => ({ event, index }));
-        if (activeFilter === "All") return indexed;
 
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
         const endOfToday = new Date(startOfToday);
         endOfToday.setDate(endOfToday.getDate() + 1);
 
-        return indexed.filter(({ event }) => {
-            const date = new Date(event.date);
-            if (activeFilter === "Ongoing") return date >= startOfToday && date < endOfToday;
-            if (activeFilter === "Upcoming") return date >= endOfToday;
-            return date < startOfToday; // Passed
-        });
+        // Parse date-only strings (e.g. "2026-07-14") as local time,
+        // not UTC, to avoid off-by-one-day errors across timezones.
+        const parseLocalDate = (value: string | Date) => {
+            if (value instanceof Date) return value;
+            const [year, month, day] = value.split("-").map(Number);
+            return new Date(year, month - 1, day);
+        };
+
+        const getStatus = (event: (typeof events)[number]) => {
+            const date = parseLocalDate(event.date);
+            if (date >= startOfToday && date < endOfToday) return "Ongoing";
+            if (date >= endOfToday) return "Upcoming";
+            return "Passed";
+        };
+
+        if (activeFilter === "All") {
+            const statusOrder: Record<string, number> = {
+                Ongoing: 0,
+                Upcoming: 1,
+                Passed: 2,
+            };
+            return [...indexed].sort(
+                (a, b) => statusOrder[getStatus(a.event)] - statusOrder[getStatus(b.event)]
+            );
+        }
+
+        return indexed.filter(({ event }) => getStatus(event) === activeFilter);
     }, [activeFilter, events]);
 
     const selectedEvent = selectedIndex !== null ? events[selectedIndex] : null;
@@ -519,7 +539,7 @@ export default function EventsPage() {
                                     {event.title}
                                 </p>
                                 <p className="font-lato text-[#4B6450] text-sm font-light">
-                                    {event.description}
+                                    {event.description.length > 100 ? event.description.slice(0, 100) + "..." : event.description}
                                 </p>
                                 <p className="font-lato text-primaryGreen text-sm mt-6 font-medium">
                                     {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}
