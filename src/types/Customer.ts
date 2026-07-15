@@ -20,7 +20,7 @@ export interface ICustomerMethods {
 // Statics
 export interface ICustomerModel extends Model<ICustomer, ICustomerMethods> {
   findByEmail(email: string): Promise<ICustomer | null>;
-  subscribe(email: string): Promise<ICustomer>;
+  subscribe(data: SubscribeInput): Promise<ICustomer>;
 }
 
 // Other utility types
@@ -44,7 +44,9 @@ export function sanitizeCustomer(customer: ICustomer): SafeCustomer {
 
 // DTOs
 export const SubscribeDTO = z.object({
-  email: z.string().email()
+  firstname: z.string().trim().min(1, "firstname is required"),
+  lastname: z.string().trim().min(1, "lastname is required"),
+  email: z.string().trim().email()
 });
 
 export const SendEmailDto = z.object({

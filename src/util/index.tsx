@@ -60,8 +60,25 @@ export const getPackages = async () => {
 };
 
 // Subscribe to newsletter
-export const subscribeToNewsletter = async (email: string) => {
-  const response = await axios.post(`/customers/subscribe`, { email });
+export const subscribeToNewsletter = async (
+  payload:
+    | string
+    | {
+        firstname: string;
+        lastname: string;
+        email: string;
+      },
+) => {
+  const body =
+    typeof payload === "string"
+      ? {
+          firstname: "Subscribed",
+          lastname: "Customer",
+          email: payload,
+        }
+      : payload;
+
+  const response = await axios.post(`/customers/subscribe`, body);
   return response.data;
 };
 
@@ -127,6 +144,20 @@ export const createEvent = async (data: FormData) => {
   return response.data;
 };
 
+// Update event
+export const updateEvent = async (data: FormData, id: string) => {
+  const response = await axios.put(`/admin/events/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Delete event
+export const deleteEvent = async (id: string) => {
+  const response = await axios.delete(`/admin/events/${id}`);
+  return response.data;
+};
+
 // Get add-ons
 export const getAddons = async () => {
   const response = await axios.get(`/admin/addons`);
@@ -138,6 +169,20 @@ export const createAddon = async (data: FormData) => {
   const response = await axios.post(`/admin/addons`, data, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return response.data;
+};
+
+// Update add-on
+export const updateAddon = async (data: FormData, id: string) => {
+  const response = await axios.put(`/admin/addons/${id}`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+// Delete add-on
+export const deleteAddon = async (id: string) => {
+  const response = await axios.delete(`/admin/addons/${id}`);
   return response.data;
 };
 

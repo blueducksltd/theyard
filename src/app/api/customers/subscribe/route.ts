@@ -12,16 +12,26 @@ export const POST = errorHandler(
         const body: SubscribeInput = await request.json();
         const data = SubscribeDTO.parse(body);
 
-        const subscriber = await Customer.subscribe(data.email);
+        const subscriber = await Customer.subscribe(data);
 
         await sendNotification({
             type: "subscription",
             title: "New Subscription",
-            message: `${subscriber.email} just subscribed to newsletter`,
+            message: `${subscriber.firstname} ${subscriber.lastname} (${subscriber.email}) just subscribed to newsletter`,
             permission: 3,
             meta: { customer: subscriber }
         })
 
-        return APIResponse.success("Subscribed successfully", { subscriber: subscriber.email }, 201);
+        return APIResponse.success(
+            "Subscribed successfully",
+            {
+                subscriber: {
+                    firstname: subscriber.firstname,
+                    lastname: subscriber.lastname,
+                    email: subscriber.email,
+                },
+            },
+            201
+        );
     }
 )
