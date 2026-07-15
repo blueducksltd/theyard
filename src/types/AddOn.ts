@@ -23,6 +23,7 @@ export interface IAddOnModelClient {
   pricePerMin?: number;
   createdAt: Date;
   updatedAt: Date;
+  imageUrl: string;
 }
 
 export type IAddOnMethods = Record<string, never>;

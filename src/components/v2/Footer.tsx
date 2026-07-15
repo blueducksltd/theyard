@@ -107,17 +107,20 @@ export default function Footer() {
 
                             </p>
 
-                            <Link
-                                href={"/"}
+                            <a
+                                href={"https://wa.me/+2349018257388"}
+                                target='_blank'
                                 className={`font-lato inline-flex items-center gap-3 w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
                                     <Phone size={16} />
                                 </div>
-                                <p className="">+2347035963434</p>
-                            </Link>
+                                <p className="">+2349018257388</p>
+                            </a>
                             <a
-                                href={"mailto:booking@picnicattheyard.com)"}
+                                href={"mailto:booking@picnicattheyard.com"}
+                                target='_blank'
+
                                 className={`font-lato inline-flex items-center gap-3  w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>

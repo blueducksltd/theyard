@@ -715,7 +715,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                 value={inputs.title}
                 onChange={handleInputChange}
                 placeholder="Enter event title"
-                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                className="w-full h-13 rounded2px p-3 border border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
               />
             </div>
           </div>
@@ -724,16 +724,17 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           <div className="form-group flex flex-col md:flex-row items-start gap-6">
             <div className="w-full input-group flex flex-col gap-3">
               <label htmlFor="description" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
-                Description
+                Description (Maximum characters 100)
               </label>
               <textarea
                 id="description"
+                maxLength={100}
                 name="description"
                 value={inputs.description}
                 onChange={handleInputChange}
                 placeholder="Enter event description"
                 rows={3}
-                className="w-full rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] resize-none"
+                className="w-full rounded2px p-3 border border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] resize-none"
               />
             </div>
           </div>
