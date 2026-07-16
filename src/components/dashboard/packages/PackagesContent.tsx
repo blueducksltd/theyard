@@ -8,11 +8,13 @@ import {
   createAddon,
   createPackages,
   createServices,
+  deleteAddon,
   deletePackages,
   deleteServices,
   getAddons,
   getPackages,
   getServices,
+  updateAddon,
   updatePackage,
   updateService,
 } from "@/util";
@@ -32,6 +34,47 @@ const DEFAULT_INPUTS = {
   pricePerMin: "",
 };
 
+type ActionButtonVariant = "edit" | "delete";
+
+const ACTION_BUTTON_STYLES: Record<ActionButtonVariant, string> = {
+  edit: "bg-yard-primary text-white hover:bg-yard-dark-primary",
+  delete: "bg-[#FDECEC] text-[#B42318] hover:bg-[#FBD5D5]",
+};
+
+const ACTION_BUTTON_ICON: Record<ActionButtonVariant, { src: string; alt: string }> = {
+  edit: { src: "/icons/password-check.svg", alt: "Edit Icon" },
+  delete: { src: "/icons/trash-black.svg", alt: "Delete Icon" },
+};
+
+function ActionButton({
+  variant,
+  onClick,
+  children,
+}: {
+  variant: ActionButtonVariant;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  const icon = ACTION_BUTTON_ICON[variant];
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center justify-center gap-2 rounded2px px-3 py-2 text-xs font-medium transition-colors duration-200 ${ACTION_BUTTON_STYLES[variant]}`}
+    >
+      <Image
+        src={icon.src}
+        width={17}
+        height={17}
+        alt={icon.alt}
+        className="invert brightness-0"
+      />
+      <span>{children}</span>
+    </button>
+  );
+}
+
 export default function PackagesContent() {
   const [section, setSection] = React.useState<string>("services");
   const [addServiceModal, setAddServiceModal] = React.useState<boolean>(false);
@@ -39,6 +82,12 @@ export default function PackagesContent() {
   const [addAddonModal, setAddAddonModal] = React.useState<boolean>(false);
   const [updatePackageModal, setUpdatePackageModal] = React.useState<boolean>(false);
   const [updateServiceModal, setUpdateServiceModal] = React.useState<boolean>(false);
+  const [updateAddonModal, setUpdateAddonModal] = React.useState<boolean>(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<{
+    id: string;
+    type: "services" | "packages" | "addons";
+    label: string;
+  } | null>(null);
   const [preview, setPreview] = React.useState<File | undefined>(undefined);
   const [inputs, setInputs] = React.useState<Record<string, any>>({ ...DEFAULT_INPUTS });
   const [packages, setPackages] = React.useState<IPackage[]>([]);
@@ -253,6 +302,98 @@ export default function PackagesContent() {
     }
   };
 
+  const handleUpdateAddon = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formElement = e.currentTarget;
+
+    if (!inputs.id) {
+      toast.error("No add-on selected for update.", { position: "bottom-right" });
+      return;
+    }
+
+    const toastId = toast.loading("Updating add-on, please wait...", {
+      position: "bottom-right",
+    });
+
+    const category = inputs.category as AddOnCategory;
+    if (!inputs.name?.trim()) {
+      toast.update(toastId, {
+        render: "Add-on name is required!",
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+      return;
+    }
+
+    if (category === "food" && (inputs.price === "" || inputs.price == null)) {
+      toast.update(toastId, {
+        render: "Price is required for food add-ons!",
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+      return;
+    }
+
+    if (category === "game" && (inputs.pricePerMin === "" || inputs.pricePerMin == null)) {
+      toast.update(toastId, {
+        render: "Price per minute is required for game add-ons!",
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("name", inputs.name.trim());
+    formData.append("category", category);
+    if (inputs.description?.trim()) {
+      formData.append("description", inputs.description.trim());
+    }
+    if (category === "food") {
+      formData.append("price", String(Number(inputs.price)));
+    }
+    if (category === "game") {
+      formData.append("pricePerMin", String(Number(inputs.pricePerMin)));
+    }
+    if (preview) {
+      formData.append("image", preview);
+    }
+
+    try {
+      const response = await updateAddon(formData, inputs.id);
+      if (response.success == true) {
+        formElement.reset();
+        toast.update(toastId, {
+          render: `${response.message}`,
+          type: "success",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        await fetchData();
+        setUpdateAddonModal(false);
+        clearInputs();
+        return;
+      }
+
+      toast.update(toastId, {
+        render: `${response.message}`,
+        type: "warning",
+        isLoading: false,
+        autoClose: 8000,
+      });
+    } catch (error) {
+      toast.update(toastId, {
+        render: `An error occurred. Please try again later. (${error})`,
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
+    }
+  };
+
   const handleUpdate = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formElement = e.currentTarget;
@@ -314,55 +455,79 @@ export default function PackagesContent() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const closeDeleteModal = () => {
+    setDeleteTarget(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
     const toastId = toast.loading("Deleting, please wait...", {
       position: "bottom-right",
     });
-    const conf = confirm("Are you sure you want to delete?");
-    if (conf) {
-      let res;
-      try {
-        switch (section) {
-          case "packages":
-            res = await deletePackages({ id })
-            break;
-          case "services":
-            res = await deleteServices({ id })
-            break;
-          default:
-            console.log('default')
-        }
+    let res;
 
-        if (res.success == true) {
-          // Handle success
-          toast.update(toastId, {
-            render: `${res.message}`,
-            type: "success",
-            isLoading: false,
-            autoClose: 8000,
-          });
-          await fetchData();
-          clearInputs();
+    try {
+      switch (deleteTarget.type) {
+        case "packages":
+          res = await deletePackages({ id: deleteTarget.id });
+          break;
+        case "services":
+          res = await deleteServices({ id: deleteTarget.id });
+          break;
+        case "addons":
+          res = await deleteAddon(deleteTarget.id);
+          break;
+        default:
           return;
-        } else {
-          toast.update(toastId, {
-            render: `${res.message}`,
-            type: "warning",
-            isLoading: false,
-            autoClose: 8000,
-          });
-          return;
-        }
-      } catch (e) {
+      }
+
+      if (res.success == true) {
         toast.update(toastId, {
-          render: `An error occurred. Please try again later. (${e})`,
-          type: "error",
+          render: `${res.message}`,
+          type: "success",
           isLoading: false,
           autoClose: 8000,
         });
+        await fetchData();
+        clearInputs();
+        closeDeleteModal();
+        return;
       }
+
+      toast.update(toastId, {
+        render: `${res.message}`,
+        type: "warning",
+        isLoading: false,
+        autoClose: 8000,
+      });
+    } catch (e) {
+      toast.update(toastId, {
+        render: `An error occurred. Please try again later. (${e})`,
+        type: "error",
+        isLoading: false,
+        autoClose: 8000,
+      });
     }
   }
+
+  const openDeleteModal = (type: "services" | "packages" | "addons", id: string, label: string) => {
+    setDeleteTarget({ type, id, label });
+  };
+
+  const handleEditAddon = (addon: SafeAddOn) => {
+    setInputs({
+      id: addon.id,
+      name: addon.name,
+      category: addon.category,
+      description: addon.description || "",
+      price: addon.price != null ? String(addon.price) : "",
+      pricePerMin: addon.pricePerMin != null ? String(addon.pricePerMin) : "",
+      imageUrl: addon.imageUrl || "",
+    });
+    setPreview(undefined);
+    setUpdateAddonModal(true);
+  };
 
   const fetchData = async () => {
     const [packages, services, addons] = await Promise.all([
@@ -519,37 +684,22 @@ export default function PackagesContent() {
                   <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
                     {service.name}
                   </h3>
-                  <div className={'flex items-center gap-x-3'}>
-                    <div
+                  <div className="flex items-center gap-2">
+                    <ActionButton
+                      variant="edit"
                       onClick={() => {
-                        console.log(service)
                         setInputs(service)
                         setUpdateServiceModal(true)
                       }}
-                      className={'flex items-center justify-center bg-yard-primary p-2 rounded-lg cursor-pointer hover:scale-105 duration-500 gap-x-2 text-white font-medium'}
                     >
-                      <Image
-                        src={"/icons/password-check.svg"}
-                        width={17}
-                        height={17}
-                        alt="Edit Icon"
-                        className={'invert brightness-0'}
-                      />
-                      <span>Edit</span>
-                    </div>
-                    <div
-                      onClick={() => handleDelete(service.id)}
-                      className={'flex items-center justify-center bg-red-500 p-2 rounded-lg cursor-pointer hover:scale-105 duration-500 gap-x-2 text-white'}
+                      Edit
+                    </ActionButton>
+                    <ActionButton
+                      variant="delete"
+                      onClick={() => openDeleteModal("services", service.id, service.name)}
                     >
-                      <Image
-                        src={"/icons/trash-black.svg"}
-                        width={17}
-                        height={17}
-                        alt="Trash Icon"
-                        className={'invert brightness-0'}
-                      />
-                      <span>Delete</span>
-                    </div>
+                      Delete
+                    </ActionButton>
                   </div>
                 </div>
                 <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999]">
@@ -583,37 +733,22 @@ export default function PackagesContent() {
                   <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
                     {pck.name}
                   </h3>
-                  <div className={'flex items-center gap-x-3'}>
-                    <div
+                  <div className="flex items-center gap-2">
+                    <ActionButton
+                      variant="edit"
                       onClick={() => {
-                        console.log(pck)
                         setInputs(pck)
                         setUpdatePackageModal(true)
                       }}
-                      className={'flex items-center justify-center bg-yard-primary p-2 rounded-lg cursor-pointer hover:scale-105 duration-500 gap-x-2 text-white fonot-medium'}
                     >
-                      <Image
-                        src={"/icons/password-check.svg"}
-                        width={17}
-                        height={17}
-                        alt="Edit Icon"
-                        className={'invert brightness-0'}
-                      />
-                      <span>Edit</span>
-                    </div>
-                    <div
-                      onClick={() => handleDelete(pck.id)}
-                      className={'flex items-center justify-center bg-red-500 p-2 rounded-lg cursor-pointer hover:scale-105 duration-500 gap-x-2 text-white'}
+                      Edit
+                    </ActionButton>
+                    <ActionButton
+                      variant="delete"
+                      onClick={() => openDeleteModal("packages", pck.id, pck.name)}
                     >
-                      <Image
-                        src={"/icons/trash-black.svg"}
-                        width={17}
-                        height={17}
-                        alt="Trash Icon"
-                        className={'invert brightness-0'}
-                      />
-                      <span>Delete</span>
-                    </div>
+                      Delete
+                    </ActionButton>
                   </div>
                 </div>
                 <p className="font-medium text-xs leading-5 tracking-[0.5px] text-[#999999] line-clamp-3">
@@ -653,9 +788,20 @@ export default function PackagesContent() {
                     <h3 className="text-[#66655E] text-[16px] font-semibold leading-6 tracking-[0.5px]">
                       {addon.name}
                     </h3>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#EDF0EE] text-yard-primary font-medium capitalize shrink-0">
-                      {addon.category}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-[#EDF0EE] text-yard-primary font-medium capitalize shrink-0">
+                        {addon.category}
+                      </span>
+                      <ActionButton variant="edit" onClick={() => handleEditAddon(addon)}>
+                        Edit
+                      </ActionButton>
+                      <ActionButton
+                        variant="delete"
+                        onClick={() => openDeleteModal("addons", addon.id, addon.name)}
+                      >
+                        Delete
+                      </ActionButton>
+                    </div>
                   </div>
                   {priceLabel && (
                     <p className="font-semibold text-sm text-yard-primary">
@@ -803,6 +949,244 @@ export default function PackagesContent() {
             </div>
           </form>
         </div>
+      </Modal>
+
+      <Modal isOpen={updateAddonModal}>
+        <section className="w-full">
+          <div className="w-full flex items-center justify-between">
+            <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary">
+              Update add-on
+            </h2>
+            <div
+              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
+              onClick={() => {
+                clearInputs();
+                setUpdateAddonModal(false);
+              }}
+            >
+              <Image
+                src={"/icons/cancel.svg"}
+                width={16}
+                height={16}
+                alt="Close Icon"
+                className="z-40"
+              />
+              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            </div>
+          </div>
+        </section>
+
+        <div className="w-full flex items-start my-4 2xl:my-8 gap-10">
+          <form
+            className="w-full flex flex-col gap-5 max-h-[70vh] overflow-y-scroll"
+            onSubmit={(e: FormEvent<HTMLFormElement>) => handleUpdateAddon(e)}
+          >
+            <label
+              htmlFor="updateAddonMedia"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className="bg-cover bg-center"
+              style={{
+                backgroundImage: preview
+                  ? `url(${URL.createObjectURL(preview)})`
+                  : inputs.imageUrl
+                    ? `url(${inputs.imageUrl})`
+                    : undefined,
+              }}
+            >
+              <div className="flex flex-col h-[200px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
+                {preview == undefined && !inputs.imageUrl ? (
+                  <>
+                    <Image
+                      src={"/icons/upload.svg"}
+                      width={18}
+                      height={18}
+                      alt="Upload Icon"
+                    />
+                    <p className="w-[126px] text-xs text-[#999999] text-center leading-5 tracking-[0.5px] mt-4 mb-1">
+                      Choose an image or drag &amp; drop them here
+                    </p>
+                    <p className="w-[126px] text-[10px] text-[#BFBFBF] text-center leading-5 tracking-[0.5px]">
+                      JPEG &amp; PNG up to 10mb (optional)
+                    </p>
+                  </>
+                ) : null}
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setPreview(e.target.files?.[0])}
+                id="updateAddonMedia"
+                className="hidden"
+              />
+            </label>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label htmlFor="updateAddonName" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                  Add-on name *
+                </label>
+                <input
+                  type="text"
+                  id="updateAddonName"
+                  value={inputs.name || ""}
+                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
+                  placeholder="e.g. Balloon decoration"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label htmlFor="updateAddonCategory" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                  Category *
+                </label>
+                <select
+                  id="updateAddonCategory"
+                  value={inputs.category || "decoration"}
+                  onChange={(e) => setInputs({ ...inputs, category: e.target.value as AddOnCategory, price: "", pricePerMin: "" })}
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none bg-white"
+                >
+                  <option value="decoration">Decoration</option>
+                  <option value="food">Food</option>
+                  <option value="game">Game</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label htmlFor="updateAddonDesc" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                  Description
+                </label>
+                <textarea
+                  id="updateAddonDesc"
+                  value={inputs.description || ""}
+                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  placeholder="Short description of the add-on"
+                  className="w-full h-[120px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            {inputs.category === "food" && (
+              <div className="form-group flex flex-col md:flex-row items-start gap-6">
+                <div className="w-full input-group flex flex-col gap-3">
+                  <label htmlFor="updateAddonPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                    Price (₦) *
+                  </label>
+                  <input
+                    type="number"
+                    id="updateAddonPrice"
+                    min={0}
+                    value={inputs.price ?? ""}
+                    onChange={(e) => setInputs({ ...inputs, price: e.target.value })}
+                    placeholder="0"
+                    className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                  />
+                </div>
+              </div>
+            )}
+
+            {inputs.category === "game" && (
+              <div className="form-group flex flex-col md:flex-row items-start gap-6">
+                <div className="w-full input-group flex flex-col gap-3">
+                  <label htmlFor="updateAddonPricePerMin" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
+                    Price per minute (₦) *
+                  </label>
+                  <input
+                    type="number"
+                    id="updateAddonPricePerMin"
+                    min={0}
+                    value={inputs.pricePerMin ?? ""}
+                    onChange={(e) => setInputs({ ...inputs, pricePerMin: e.target.value })}
+                    placeholder="0"
+                    className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="w-full flex items-center gap-5 mt-3">
+              <button
+                type="button"
+                className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
+                onClick={() => {
+                  clearInputs();
+                  setUpdateAddonModal(false);
+                }}
+              >
+                <span className="z-40 font-sen">Cancel</span>
+                <div className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+              </button>
+
+              <button
+                type="submit"
+                className="w-full flex justify-center cta-btn bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
+              >
+                <span className="z-40 font-sen">Update add-on</span>
+                <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      <Modal isOpen={deleteTarget !== null}>
+        <section className="w-full">
+          <div className="w-full flex items-center justify-between gap-4">
+            <div>
+              <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary">
+                Delete {deleteTarget?.type === "addons" ? "add-on" : deleteTarget?.type === "services" ? "service" : "package"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-[#666]">
+                {deleteTarget?.label
+                  ? `${deleteTarget.label} will be removed permanently. This action cannot be undone.`
+                  : "This item will be removed permanently. This action cannot be undone."}
+              </p>
+            </div>
+            <div
+              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden shrink-0"
+              onClick={closeDeleteModal}
+            >
+              <Image
+                src="/icons/cancel.svg"
+                width={16}
+                height={16}
+                alt="Close Icon"
+                className="z-40"
+              />
+              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-lg border border-[#E4E8E5] bg-[#FDFBF9] p-4">
+            <p className="text-sm leading-6 text-[#666]">
+              Confirming this will permanently delete the selected item from the dashboard.
+            </p>
+          </div>
+
+          <div className="mt-6 flex items-center gap-4">
+            <button
+              type="button"
+              onClick={closeDeleteModal}
+              className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
+            >
+              <span className="z-40 font-sen">Cancel</span>
+              <div className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="w-full flex justify-center cta-btn bg-[#B42318] text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
+            >
+              <span className="z-40 font-sen">Delete</span>
+              <div className="absolute top-0 left-0 bg-[#912018] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+            </button>
+          </div>
+        </section>
       </Modal>
 
       {/*Add Package Modal*/}

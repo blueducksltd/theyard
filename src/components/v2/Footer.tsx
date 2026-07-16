@@ -1,14 +1,59 @@
 "use client";
 // import { Lato_Font, PlayFair } from '@/app/v2/page';
+import { subscribeToNewsletter } from '@/util';
 import { Mail, MapPin, Phone } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { FormEvent, useState } from 'react';
 import { RiInstagramLine, RiTiktokLine, RiWhatsappLine } from 'react-icons/ri';
 import { SlSocialFacebook } from 'react-icons/sl';
+import { toast } from 'react-toastify';
 
 
 export default function Footer() {
     // const pathname = usePathname();
+    const [firstname, setFirstname] = useState('');
+    const [lastname, setLastname] = useState('');
+    const [email, setEmail] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubscribe = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (isSubmitting) return;
+
+        const first = firstname.trim();
+        const last = lastname.trim();
+        const mail = email.trim();
+
+        if (!first || !last || !mail) {
+            toast.error('Please fill firstname, lastname and email.');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const response = await subscribeToNewsletter({
+                firstname: first,
+                lastname: last,
+                email: mail,
+            });
+
+            if (!response?.success) {
+                throw new Error(response?.message || 'Unable to subscribe right now.');
+            }
+
+            toast.success('You have been subscribed to our newsletter.');
+            setFirstname('');
+            setLastname('');
+            setEmail('');
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+            toast.error(errorMessage);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <footer className={`relative`}>
@@ -42,24 +87,51 @@ export default function Footer() {
                     </h1>
                     <p className={`font-lato text-sm text-center`}>Join our picnic lovers list for updates,tips, offers, and event inspiration.
                     </p>
-                    <div className='grid grid-cols-1 md:grid-cols-2 w-full md:w-[60%] mt-10 gap-y-4'>
+                    <form onSubmit={handleSubscribe} className='grid grid-cols-1 md:grid-cols-2 w-full md:w-[60%] mt-10 gap-y-4'>
                         <div className='h-14 border flex items-center p-4'>
-                            <input type="text" placeholder='Firstname' className='h-full outline-none' />
+                            <input
+                                type="text"
+                                placeholder='Firstname'
+                                value={firstname}
+                                onChange={(event) => setFirstname(event.target.value)}
+                                className='h-full outline-none bg-transparent w-full'
+                                disabled={isSubmitting}
+                            />
                         </div>
 
                         <div className='h-14 border flex items-center p-4'>
-                            <input type="text" placeholder='Lastname' className='h-full outline-none' />
+                            <input
+                                type="text"
+                                placeholder='Lastname'
+                                value={lastname}
+                                onChange={(event) => setLastname(event.target.value)}
+                                className='h-full outline-none bg-transparent w-full'
+                                disabled={isSubmitting}
+                            />
                         </div>
 
                         <div className='  items-center  md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-y-4'>
                             <div className='h-14 border flex items-center p-4 md:col-span-2'>
-                                <input type="email" placeholder='Email' className='h-full outline-none  ' />
+                                <input
+                                    type="email"
+                                    placeholder='Email'
+                                    value={email}
+                                    onChange={(event) => setEmail(event.target.value)}
+                                    className='h-full outline-none bg-transparent w-full'
+                                    disabled={isSubmitting}
+                                />
                             </div>
 
-                            <button className='bg-white h-full text-black text-sm py-4'>Accept our policy & Subscribe</button>
+                            <button
+                                type='submit'
+                                disabled={isSubmitting}
+                                className='bg-white h-full text-black text-sm py-4 disabled:opacity-70 disabled:cursor-not-allowed'
+                            >
+                                {isSubmitting ? 'Subscribing...' : 'Accept our policy & Subscribe'}
+                            </button>
                         </div>
 
-                    </div>
+                    </form>
 
                 </div>
 

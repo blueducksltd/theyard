@@ -4,7 +4,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { IBooking } from "@/types/Booking";
-import { getPackages, createEvent, getEvents, getEventRegistrations } from "@/util";
+import { getPackages, createEvent, getEvents, getEventRegistrations, updateEvent, deleteEvent } from "@/util";
 import { IPackage } from "@/types/Package";
 import { saveToLS } from "@/util/helper";
 import moment from "moment";
@@ -14,11 +14,33 @@ import { toast } from "react-toastify";
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
 type EventDateCategory = "active" | "upcoming" | "past";
+type EventDateFilter = EventDateCategory | "all";
+
+const EVENT_DATE_FILTER_OPTIONS: Array<{ label: string; value: EventDateFilter }> = [
+  { label: "All", value: "all" },
+  { label: "Active", value: "active" },
+  { label: "Upcoming", value: "upcoming" },
+  { label: "Past", value: "past" },
+];
 
 const EVENT_DATE_CATEGORY_ORDER: Record<EventDateCategory, number> = {
   active: 0,
   upcoming: 1,
   past: 2,
+};
+
+const DEFAULT_EVENT_INPUTS = {
+  title: "",
+  description: "",
+  date: "",
+  time: "",
+  audienceType: "both",
+  adultPrice: "",
+  childPrice: "",
+  public: false,
+  location: "The Yard",
+  activities: "",
+  status: "pending",
 };
 
 const getEventDateCategory = (date: Date | string | null | undefined): EventDateCategory => {
@@ -55,24 +77,19 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   const [activeTab, setActiveTab] = useState<"calendar" | "list">("calendar");
   const [events, setEvents] = useState<any[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [eventToEdit, setEventToEdit] = useState<any | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<any | null>(null);
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [isRegLoading, setIsRegLoading] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [eventSearch, setEventSearch] = useState("");
+  const [eventDateFilter, setEventDateFilter] = useState<EventDateFilter>("all");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const [inputs, setInputs] = useState<Record<string, any>>({
-    title: "",
-    description: "",
-    date: "",
-    time: "",
-    audienceType: "both",
-    adultPrice: "",
-    childPrice: "",
-    public: true,
-    location: "The Yard",
-    activities: ""
-  });
+  const [inputs, setInputs] = useState<Record<string, any>>({ ...DEFAULT_EVENT_INPUTS });
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -99,6 +116,118 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     }
   };
 
+  const resetEventForm = () => {
+    setInputs({ ...DEFAULT_EVENT_INPUTS });
+    setImageFile(null);
+    setImagePreview(null);
+    setEventToEdit(null);
+  };
+
+  const openCreateModal = () => {
+    resetEventForm();
+    setIsCreateModalOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    resetEventForm();
+    setIsCreateModalOpen(false);
+  };
+
+  const closeEditModal = () => {
+    resetEventForm();
+    setIsEditModalOpen(false);
+  };
+
+  const closeDeleteModal = () => {
+    setEventToDelete(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  const populateEventForm = (event: any) => {
+    setInputs({
+      title: event.title ?? "",
+      description: event.description ?? "",
+      date: event.date ? moment(event.date).format("YYYY-MM-DD") : "",
+      time: event.startTime ?? event.time?.start ?? "09:00",
+      audienceType: event.audienceType ?? "both",
+      adultPrice: event.adultPrice != null ? String(event.adultPrice) : "",
+      childPrice: event.childPrice != null ? String(event.childPrice) : "",
+      public: Boolean(event.public),
+      location: event.location ?? "The Yard",
+      activities: Array.isArray(event.activities) ? event.activities.join(", ") : "",
+      status: event.status ?? "pending",
+    });
+    setImageFile(null);
+    setImagePreview(event.images?.[0] ?? null);
+  };
+
+  const openEditModal = (event: any) => {
+    setEventToEdit(event);
+    populateEventForm(event);
+    setIsEditModalOpen(true);
+  };
+
+  const loadEvents = async () => {
+    try {
+      const res = await getEvents();
+      if (res.success) {
+        setEvents(res.data.events || []);
+      }
+    } catch (e) {
+      console.error("Failed to load events:", e);
+    }
+  };
+
+  const buildEventFormData = (toastId: string | number, includeStatus = false) => {
+    const formData = new FormData();
+    formData.append("title", inputs.title);
+    formData.append("description", inputs.description || "");
+    formData.append("date", inputs.date);
+    formData.append("time", inputs.time);
+    formData.append("audienceType", inputs.audienceType);
+    formData.append("public", String(!!inputs.public));
+    formData.append("location", inputs.location || "The Yard");
+    formData.append("activities", inputs.activities || "");
+
+    if (includeStatus) {
+      formData.append("status", inputs.status || "pending");
+    }
+
+    if (inputs.audienceType === "adults" || inputs.audienceType === "both") {
+      const adultPrice = Number(inputs.adultPrice);
+      if (!Number.isFinite(adultPrice) || adultPrice < 0) {
+        toast.update(toastId, {
+          render: "Please enter a valid adult ticket price.",
+          type: "error",
+          isLoading: false,
+          autoClose: 5000,
+        });
+        return null;
+      }
+      formData.append("adultPrice", String(adultPrice));
+    }
+
+    if (inputs.audienceType === "children" || inputs.audienceType === "both") {
+      const childPrice = Number(inputs.childPrice);
+      if (!Number.isFinite(childPrice) || childPrice < 0) {
+        toast.update(toastId, {
+          render: "Please enter a valid child ticket price.",
+          type: "error",
+          isLoading: false,
+          autoClose: 5000,
+        });
+        return null;
+      }
+      formData.append("childPrice", String(childPrice));
+    }
+
+    if (imageFile) {
+      formData.append("images", imageFile);
+    }
+
+    return formData;
+  };
+
   const handleOpenRegistrations = async (event: any) => {
     setSelectedEvent(event);
     setIsRegModalOpen(true);
@@ -123,44 +252,9 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     });
 
     try {
-      const formData = new FormData();
-      formData.append("title", inputs.title);
-      formData.append("description", inputs.description || "");
-      formData.append("date", inputs.date);
-      formData.append("time", inputs.time);
-      formData.append("audienceType", inputs.audienceType);
-      formData.append("public", String(!!inputs.public));
-      formData.append("location", inputs.location || "The Yard");
-      formData.append("activities", inputs.activities || "");
-
-      if (inputs.audienceType === "adults" || inputs.audienceType === "both") {
-        const adultPrice = Number(inputs.adultPrice);
-        if (!Number.isFinite(adultPrice) || adultPrice < 0) {
-          toast.update(toastId, {
-            render: "Please enter a valid adult ticket price.",
-            type: "error",
-            isLoading: false,
-            autoClose: 5000,
-          });
-          return;
-        }
-        formData.append("adultPrice", String(adultPrice));
-      }
-      if (inputs.audienceType === "children" || inputs.audienceType === "both") {
-        const childPrice = Number(inputs.childPrice);
-        if (!Number.isFinite(childPrice) || childPrice < 0) {
-          toast.update(toastId, {
-            render: "Please enter a valid child ticket price.",
-            type: "error",
-            isLoading: false,
-            autoClose: 5000,
-          });
-          return;
-        }
-        formData.append("childPrice", String(childPrice));
-      }
-      if (imageFile) {
-        formData.append("images", imageFile);
+      const formData = buildEventFormData(toastId);
+      if (!formData) {
+        return;
       }
 
       const response = await createEvent(formData);
@@ -173,25 +267,8 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           autoClose: 5000,
         });
 
-        setIsCreateModalOpen(false);
-        setImageFile(null);
-        setImagePreview(null);
-        setInputs({
-          title: "",
-          description: "",
-          date: "",
-          time: "",
-          audienceType: "both",
-          adultPrice: "",
-          childPrice: "",
-          public: false,
-          location: "The Yard",
-          activities: ""
-        });
-
-        // Refresh events list
-        const evRes = await getEvents();
-        if (evRes.success) setEvents(evRes.data.events || []);
+        closeCreateModal();
+        await loadEvents();
 
         router.refresh();
       } else {
@@ -207,6 +284,108 @@ const AdminCalendar: React.FC<CalendarProps> = ({
       const errMsg = error.response?.data?.message || error.message || "An error occurred.";
       toast.update(toastId, {
         render: errMsg,
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    }
+  };
+
+  const handleUpdateEvent = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!eventToEdit?.id) {
+      toast.error("No event selected for update.", { position: "bottom-right" });
+      return;
+    }
+
+    const toastId = toast.loading("Updating event, please wait...", {
+      position: "bottom-right",
+    });
+
+    try {
+      const formData = buildEventFormData(toastId, true);
+      if (!formData) {
+        return;
+      }
+
+      const response = await updateEvent(formData, eventToEdit.id);
+
+      if (response.success) {
+        toast.update(toastId, {
+          render: "Event updated successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 5000,
+        });
+
+        closeEditModal();
+        await loadEvents();
+        router.refresh();
+        return;
+      }
+
+      toast.update(toastId, {
+        render: response.message || "Failed to update event.",
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    } catch (error: any) {
+      console.error(error);
+      const errMsg = error.response?.data?.message || error.message || "An error occurred.";
+      toast.update(toastId, {
+        render: errMsg,
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    }
+  };
+
+  const openDeleteEventModal = (event: any) => {
+    setEventToDelete(event);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!eventToDelete?.id) {
+      return;
+    }
+
+    const toastId = toast.loading("Deleting event, please wait...", {
+      position: "bottom-right",
+    });
+
+    try {
+      const response = await deleteEvent(eventToDelete.id);
+      if (response.success) {
+        toast.update(toastId, {
+          render: "Event deleted successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 5000,
+        });
+        await loadEvents();
+        if (selectedEvent?.id === eventToDelete.id) {
+          setIsRegModalOpen(false);
+          setSelectedEvent(null);
+          setRegistrations([]);
+        }
+        closeDeleteModal();
+        router.refresh();
+        return;
+      }
+
+      toast.update(toastId, {
+        render: response.message || "Failed to delete event.",
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+      });
+    } catch (error: any) {
+      toast.update(toastId, {
+        render: error.response?.data?.message || error.message || "Failed to delete event.",
         type: "error",
         isLoading: false,
         autoClose: 5000,
@@ -433,17 +612,26 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   // Load all events for list view
   useEffect(() => {
     (async () => {
-      try {
-        const res = await getEvents();
-        if (res.success) setEvents(res.data.events || []);
-      } catch (e) {
-        console.error("Failed to load events:", e);
-      }
+      await loadEvents();
     })();
   }, []);
 
   const sortedEvents = useMemo(() => {
-    return [...events].sort((a, b) => {
+    const searchTerm = eventSearch.trim().toLowerCase();
+
+    const filteredEvents = events.filter((event) => {
+      const eventDateCategory = getEventDateCategory(event.date);
+      const matchesDateCategory = eventDateFilter === "all" || eventDateCategory === eventDateFilter;
+      const searchableText = [event.title, event.description, event.location, event.audienceType, event.status]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = searchTerm.length === 0 || searchableText.includes(searchTerm);
+
+      return matchesDateCategory && matchesSearch;
+    });
+
+    return filteredEvents.sort((a, b) => {
       const categoryA = getEventDateCategory(a.date);
       const categoryB = getEventDateCategory(b.date);
 
@@ -460,7 +648,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
 
       return dateA.valueOf() - dateB.valueOf();
     });
-  }, [events]);
+  }, [events, eventSearch, eventDateFilter]);
 
   return (
     <main className="flex-1 py-4 px-5 flex flex-col gap-4 w-full overflow-y-auto">
@@ -491,7 +679,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
 
         {/* Create Event Button */}
         <div
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={openCreateModal}
           className="w-max h-10 items-center flex rounded2px border-[1px] border-[#999999] px-4 gap-2.5 group relative overflow-hidden cursor-pointer bg-white"
         >
           <img src={"/icons/add.svg"} className="w-4 h-4 z-40 relative" alt="Add Icon" />
@@ -595,11 +783,57 @@ const AdminCalendar: React.FC<CalendarProps> = ({
       {/* ── EVENTS LIST VIEW ── */}
       {activeTab === "list" && (
         <div className="w-full">
+          <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#E4E8E5] bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
+              <input
+                type="search"
+                value={eventSearch}
+                onChange={(e) => setEventSearch(e.target.value)}
+                placeholder="Search events by title, location, or description"
+                className="h-11 w-full rounded2px border border-[#C7CFC9] px-4 text-sm text-yard-primary outline-none transition-colors placeholder:text-[#8B8B8B] focus:border-yard-primary md:max-w-md"
+              />
+              <select
+                value={eventDateFilter}
+                onChange={(e) => setEventDateFilter(e.target.value as EventDateFilter)}
+                className="h-11 w-full rounded2px border border-[#C7CFC9] bg-white px-4 text-sm text-yard-primary outline-none transition-colors focus:border-yard-primary md:w-56"
+              >
+                {EVENT_DATE_FILTER_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 text-sm text-[#666] lg:justify-end">
+              <span>
+                Showing {sortedEvents.length} of {events.length}
+              </span>
+              {eventSearch && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEventSearch("");
+                  }}
+                  className="rounded2px border border-[#C7CFC9] px-3 py-2 font-medium text-yard-primary transition-colors hover:bg-[#EDF0EE]"
+                >
+                  Reset filters
+                </button>
+              )}
+            </div>
+          </div>
+
           {events.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
               <div className="w-16 h-16 rounded-full bg-[#EDF0EE] flex items-center justify-center text-3xl">📅</div>
               <p className="text-yard-primary font-semibold font-sen text-lg">No events yet</p>
               <p className="text-[#666] text-sm">Click &quot;Create Event&quot; to schedule your first event.</p>
+            </div>
+          ) : sortedEvents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
+              <div className="w-16 h-16 rounded-full bg-[#EDF0EE] flex items-center justify-center text-3xl">🔎</div>
+              <p className="text-yard-primary font-semibold font-sen text-lg">No matching events</p>
+              <p className="text-[#666] text-sm">Try a different search term or clear the status filter.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -661,10 +895,36 @@ const AdminCalendar: React.FC<CalendarProps> = ({
 
                     {/* CTA */}
                     <div className="flex-shrink-0 flex items-center gap-2">
-                      <span className="text-xs text-[#999] font-sen hidden sm:block">View registrations</span>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yard-primary opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200">
-                        <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenRegistrations(event);
+                        }}
+                        className="px-3 py-2 rounded2px bg-[#EDF0EE] text-yard-primary text-xs font-medium font-sen hover:bg-[#D9E0DA] transition-colors"
+                      >
+                        Registrations
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditModal(event);
+                        }}
+                        className="px-3 py-2 rounded2px bg-yard-primary text-white text-xs font-medium font-sen hover:bg-yard-dark-primary transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDeleteEventModal(event);
+                        }}
+                        className="px-3 py-2 rounded2px bg-[#FDECEC] text-[#B42318] text-xs font-medium font-sen hover:bg-[#FBD5D5] transition-colors"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 );
@@ -673,6 +933,56 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           )}
         </div>
       )}
+
+      <Modal isOpen={isDeleteModalOpen}>
+        <section className="w-full">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary font-playfair">
+                Delete Event
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[#666] font-sen">
+                This event will be removed permanently. This action cannot be undone.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={closeDeleteModal}
+              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden shrink-0"
+            >
+              <img src="/icons/cancel.svg" alt="Close Icon" className="z-40" />
+              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            </button>
+          </div>
+
+          <div className="mt-5 rounded-lg border border-[#E4E8E5] bg-[#FDFBF9] p-4">
+            <p className="text-sm font-medium text-[#666] font-sen">Event</p>
+            <h3 className="mt-1 text-lg font-semibold text-yard-primary font-playfair">
+              {eventToDelete?.title || "Selected event"}
+            </h3>
+            <p className="mt-2 text-sm text-[#666] font-sen">
+              {eventToDelete?.location || "No location set"}
+            </p>
+          </div>
+
+          <div className="mt-6 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={closeDeleteModal}
+              className="rounded2px border border-[#C7CFC9] px-4 py-2 text-sm font-medium text-yard-primary transition-colors hover:bg-[#EDF0EE]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteEvent}
+              className="rounded2px bg-[#B42318] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#8F1D14]"
+            >
+              Delete event
+            </button>
+          </div>
+        </section>
+      </Modal>
 
       {/* Create Event Modal */}
       <Modal isOpen={isCreateModalOpen}>
@@ -683,7 +993,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             </h2>
             <div
               className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-              onClick={() => setIsCreateModalOpen(false)}
+              onClick={closeCreateModal}
             >
               <img
                 src={"/icons/cancel.svg"}
@@ -931,6 +1241,273 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3 cursor-pointer py-4"
           >
             <span className="z-40 font-sen font-semibold text-[16px] leading-[26px]">Create Event</span>
+            <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+          </button>
+        </form>
+      </Modal>
+
+      <Modal isOpen={isEditModalOpen}>
+        <section className="w-full">
+          <div className="w-full flex items-center justify-between">
+            <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary font-playfair">
+              Edit Event
+            </h2>
+            <div
+              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
+              onClick={closeEditModal}
+            >
+              <img
+                src={"/icons/cancel.svg"}
+                alt="Close Icon"
+                className="z-40"
+              />
+              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            </div>
+          </div>
+        </section>
+        <hr className="w-full h-[1px] bg-[#E4E8E5] border-0 my-5" />
+
+        <form
+          className="w-full flex flex-col gap-5 max-h-[70vh] overflow-y-auto pr-2"
+          onSubmit={handleUpdateEvent}
+        >
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full input-group flex flex-col gap-3">
+              <label htmlFor="edit-title" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Event Title *
+              </label>
+              <input
+                type="text"
+                id="edit-title"
+                name="title"
+                required
+                value={inputs.title}
+                onChange={handleInputChange}
+                placeholder="Enter event title"
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
+            </div>
+          </div>
+
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full input-group flex flex-col gap-3">
+              <label htmlFor="edit-description" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Description
+              </label>
+              <textarea
+                id="edit-description"
+                name="description"
+                value={inputs.description}
+                onChange={handleInputChange}
+                placeholder="Enter event description"
+                rows={3}
+                className="w-full rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] resize-none"
+              />
+            </div>
+          </div>
+
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+              <label htmlFor="edit-date" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Event Date *
+              </label>
+              <input
+                type="date"
+                id="edit-date"
+                name="date"
+                required
+                value={inputs.date}
+                onChange={handleInputChange}
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
+            </div>
+
+            <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+              <label htmlFor="edit-time" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Start Time *
+              </label>
+              <input
+                type="time"
+                id="edit-time"
+                name="time"
+                required
+                value={inputs.time}
+                onChange={handleInputChange}
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
+            </div>
+          </div>
+
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full md:w-1/3 input-group flex flex-col gap-3">
+              <label htmlFor="edit-audienceType" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Audience *
+              </label>
+              <select
+                id="edit-audienceType"
+                name="audienceType"
+                value={inputs.audienceType}
+                onChange={handleInputChange}
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] bg-white"
+              >
+                <option value="both">Both (Adults & Children)</option>
+                <option value="adults">Adults Only</option>
+                <option value="children">Children Only</option>
+              </select>
+            </div>
+
+            <div className="w-full md:w-1/3 input-group flex flex-col gap-3">
+              <label htmlFor="edit-location" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Location
+              </label>
+              <input
+                type="text"
+                id="edit-location"
+                name="location"
+                value={inputs.location}
+                onChange={handleInputChange}
+                placeholder="The Yard"
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
+            </div>
+
+            <div className="w-full md:w-1/3 input-group flex flex-col gap-3">
+              <label htmlFor="edit-status" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Status
+              </label>
+              <select
+                id="edit-status"
+                name="status"
+                value={inputs.status}
+                onChange={handleInputChange}
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] bg-white"
+              >
+                <option value="pending">Pending</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            {(inputs.audienceType === "adults" || inputs.audienceType === "both") && (
+              <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+                <label htmlFor="edit-adultPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                  Adult Ticket Price (₦) *
+                </label>
+                <input
+                  type="number"
+                  id="edit-adultPrice"
+                  name="adultPrice"
+                  required
+                  min={0}
+                  value={inputs.adultPrice}
+                  onChange={handleInputChange}
+                  placeholder="0.00"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            )}
+
+            {(inputs.audienceType === "children" || inputs.audienceType === "both") && (
+              <div className="w-full md:w-1/2 input-group flex flex-col gap-3">
+                <label htmlFor="edit-childPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                  Child Ticket Price (₦) *
+                </label>
+                <input
+                  type="number"
+                  id="edit-childPrice"
+                  name="childPrice"
+                  required
+                  min={0}
+                  value={inputs.childPrice}
+                  onChange={handleInputChange}
+                  placeholder="0.00"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="form-group flex flex-col md:flex-row items-start gap-6">
+            <div className="w-full input-group flex flex-col gap-3">
+              <label htmlFor="edit-activities" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                Activities (comma-separated)
+              </label>
+              <input
+                type="text"
+                id="edit-activities"
+                name="activities"
+                value={inputs.activities}
+                onChange={handleInputChange}
+                placeholder="e.g. Picnic, Board games, Music, Networking"
+                className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+              />
+            </div>
+          </div>
+
+          <div className="form-group flex flex-col gap-3">
+            <label className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+              Event Image
+            </label>
+            <label
+              htmlFor="edit-event-image-upload"
+              className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-lg cursor-pointer transition-all duration-300 ${imagePreview ? "border-yard-primary bg-[#EDF0EE]" : "border-[#BFBFBF] bg-[#FAFAFA] hover:border-yard-primary hover:bg-[#EDF0EE]"
+                }`}
+            >
+              {imagePreview ? (
+                <img src={imagePreview} alt="Preview" className="h-full w-full object-cover rounded-lg" />
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-center px-4">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#999]">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <p className="text-sm text-[#666] font-sen">Click to upload or drag &amp; drop</p>
+                  <p className="text-xs text-[#999] font-sen">PNG, JPG, WEBP up to 5MB</p>
+                </div>
+              )}
+              <input
+                id="edit-event-image-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
+            </label>
+            {(imageFile || imagePreview) && (
+              <div className="flex items-center justify-between text-sm text-[#555] font-sen bg-[#EDF0EE] rounded px-3 py-2">
+                <span className="truncate max-w-[80%]">{imageFile ? imageFile.name : "Current event image"}</span>
+                <button
+                  type="button"
+                  onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  className="text-red-500 font-medium hover:text-red-700 flex-shrink-0 ml-2"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="form-group flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="edit-public"
+              name="public"
+              checked={inputs.public}
+              onChange={handleInputChange}
+              className="checkbox checkbox-sm border-2 border-yard-primary checked:border-yard-dark-primary checked:text-yard-dark-primary cursor-pointer"
+            />
+            <label htmlFor="edit-public" className="leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen cursor-pointer select-none">
+              Make event public
+            </label>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px] mt-3 cursor-pointer py-4"
+          >
+            <span className="z-40 font-sen font-semibold text-[16px] leading-[26px]">Update Event</span>
             <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
           </button>
         </form>

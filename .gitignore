@@ -44,3 +44,5 @@ next-env.d.ts
 /mongodb_data
 /src/scripts
 .vscode/agents/NextJsDev.agent.md
+
+/WALKTHROUGH.md
