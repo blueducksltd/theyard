@@ -151,16 +151,16 @@ const Footer = () => {
               </Link>
 
               <Link
-                href={"/contact"}
+                href={"mailto: booking@picnicattheyard.com"}
                 className="text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-center gap-2 group relative w-max"
               >
                 <img src={"/icons/mail.svg"} alt="Mail Icon" />
-                info@theyard.com
+                booking@picnicattheyard.com
                 <span className="yard-link-line bg-[#EDF0EE]"></span>
               </Link>
 
               <Link
-                href={"/contact"}
+                href={"https://maps.app.goo.gl/PVs15BWxQiazupRf9"}
                 className="w-[250px] text-[#EDF0EE] font-[400] leading-[22px] tracking-[0.5px] text-sm flex items-start gap-2 group relative"
               >
                 <img
@@ -251,15 +251,15 @@ const Footer = () => {
         {/*</p>*/}
 
         <div>
-          <Link href={'/'} className={'text-sm underline text-white'}>Terms &amp; Condition</Link>
-          <Link href={'/'} className={'text-sm underline text-white ml-3'}>Privacy Policy</Link>
+          <Link href={'/terms'} className={'text-sm underline text-white'}>Terms &amp; Condition</Link>
+          <Link href={'/terms'} className={'text-sm underline text-white ml-3'}>Privacy Policy</Link>
           <p className={'text-sm mt-2 text-white'}>&copy; 2025 - Copyright The Yard Picnic Park. All rights reserved</p>
         </div>
 
-        <div className={'mt-5 ml-80 md:mt-0 md:ml-0'}>
+        <Link href={""} className={'mt-5 ml-80 md:mt-0 md:ml-0'}>
           <p className={'text-sm mt-2 text-white mb-2'}>Developed by</p>
           <img src={"/blueducks.png"} alt="White Logo" width={90} />
-        </div>
+        </Link>
       </div>
     </main>
   );

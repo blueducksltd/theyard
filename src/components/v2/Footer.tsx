@@ -108,7 +108,7 @@ export default function Footer() {
                             </p>
 
                             <a
-                                href={"https://wa.me/+2349018257388"}
+                                href={"tel:+2349018257388"}
                                 target='_blank'
                                 className={`font-lato inline-flex items-center gap-3 w-fit`}
                             >
@@ -142,7 +142,7 @@ export default function Footer() {
 
                         </div>
 
-                        <div className='flex flex-col gap-5 text-sm'>
+                        <div className='flex flex-col gap-5 text-sm relative z-10'>
                             <p className={`font-lato text-primaryBrown text-sm font-light relative w-fit uppercase`}>
                                 Social Links
                                 {/* <Image width={100} height={100} alt="" src={"/images/paint_design.png"} className="object-contain right-0 absolute" /> */}
@@ -150,7 +150,7 @@ export default function Footer() {
                             </p>
 
                             <Link
-                                href={"/"}
+                                href={"https://wa.me/+2349018257388"}
                                 className={`font-lato inline-flex items-center gap-3 w-fit`}
                             >
                                 <div className='h-8 w-8 border-2 border-primaryBrown bg-[#ECE5CB] flex items-center justify-center text-primaryBrown '>
@@ -170,7 +170,7 @@ export default function Footer() {
                             </a>
 
                             <a
-                                href={"https://www.tiktok.com/@theyard.picnicpark "}
+                                href={"https://www.tiktok.com/@theyard.picnicpark"}
                                 target='_blank'
 
                                 className={`font-lato inline-flex items-center gap-3  w-fit`}
@@ -203,10 +203,10 @@ export default function Footer() {
                         <Image src={"/images/logo.svg"} width={80} height={80} alt='Logo' className='object-contain' />
                         <div className='flex flex-col  md:justify-center md:items-center text-sm gap-3'>
                             <div className='flex flex-col md:flex-row md:items-center gap-3'>
-                                <Link href={"/"} className='underline underline-offset-2 decoration-primaryBrown'>
+                                <Link href={"/terms"} className='underline underline-offset-2 decoration-primaryBrown'>
                                     Terms & Conditions
                                 </Link>
-                                <Link href={"/"} className='underline underline-offset-2 decoration-primaryBrown'>
+                                <Link href={"/terms"} className='underline underline-offset-2 decoration-primaryBrown'>
                                     Privacy Policy
                                 </Link>
                             </div>
