@@ -15,7 +15,7 @@ const Testimonials = () => {
 
   React.useEffect(() => {
     const fetchReviews = async () => {
-      const data = await getReviews();
+      const data = await getReviews({ status: "published" });
       setReviews(data.data.reviews);
     };
     fetchReviews();
@@ -42,9 +42,8 @@ const Testimonials = () => {
     try {
       const response = await createReview(data);
       if (response.success == true) {
-        setReviews((prevReviews) => [...prevReviews, response.data.review]);
         setReviewModal(false);
-        toast.success("Review submitted successfully!", {
+        toast.success("Review submitted for approval!", {
           position: "bottom-right",
           autoClose: false,
         });

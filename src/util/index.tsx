@@ -26,8 +26,23 @@ export const getSpaces = async () => {
 };
 
 // Get reviews
-export const getReviews = async () => {
-  const response = await axios.get(`/reviews`);
+export const getReviews = async (params?: {
+  status?: string;
+  sort?: string;
+  direction?: "ASC" | "DESC";
+  page?: number;
+  limit?: number;
+}) => {
+  const searchParams = new URLSearchParams();
+
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.sort) searchParams.set("sort", params.sort);
+  if (params?.direction) searchParams.set("direction", params.direction);
+  if (params?.page) searchParams.set("page", String(params.page));
+  if (params?.limit) searchParams.set("limit", String(params.limit));
+
+  const query = searchParams.toString();
+  const response = await axios.get(`/reviews${query ? `?${query}` : ""}`);
   return response.data;
 };
 

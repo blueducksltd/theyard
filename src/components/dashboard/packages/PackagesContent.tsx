@@ -116,7 +116,7 @@ export default function PackagesContent() {
   };
 
   const formatAddonPrice = (addon: SafeAddOn) => {
-    if (addon.category === "food" && addon.price != null) {
+    if (addon.category !== "game" && addon.price != null) {
       return `₦${addon.price.toLocaleString()}`;
     }
     if (addon.category === "game" && addon.pricePerMin != null) {
@@ -258,9 +258,9 @@ export default function PackagesContent() {
       return;
     }
 
-    if (category === "food" && (inputs.price === "" || inputs.price == null)) {
+    if (category !== "game" && (inputs.price === "" || inputs.price == null)) {
       toast.update(toastId, {
-        render: "Price is required for food add-ons!",
+        render: "Price is required for this add-on!",
         type: "error",
         isLoading: false,
         autoClose: 8000,
@@ -284,7 +284,7 @@ export default function PackagesContent() {
     if (inputs.description?.trim()) {
       formData.append("description", inputs.description.trim());
     }
-    if (category === "food") {
+    if (category !== "game") {
       formData.append("price", String(Number(inputs.price)));
     }
     if (category === "game") {
@@ -350,9 +350,9 @@ export default function PackagesContent() {
       return;
     }
 
-    if (category === "food" && (inputs.price === "" || inputs.price == null)) {
+    if (category !== "game" && (inputs.price === "" || inputs.price == null)) {
       toast.update(toastId, {
-        render: "Price is required for food add-ons!",
+        render: "Price is required for this add-on!",
         type: "error",
         isLoading: false,
         autoClose: 8000,
@@ -376,7 +376,7 @@ export default function PackagesContent() {
     if (inputs.description?.trim()) {
       formData.append("description", inputs.description.trim());
     }
-    if (category === "food") {
+    if (category !== "game") {
       formData.append("price", String(Number(inputs.price)));
     }
     if (category === "game") {
@@ -1094,7 +1094,7 @@ export default function PackagesContent() {
               </div>
             </div>
 
-            {inputs.category === "food" && (
+            {inputs.category !== "game" && (
               <div className="form-group flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full input-group flex flex-col gap-3">
                   <label htmlFor="updateAddonPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
@@ -1568,7 +1568,7 @@ export default function PackagesContent() {
               </div>
             </div>
 
-            {inputs.category === "food" && (
+            {inputs.category !== "game" && (
               <div className="form-group flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full input-group flex flex-col gap-3">
                   <label htmlFor="addonPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">

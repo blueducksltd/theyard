@@ -66,10 +66,10 @@ export const CreateAddOnDTO = z
     imageUrl: z.string().url().optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.category === "food" && typeof data.price !== "number") {
+    if ((data.category === "food" || data.category === "decoration") && typeof data.price !== "number") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "field `price` is required for food add-ons",
+        message: "field `price` is required for food and decoration add-ons",
         path: ["price"],
       });
     }
@@ -82,11 +82,11 @@ export const CreateAddOnDTO = z
       });
     }
 
-    if (data.category === "decoration" && (data.price !== undefined || data.pricePerMin !== undefined)) {
+    if (data.category !== "game" && data.pricePerMin !== undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "decoration add-ons should not include pricing fields",
-        path: ["price"],
+        message: "field `pricePerMin` is only allowed for game add-ons",
+        path: ["pricePerMin"],
       });
     }
   });

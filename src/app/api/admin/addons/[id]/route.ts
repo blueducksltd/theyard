@@ -7,7 +7,6 @@ import { errorHandler } from "@/lib/errors/ErrorHandler";
 import { deleteImage, uploadImage } from "@/lib/vercel";
 import AddOn from "@/models/AddOn";
 import { CreateAddOnDTO, UpdateAddOnDTO, UpdateAddOnInput, sanitizeAddOn } from "@/types/AddOn";
-import { z } from "zod";
 
 function parseOptionalNumber(value: unknown): number | undefined {
   if (value === null || value === undefined || value === "") return undefined;
@@ -62,7 +61,7 @@ export const PUT = errorHandler<{ params: { id: string } }>(async (request: Next
     name: data.name ?? existing.name,
     category,
     description: data.description ?? existing.description,
-    price: category === "food" ? data.price ?? existing.price : undefined,
+    price: category !== "game" ? data.price ?? existing.price : undefined,
     pricePerMin: category === "game" ? data.pricePerMin ?? existing.pricePerMin : undefined,
     imageUrl: data.imageUrl ?? existing.imageUrl,
   };

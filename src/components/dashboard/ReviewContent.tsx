@@ -15,6 +15,40 @@ export default function ReviewContent() {
   const [totalNum, setTotalNum] = React.useState<Record<string, number>>({});
   const [action, setAction] = React.useState<Record<string, string>>({});
 
+  const fetchComments = async (showLoadingToast = false) => {
+    const toastId = showLoadingToast
+      ? toast.loading("Loading comments...", {
+          position: "bottom-right",
+        })
+      : undefined;
+
+    try {
+      const response = await getReviews({ status: "all" });
+      const reviews: IReview[] = response.data.reviews;
+      setComments(reviews);
+      setDefaultComments(reviews);
+      setTotalNum({
+        published: reviews.filter((review) => review.status === "published")
+          .length,
+        pending: reviews.filter((review) => review.status === "pending")
+          .length,
+        ignored: reviews.filter((review) => review.status === "ignored")
+          .length,
+      });
+      if (toastId) toast.dismiss(toastId);
+    } catch (error) {
+      console.error(error);
+      if (toastId) {
+        toast.update(toastId, {
+          render: "Failed to load comments!",
+          type: "error",
+          position: "bottom-right",
+          isLoading: false,
+        });
+      }
+    }
+  };
+
   const handleSubmit = async (reviewForm: FormData) => {
     const toastId = toast.loading("Publishing comment...", {
       position: "bottom-right",
@@ -27,11 +61,10 @@ export default function ReviewContent() {
     try {
       const response = await createReview(data);
       if (response.success == true) {
-        const newData = response.data.review;
-        comments.push(newData);
+        await fetchComments(false);
         setReviewModal(false);
         toast.update(toastId, {
-          render: "Comment published successfully!",
+          render: "Comment submitted for approval!",
           type: "success",
           position: "bottom-right",
           autoClose: 3000,
@@ -50,7 +83,7 @@ export default function ReviewContent() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.update(toastId, {
-        render: "Failed to publish comment!",
+        render: "Failed to submit comment!",
         type: "error",
         position: "bottom-right",
         autoClose: 3000,
@@ -105,6 +138,9 @@ export default function ReviewContent() {
     try {
       const response = await publishOrIgnoreReview(data);
       if (response) {
+        await fetchComments(false);
+        setAction({});
+        setConfModal(false);
         toast.success(`${response.message}`, {
           position: "bottom-right",
         });
@@ -119,35 +155,7 @@ export default function ReviewContent() {
   };
 
   React.useEffect(() => {
-    const toastId = toast.loading("Loading comments...", {
-      position: "bottom-right",
-    });
-    const fetchComments = async () => {
-      try {
-        const response = await getReviews();
-        const reviews: IReview[] = response.data.reviews;
-        setComments(reviews);
-        setDefaultComments(reviews);
-        setTotalNum({
-          published: reviews.filter((review) => review.status === "published")
-            .length,
-          pending: reviews.filter((review) => review.status === "pending")
-            .length,
-          ignored: reviews.filter((review) => review.status === "ignored")
-            .length,
-        });
-        toast.dismiss(toastId);
-      } catch (error) {
-        console.error(error);
-        toast.update(toastId, {
-          render: "Failed to load comments!",
-          type: "error",
-          position: "bottom-right",
-          isLoading: false,
-        });
-      }
-    };
-    fetchComments();
+    void fetchComments(true);
   }, []);
 
   return (
@@ -259,7 +267,7 @@ export default function ReviewContent() {
           comments.toReversed().map((comment) => (
             <div
               key={comment.id as string}
-              className="w-full h-[264px] border-[1px] border-[#C7CFC9] rounded-lg gap-6 p-5 relative"
+              className="flex min-h-[264px] w-full flex-col gap-6 rounded-lg border-[1px] border-[#C7CFC9] p-5"
             >
               <div className="w-full flex items-center justify-between">
                 <h2 className="font-bold text-[22px] leading-[30px] text-[#737373]">
@@ -269,18 +277,18 @@ export default function ReviewContent() {
                   {moment(comment.createdAt).format("DD MMM, YYYY")}
                 </p>
               </div>
-              <p className="text-[#737373] text-[16px] leading-6 mt-5">
+              <p className="mt-5 break-words text-[16px] leading-6 text-[#737373]">
                 {comment.comment}
               </p>
 
-              <div className="w-full flex items-center justify-end gap-2 mt-10">
+              <div className="mt-auto flex w-full items-center justify-end gap-2 pt-6">
                 {comment.status === "pending" ? (
                   <>
                     <button
                       className="w-[114px] h-[35px] flex items-center justify-center border-[1px] border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
                       onClick={() => {
                         setAction({
-                          id: comment._id as unknown as string,
+                          id: comment.id,
                           status: "ignore",
                         });
                         setConfModal(true);
@@ -294,7 +302,7 @@ export default function ReviewContent() {
                       className="w-[114px] h-[35px] items-center flex justify-center border-[#8C5C5C] bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
                       onClick={() => {
                         setAction({
-                          id: comment._id as unknown as string,
+                          id: comment.id,
                           status: "publish",
                         });
                         setConfModal(true);
