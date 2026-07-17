@@ -22,6 +22,7 @@ import { compressImage } from "@/util/helper";
 import Image from "next/image";
 import React, { DragEvent, FormEvent, useEffect } from "react";
 import { toast } from "react-toastify";
+import { DESCRIPTION_WORD_LIMIT, limitWords } from "../GalleryContent";
 
 const DEFAULT_INPUTS = {
   name: "",
@@ -900,8 +901,15 @@ export default function PackagesContent() {
                   id="serviceName"
                   name="serviceName"
                   value={inputs.name ?? ""}
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
-                  placeholder="Enter service name"
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT,
+                    );
+
+                    setInputs({ ...inputs, name: limited })
+                  }}
+                  placeholder="Enter 50 words"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -919,7 +927,17 @@ export default function PackagesContent() {
                   id="desc"
                   name="desc"
                   value={inputs.description ?? ""}
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    {
+                      const limited = limitWords(
+                        e.target.value,
+                        DESCRIPTION_WORD_LIMIT,
+                      );
+
+                      setInputs({ ...inputs, description: limited })
+                    }
+
+                  }}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -1271,8 +1289,16 @@ export default function PackagesContent() {
                   type="text"
                   id="packageName"
                   name="packageName"
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
-                  placeholder="Enter package name"
+                  onChange={(e) => {
+
+                    const limited = limitWords(
+                      e.target.value,
+                      50,
+                    );
+
+                    setInputs({ ...inputs, name: limited })
+                  }}
+                  placeholder="50 Words"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1287,10 +1313,17 @@ export default function PackagesContent() {
                   Enter description
                 </label>
                 <textarea
-                value={inputs.description || ""}
+                  value={inputs.description || ""}
                   id="desc"
                   name="desc"
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT,
+                    );
+                    setInputs(prev => ({ ...prev, description: limited }))
+
+                  }}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -1475,14 +1508,20 @@ export default function PackagesContent() {
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label htmlFor="addonName" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
-                  Add-on name *
+                  Add-on name * <small>20 words max</small>
                 </label>
                 <input
                   type="text"
                   id="addonName"
                   name="addonName"
                   value={inputs.name || ""}
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      20
+                    )
+                    setInputs({ ...inputs, name: limited })
+                  }}
                   placeholder="e.g. Balloon decoration"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -1517,7 +1556,13 @@ export default function PackagesContent() {
                   id="addonDesc"
                   name="addonDesc"
                   value={inputs.description || ""}
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT
+                    )
+                    setInputs({ ...inputs, name: limited })
+                  }}
                   placeholder="Short description of the add-on"
                   className="w-full h-[120px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -1671,8 +1716,15 @@ export default function PackagesContent() {
                   id="packageName"
                   name="packageName"
                   value={inputs.name || ""}
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
-                  placeholder="Enter package name"
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      50,
+                    );
+
+                    setInputs({ ...inputs, name: limited })
+                  }}
+                  placeholder="50 Words"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1690,7 +1742,14 @@ export default function PackagesContent() {
                   id="desc"
                   name="desc"
                   value={inputs.description || ""}
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT,
+                    );
+
+                    setInputs({ ...inputs, description: limited })
+                  }}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -1887,7 +1946,14 @@ export default function PackagesContent() {
                   id="serviceName"
                   name="serviceName"
                   value={inputs.name || ""}
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      50,
+                    );
+
+                    setInputs({ ...inputs, name: limited })
+                  }}
                   placeholder="Enter service name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -1906,7 +1972,15 @@ export default function PackagesContent() {
                   id="desc"
                   name="desc"
                   value={inputs.description || ""}
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT,
+                    );
+
+                    setInputs({ ...inputs, description: limited })
+                  }
+                  }
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>

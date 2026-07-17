@@ -178,6 +178,7 @@ const Testimonials = () => {
                   Enter review
                 </label>
                 <textarea
+                
                   id="comment"
                   name="comment"
                   placeholder="150 words"

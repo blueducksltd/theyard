@@ -1,6 +1,6 @@
 "use client";
 import Modal from '@/components/v2/Modal';
-import { ArrowLeft, CalendarDays, ChevronDown, PackageX } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronDown, PackageX, X } from 'lucide-react';
 import EmptyState from '@/components/v2/EmptyState';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -15,6 +15,22 @@ import { motion } from "motion/react";
 import { initiatePayment } from '@/util/payment';
 import { IBooking } from '@/types/Booking';
 import { getBookings } from '@/util';
+type FormErrors = Partial<{
+  package: string;
+  guest: string;
+  firstname: string;
+  lastname: string;
+  phonenumber: string;
+  email: string;
+  date: string;
+  time: string;
+}>;
+
+const FieldError = ({ message }: { message?: string }) => {
+  if (!message) return null;
+  return <p className="text-red-500 text-xs mt-1.5 font-lato">{message}</p>;
+};
+
 type ShowState = {
   package: {
     show: boolean;
@@ -36,7 +52,8 @@ type ShowState = {
 
 const PackageModalContent = ({ packages, showModal, setSelectedPackage, closePackageModal }: { packages: IPackageFun[], showModal: boolean, setSelectedPackage: (selectedPackage: IPackageFun) => void, closePackageModal: () => void; }) => {
 
-  const [viewing, setViewing] = useState<IPackageFun | null>(null)
+  const [viewing, setViewing] = useState<IPackageFun | null>(null);
+  const {selectedDate} = useBookingStore()
 
   if (viewing) {
     return <ModalContent
@@ -55,29 +72,44 @@ const PackageModalContent = ({ packages, showModal, setSelectedPackage, closePac
     />
   }
 
-  return <div
-    className={`bg-white space-y-3 transition-all duration-300 ${showModal
-      ? "p-5 opacity-100 scale-100 w-100  h-[70vh] md:w-full md:min-h-100"
-      : "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none"
-      } grid grid-cols-1 md:grid-cols-2 gap-4 h-100 overflow-auto`}>
+  return <div className='bg-[#F6F2EC] md:w-[70%] p-5'>
+    <div className=' flex justify-between items-center pb-7'>
+      <h1 className='text-primaryGreen font-playfair-display text-lg font-bold'>Choose Package</h1>
 
-    {packages.length === 0 && (
-      <EmptyState
-        icon={PackageX}
-        title="No Packages"
-        message="There are no packages available at the moment. Please check back soon."
-      />
-    )}
-    {packages.map((pkg, index) => (
-      <PackageCard
-        key={pkg.id}
-        pkg={pkg}
-        index={index}
-        onSelect={() => {
-          setViewing(pkg)
-        }}
-      />
-    ))}
+      <div
+        className="bg-white w-8 h-8 flex items-center justify-center cursor-pointer"
+        style={{ boxShadow: "0 2px 40px rgba(0,0,0,0.1)" }}
+        onClick={closePackageModal}
+      >
+        <X size={16} />
+      </div>
+    </div>
+    <div
+      className={`space-y-3 transition-all duration-300 ${showModal
+        ? " opacity-100 scale-100 w-100  h-[70vh] md:w-full md:min-h-100"
+        : "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none"
+        } grid grid-cols-1 md:grid-cols-2 gap-4 h-100 overflow-auto`}>
+
+
+      {packages.length === 0 && (
+        <EmptyState
+          icon={PackageX}
+          title="No Packages"
+          message="There are no packages available at the moment. Please check back soon."
+        />
+      )}
+      {packages.map((pkg, index) => (
+        <PackageCard
+          key={pkg.id}
+          pkg={pkg}
+          index={index}
+          onSelect={() => {
+            setViewing(pkg)
+          }}
+          selectedDate={selectedDate}
+        />
+      ))}
+    </div>
   </div>
 }
 
@@ -110,6 +142,18 @@ export default function BookingPage() {
     lastname: "",
     note: ""
   })
+
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const clearError = (field: keyof FormErrors) => {
+    setErrors(prev => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  };
+
+  useEffect(() => {
+    if (Object.keys(errors).length === 0) return;
+    const timer = setTimeout(() => setErrors({}), 4000);
+    return () => clearTimeout(timer);
+  }, [errors]);
 
   const summary: { title: string; subtitle: string; }[] = [{
     title: "Package",
@@ -145,7 +189,7 @@ export default function BookingPage() {
   const setSelectedPackage = (selectedPackage: IPackageFun) => {
 
     setShow(prev => ({ ...prev, package: { ...prev.package, value: selectedPackage } }));
-
+    clearError('package');
 
   }
 
@@ -164,14 +208,24 @@ export default function BookingPage() {
   }
 
   const handleSubmit = async () => {
-    if (!show.package.value) return toast("Please select a package.", { type: "error" });
-    if (!inputs.firstname.trim()) return toast("Please enter your first name.", { type: "error" });
-    if (!inputs.lastname.trim()) return toast("Please enter your last name.", { type: "error" });
-    if (!inputs.email.trim()) return toast("Please enter your email address.", { type: "error" });
-    if (!inputs.phonenumber.trim()) return toast("Please enter your phone number.", { type: "error" });
-    if (!show.date.value) return toast("Please select an event date.", { type: "error" });
-    if (!show.time.value) return toast("Please select an event time.", { type: "error" });
-    if (!inputs.guest || inputs.guest < 1) return toast("Please enter the number of guests.", { type: "error" });
+    const newErrors: FormErrors = {};
+    if (!show.package.value) newErrors.package = "Please select a package.";
+    if (!inputs.firstname.trim()) newErrors.firstname = "Please enter your first name.";
+    if (!inputs.lastname.trim()) newErrors.lastname = "Please enter your last name.";
+    if (!inputs.email.trim()) newErrors.email = "Please enter your email address.";
+    if (!inputs.phonenumber.trim()) newErrors.phonenumber = "Please enter your phone number.";
+    if (!show.date.value) newErrors.date = "Please select an event date.";
+    if (!show.time.value) newErrors.time = "Please select an event time.";
+    if (!inputs.guest || inputs.guest < 1) newErrors.guest = "Please enter the number of guests.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
+
+    if (!show.package.value) return;
+
     const data = {
       firstName: inputs.firstname,
       lastName: inputs.lastname,
@@ -273,11 +327,13 @@ export default function BookingPage() {
               <ArrowLeft size={10} /> <span>Back to packages</span>
             </Link>
           }
+
           {
             selectedDate && <Link className='border-b flex w-fit font-sen text-xs items-center gap-1 text-primaryGreen my-6' href={"/booking/calendar"}>
               <ArrowLeft size={10} /> <span>Back to calendar</span>
             </Link>
           }
+          
           <h1 className={`font-semibold text-primaryGreen text-3xl md:text-2xl md:italic font-playfair-display  relative `}>Booking Form
 
             <Image width={150} height={100} alt="" src={"/images/paint_design.png"} className="object-contain absolute left-0 md:block hidden" />
@@ -289,7 +345,7 @@ export default function BookingPage() {
             }}>
               <label htmlFor="package" className='block text-[#1A1A1A]'>Choose Package</label>
 
-              <div className="border h-12 p-3 flex justify-between items-center cursor-pointer">
+              <div className={`border h-12 p-3 flex justify-between items-center cursor-pointer transition-colors duration-200 ${errors.package ? "border-red-500" : ""}`}>
                 <p className={(show.package.value?.name) ? "text-black" : "text-[#999999]"}>
                   {show.package.value?.name
                     ? show.package.value?.name
@@ -299,54 +355,62 @@ export default function BookingPage() {
 
                 <ChevronDown size={20} />
               </div>
+              <FieldError message={errors.package} />
             </div>
 
             <div className='space-y-1 text-sm'>
               <label htmlFor="package" className='block text-[#1A1A1A]'>Guest Number</label>
 
-              <div className='border h-12 p-3 flex justify-between items-center'>
+              <div className={`border h-12 p-3 flex justify-between items-center transition-colors duration-200 ${errors.guest ? "border-red-500" : ""}`}>
                 <input type="number" value={inputs.guest || ""} onChange={e => {
-                  if (!!!show.package.value) {
-                    toast("Please select a package.", { type: "error" })
+                  if (!show.package.value) {
+                    setErrors(prev => ({ ...prev, guest: "Please select a package first." }));
                     return;
                   }
 
-                  if (Number(e.target.value) > show.package.value.guestLimit) {
-                    toast(`Guest exceeds max guest of ${show.package.value.guestLimit}.`, { type: "error" })
+                  const value = Number(e.target.value);
+                  if (value > show.package.value.guestLimit) {
+                    setErrors(prev => ({ ...prev, guest: `Guest exceeds max guest of ${show.package.value!.guestLimit}.` }));
                     return;
                   }
-                  setInputs(prev => ({ ...prev, guest: Number(e.target.value) }))
+                  clearError('guest');
+                  setInputs(prev => ({ ...prev, guest: value }))
                 }} className='w-full h-full outline-0' placeholder='Enter Number of Participant' />
               </div>
+              <FieldError message={errors.guest} />
             </div>
             <div className='space-y-1 text-sm'>
               <label htmlFor="package" className='block text-[#1A1A1A]'>First name</label>
 
-              <div className='border h-12 p-3 flex justify-between items-center'>
-                <input type="text" value={inputs.firstname} onChange={e => setInputs(prev => ({ ...prev, firstname: e.target.value }))} className='w-full h-full outline-0' placeholder='Enter your first name' />
+              <div className={`border h-12 p-3 flex justify-between items-center transition-colors duration-200 ${errors.firstname ? "border-red-500" : ""}`}>
+                <input type="text" value={inputs.firstname} onChange={e => { setInputs(prev => ({ ...prev, firstname: e.target.value })); clearError('firstname'); }} className='w-full h-full outline-0' placeholder='Enter your first name' />
               </div>
+              <FieldError message={errors.firstname} />
             </div>
             <div className='space-y-1 text-sm'>
               <label htmlFor="package" className='block text-[#1A1A1A]'>Last name</label>
 
-              <div className='border h-12 p-3 flex justify-between items-center'>
-                <input type="text" value={inputs.lastname} onChange={e => setInputs(prev => ({ ...prev, lastname: e.target.value }))} className='w-full h-full outline-0' placeholder='Enter your last name' />
+              <div className={`border h-12 p-3 flex justify-between items-center transition-colors duration-200 ${errors.lastname ? "border-red-500" : ""}`}>
+                <input type="text" value={inputs.lastname} onChange={e => { setInputs(prev => ({ ...prev, lastname: e.target.value })); clearError('lastname'); }} className='w-full h-full outline-0' placeholder='Enter your last name' />
               </div>
+              <FieldError message={errors.lastname} />
             </div>
 
             <div className='space-y-1 text-sm'>
               <label htmlFor="package" className='block text-[#1A1A1A]'>Phone Number(Whatsapp)</label>
 
-              <div className='border h-12 p-3 flex justify-between items-center'>
-                <input type="tel" value={inputs.phonenumber} onChange={e => setInputs(prev => ({ ...prev, phonenumber: e.target.value }))} className='w-full h-full outline-0' placeholder='Enter your phone number(Whatsapp)' />
+              <div className={`border h-12 p-3 flex justify-between items-center transition-colors duration-200 ${errors.phonenumber ? "border-red-500" : ""}`}>
+                <input type="tel" value={inputs.phonenumber} onChange={e => { setInputs(prev => ({ ...prev, phonenumber: e.target.value })); clearError('phonenumber'); }} className='w-full h-full outline-0' placeholder='Enter your phone number(Whatsapp)' />
               </div>
+              <FieldError message={errors.phonenumber} />
             </div>
             <div className='space-y-1 text-sm'>
               <label htmlFor="package" className='block text-[#1A1A1A]'>Email address</label>
 
-              <div className='border h-12 p-3 flex justify-between items-center'>
-                <input type="email" value={inputs.email} onChange={e => setInputs(prev => ({ ...prev, email: e.target.value }))} className='w-full h-full outline-0' placeholder='Enter your email address' />
+              <div className={`border h-12 p-3 flex justify-between items-center transition-colors duration-200 ${errors.email ? "border-red-500" : ""}`}>
+                <input type="email" value={inputs.email} onChange={e => { setInputs(prev => ({ ...prev, email: e.target.value })); clearError('email'); }} className='w-full h-full outline-0' placeholder='Enter your email address' />
               </div>
+              <FieldError message={errors.email} />
             </div>
 
             <div className='space-y-1 text-sm relative' onClick={() => {
@@ -354,7 +418,7 @@ export default function BookingPage() {
             }}>
               <label htmlFor="package" className='block text-[#1A1A1A]'>Select Date</label>
 
-              <div className='border h-12 p-3 flex justify-between items-center'>
+              <div className={`border h-12 p-3 flex justify-between items-center transition-colors duration-200 ${errors.date ? "border-red-500" : ""}`}>
                 <p className={!!show.date.value ? "text-black" : "text-[#999999]"}>
                   {!!show.date.value
                     ? show.date.value
@@ -363,6 +427,7 @@ export default function BookingPage() {
                 </p>
                 <CalendarDays size={14} />
               </div>
+              <FieldError message={errors.date} />
 
               <div
                 className={`absolute left-0 -bottom-104 transition-[height] z-100 duration-500 ease-in-out cursor-pointer  justify-center ${show.date.show
@@ -374,7 +439,8 @@ export default function BookingPage() {
                 <BookingCalendar bookingData={bookingData}
 
                   onDateClick={(date) => {
-                    setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
+                    setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }));
+                    clearError('date');
 
                   }} />
               </div>
@@ -386,16 +452,18 @@ export default function BookingPage() {
             }}>
               <label htmlFor="package" className='block text-[#1A1A1A]'>Select time</label>
 
-              <div className='border h-12 p-3 flex justify-between items-center' >
+              <div className={`border h-12 p-3 flex justify-between items-center transition-colors duration-200 ${errors.time ? "border-red-500" : ""}`} >
                 <input type="text" className='w-full h-full outline-0 cursor-pointer' placeholder='Select Time and Date' readOnly value={show.time.value as string} />
                 <ChevronDown size={20} />
               </div>
+              <FieldError message={errors.time} />
 
               <div className={`absolute bg-white z-10 overflow-auto transition-[height] duration-500 ease-in-out ${!show.time.show ? "w-0 h-0 p-0" : "w-full h-30 p-2 "}`}>
                 {Array.from({ length: 15 }).map((_, index) => {
                   const hour = (index + 8).toLocaleString().padStart(2, "0");
                   return <p key={index} onClick={() => {
                     setShow(prev => ({ ...prev, time: { ...prev.time, value: hour + ":00" } }))
+                    clearError('time');
                   }} className='p-3 z-50 hover:bg-black/5'>{hour}:00</p>
                 })}
               </div>
@@ -403,8 +471,8 @@ export default function BookingPage() {
             </div>
 
             <button onClick={() => {
-              if (!!!show.package.value) {
-                toast("Please select a package.", { type: "error" })
+              if (!show.package.value) {
+                setErrors(prev => ({ ...prev, package: "Please select a package first." }));
                 return;
               }
               setShow(prev => ({ ...prev, fun: { ...prev.fun, show: true } }))

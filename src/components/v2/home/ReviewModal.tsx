@@ -5,6 +5,7 @@ import { Check, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { createReview } from "@/util";
 import { IReviewClient } from "@/types/Review";
+import { limitWords } from "@/components/dashboard/GalleryContent";
 
 const COMMENT_LIMIT = 200;
 
@@ -164,7 +165,13 @@ export default function ReviewModal({
                                     id="review-name"
                                     type="text"
                                     value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    onChange={(e) => {
+                                        const limited = limitWords(
+                                            e.target.value,
+                                            3
+                                        )
+                                       setName(limited)
+                                    }}
                                     placeholder="Enter your name"
                                     disabled={isBusy}
                                     className="font-sen w-full h-13  px-4 bg-[#F2F2F4] text-[15px] text-[#1D1D1F] placeholder:text-[#A1A1A6] outline-none border border-transparent transition-all duration-200 focus:bg-white focus:border-primaryGreen/50 focus:ring-4 focus:ring-primaryGreen/12 disabled:opacity-60"

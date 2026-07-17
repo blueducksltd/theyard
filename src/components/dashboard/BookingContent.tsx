@@ -209,6 +209,8 @@ export default function BookingContent() {
     })();
   }, []);
 
+  console.log(bookings);
+
   return (
     <main className="flex-1 py-4 md:h-[600px] 2xl:h-[770px] overflow-y-auto">
       <section className="flex flex-col gap-5">
