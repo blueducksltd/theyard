@@ -4,6 +4,8 @@ import { NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import Space from "@/models/Space";
 import Booking from "@/models/Booking";
+import ClosedDay from "@/models/ClosedDay";
+import { isShutdownPackage } from "@/lib/packageRules";
 import {
     startOfDay,
     endOfDay,
@@ -36,18 +38,25 @@ export const GET = errorHandler<{ params: { area: string } }>(
             const bookings = await Booking.find({
                 eventDate: { $gte: dayStart, $lte: dayEnd },
                 status: { $ne: "cancelled" }
+            }).populate("package");
+            const manuallyClosedDay = await ClosedDay.findOne({
+                date: { $gte: dayStart, $lte: dayEnd },
             });
+
+            const hasShutdownBooking = bookings.some((booking) =>
+                isShutdownPackage(booking.package as unknown as { name?: string; description?: string; specs?: string[] })
+            );
 
             // Day-based availability - a space is either available or unavailable for the whole day
             const spacesWithAvailability = spaces.map((space: ISpace) => {
-                const isBooked = bookings.some(
+                const isBooked = hasShutdownBooking || bookings.some(
                     (b) => b.space?.toString() === space.id
                 );
 
                 return {
                     id: space.id,
                     name: space.name,
-                    status: isBooked ? "unavailable" : "available",
+                    status: manuallyClosedDay || isBooked ? "unavailable" : "available",
                 };
             });
 
@@ -72,6 +81,16 @@ export const GET = errorHandler<{ params: { area: string } }>(
 
             const spaces = await Space.find();
             const bookings = await Booking.findByDateRange(start, end);
+            const populatedBookings = await Booking.find({
+                eventDate: { $gte: start, $lte: end },
+                status: { $ne: "cancelled" },
+            }).populate("package");
+            const monthClosedDays = await ClosedDay.find({
+                date: { $gte: start, $lte: end },
+            });
+            const closedDaySet = new Set(
+                monthClosedDays.map((item) => format(item.date, "yyyy-MM-dd"))
+            );
 
             const days: {
                 date: string;
@@ -81,10 +100,19 @@ export const GET = errorHandler<{ params: { area: string } }>(
 
             for (let d = start; d <= end; d = addDays(d, 1)) {
                 const dateStr = format(d, "yyyy-MM-dd");
+                const isManuallyClosed = closedDaySet.has(dateStr);
 
                 // Filter the pre-fetched bookings for this day
                 const dayBookings = bookings.filter(
                     (b) => format(b.eventDate, "yyyy-MM-dd") === dateStr
+                );
+
+                const dayPopulatedBookings = populatedBookings.filter(
+                    (b) => format(b.eventDate, "yyyy-MM-dd") === dateStr
+                );
+
+                const hasShutdownBooking = dayPopulatedBookings.some((booking) =>
+                    isShutdownPackage(booking.package as unknown as { name?: string; description?: string; specs?: string[] })
                 );
 
                 // Check each space's availability for this day
@@ -100,12 +128,14 @@ export const GET = errorHandler<{ params: { area: string } }>(
                 });
 
                 // Determine overall day status
-                let overall: "available" | "partial" | "unavailable" = "available";
+                let overall: "available" | "partial" | "unavailable" = hasShutdownBooking || isManuallyClosed ? "unavailable" : "available";
 
                 const hasBookedSpaces = statuses.some((s) => s === "unavailable");
                 const hasAvailableSpaces = statuses.some((s) => s === "available");
 
-                if (hasBookedSpaces && hasAvailableSpaces) {
+                if (hasShutdownBooking || isManuallyClosed) {
+                    overall = "unavailable";
+                } else if (hasBookedSpaces && hasAvailableSpaces) {
                     overall = "partial"; // Some spaces booked, some available
                 } else if (hasBookedSpaces && !hasAvailableSpaces) {
                     overall = "unavailable"; // All spaces booked

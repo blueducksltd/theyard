@@ -100,6 +100,12 @@ export const getBookings = async () => {
   return response.data;
 };
 
+export const getClosedDays = async (month?: string) => {
+  const query = month ? `?month=${month}` : "";
+  const response = await axios.get(`/closed-days${query}`);
+  return response.data;
+};
+
 // Get bookings by date
 export const getBookingsByDate = async (date: string) => {
   const response = await axios.get(`/calendar/days?date=${date}`);
@@ -133,6 +139,22 @@ export const getActiveBookings = async () => {
 // Get dashboard Data
 export const getDashboardData = async () => {
   const response = await axios.get(`/admin/dashboard`);
+  return response.data;
+};
+
+export const getAdminClosedDays = async (month?: string) => {
+  const query = month ? `?month=${month}` : "";
+  const response = await axios.get(`/admin/closed-days${query}`);
+  return response.data;
+};
+
+export const closeAdminDay = async (date: string, reason = "") => {
+  const response = await axios.post(`/admin/closed-days`, { date, reason });
+  return response.data;
+};
+
+export const reopenAdminDay = async (date: string) => {
+  const response = await axios.delete(`/admin/closed-days?date=${date}`);
   return response.data;
 };
 

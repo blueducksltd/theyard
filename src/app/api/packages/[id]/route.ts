@@ -40,6 +40,9 @@ export const PUT = errorHandler<{ params: { id: string } }>(
         const weekendPriceStr = form.get("weekendPrice") as string | null;
         if (weekendPriceStr) data.weekendPrice = z.coerce.number().parse(weekendPriceStr);
 
+        const capacityStr = form.get("capacity") as string | null;
+        if (capacityStr) data.capacity = z.coerce.number().parse(capacityStr);
+
         const guestLimitStr = form.get("guestLimit") as string | null;
         if (guestLimitStr) data.guestLimit = z.coerce.number().parse(guestLimitStr);
 

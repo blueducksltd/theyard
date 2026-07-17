@@ -3,7 +3,7 @@ import Modal from '@/components/v2/Modal';
 import { ArrowLeft, CalendarDays, ChevronDown, PackageX } from 'lucide-react';
 import EmptyState from '@/components/v2/EmptyState';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AddMoreFun, IPackageFun, ModalContent, PackageCard, SelectedAddon } from '../packages/page';
 import BookingCalendar from '@/components/booking/Calender';
 import { toast } from 'react-toastify';
@@ -14,7 +14,8 @@ import { IPackageClient } from '@/types/Package';
 import { motion } from "motion/react";
 import { initiatePayment } from '@/util/payment';
 import { IBooking } from '@/types/Booking';
-import { getBookings } from '@/util';
+import { getBookings, getClosedDays } from '@/util';
+import { isShutdownPackage } from '@/lib/packageRules';
 type ShowState = {
   package: {
     show: boolean;
@@ -34,7 +35,38 @@ type ShowState = {
   };
 };
 
-const PackageModalContent = ({ packages, showModal, setSelectedPackage, closePackageModal }: { packages: IPackageFun[], showModal: boolean, setSelectedPackage: (selectedPackage: IPackageFun) => void, closePackageModal: () => void; }) => {
+const normalizeDateKey = (value: Date | string): string | null => {
+  const parsedDate = new Date(value);
+  if (isNaN(parsedDate.getTime())) return null;
+
+  const year = parsedDate.getFullYear();
+  const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(parsedDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getBookingPackageId = (booking: IBooking): string | null => {
+  const bookingPackage = booking.package as unknown as { id?: string; _id?: string } | string | null;
+  if (!bookingPackage) return null;
+  if (typeof bookingPackage === 'string') return bookingPackage;
+  return bookingPackage.id || bookingPackage._id || null;
+};
+
+const PackageModalContent = ({
+  packages,
+  showModal,
+  setSelectedPackage,
+  closePackageModal,
+  hasSelectedDate,
+  isPackageUnavailableForSelectedDate,
+}: {
+  packages: IPackageFun[];
+  showModal: boolean;
+  setSelectedPackage: (selectedPackage: IPackageFun) => void;
+  closePackageModal: () => void;
+  hasSelectedDate: boolean;
+  isPackageUnavailableForSelectedDate: (pkg: IPackageFun) => boolean;
+}) => {
 
   const [viewing, setViewing] = useState<IPackageFun | null>(null)
 
@@ -68,16 +100,32 @@ const PackageModalContent = ({ packages, showModal, setSelectedPackage, closePac
         message="There are no packages available at the moment. Please check back soon."
       />
     )}
-    {packages.map((pkg, index) => (
-      <PackageCard
-        key={pkg.id}
-        pkg={pkg}
-        index={index}
-        onSelect={() => {
-          setViewing(pkg)
-        }}
-      />
-    ))}
+    {packages.map((pkg, index) => {
+      const isSoldOut = hasSelectedDate && isPackageUnavailableForSelectedDate(pkg);
+
+      return (
+        <div key={pkg.id} className='relative'>
+          <div className={isSoldOut ? 'pointer-events-none opacity-45' : ''}>
+            <PackageCard
+              pkg={pkg}
+              index={index}
+              onSelect={() => {
+                if (isSoldOut) {
+                  toast.error('This package is fully booked for the selected date. Please choose another day.');
+                  return;
+                }
+                setViewing(pkg)
+              }}
+            />
+          </div>
+          {isSoldOut && (
+            <div className='absolute top-3 right-3 bg-[#CA1919] text-white text-[10px] px-2 py-1 rounded-sm'>
+              Fully booked on this date
+            </div>
+          )}
+        </div>
+      );
+    })}
   </div>
 }
 
@@ -93,6 +141,50 @@ export default function BookingPage() {
 
   const [loading, setLoading] = useState<boolean>(false)
   const [bookingData, setBookingData] = useState<IBooking[]>([])
+  const [closedDateKeys, setClosedDateKeys] = useState<Set<string>>(new Set());
+
+  const getBookingsForDate = useCallback((dateValue?: string) => {
+    if (!dateValue) return [] as IBooking[];
+
+    const selectedDateKey = normalizeDateKey(dateValue);
+    if (!selectedDateKey) return [] as IBooking[];
+
+    return bookingData.filter((booking) => {
+      if ((booking as unknown as { status?: string }).status === 'cancelled') return false;
+
+      const bookingDateKey = normalizeDateKey(booking.eventDate as unknown as string | Date);
+      return bookingDateKey === selectedDateKey;
+    });
+  }, [bookingData]);
+
+  const isPackageUnavailableForDate = useCallback((pkg: IPackageFun, dateValue?: string) => {
+    if (!dateValue) return false;
+
+    const selectedDateKey = normalizeDateKey(dateValue);
+    if (selectedDateKey && closedDateKeys.has(selectedDateKey)) {
+      return true;
+    }
+
+    const dayBookings = getBookingsForDate(dateValue);
+    if (dayBookings.some((booking) => isShutdownPackage(booking.package as unknown as { name?: string; description?: string; specs?: string[] }))) {
+      return true;
+    }
+
+    if (isShutdownPackage(pkg)) {
+      return dayBookings.length > 0;
+    }
+
+    const capacity = Number(pkg.capacity ?? 0);
+    if (capacity <= 0) return false;
+
+    const bookedCount = dayBookings.reduce((count, booking) => {
+      const bookingPackageId = getBookingPackageId(booking);
+      if (!bookingPackageId || bookingPackageId !== pkg.id) return count;
+      return count + 1;
+    }, 0);
+
+    return bookedCount >= capacity;
+  }, [closedDateKeys, getBookingsForDate]);
 
 
   const [inputs, setInputs] = useState<{
@@ -170,6 +262,13 @@ export default function BookingPage() {
     if (!inputs.email.trim()) return toast("Please enter your email address.", { type: "error" });
     if (!inputs.phonenumber.trim()) return toast("Please enter your phone number.", { type: "error" });
     if (!show.date.value) return toast("Please select an event date.", { type: "error" });
+    const selectedDateKey = normalizeDateKey(show.date.value);
+    if (selectedDateKey && closedDateKeys.has(selectedDateKey)) {
+      return toast("This day has been closed by the admin. Please choose another date.", { type: "error" });
+    }
+    if (isPackageUnavailableForDate(show.package.value, show.date.value)) {
+      return toast("This package is fully booked for the selected date. Please choose another date or package.", { type: "error" });
+    }
     if (!show.time.value) return toast("Please select an event time.", { type: "error" });
     if (!inputs.guest || inputs.guest < 1) return toast("Please enter the number of guests.", { type: "error" });
     const data = {
@@ -229,6 +328,13 @@ export default function BookingPage() {
 
         setBookingData((await getBookings()).data.bookings)
 
+        const closedDaysRes = await getClosedDays();
+        const rawDates: string[] = closedDaysRes?.data?.closedDays?.map((item: { date: string }) => item.date) || [];
+        const normalized = rawDates
+          .map((dateStr) => normalizeDateKey(dateStr))
+          .filter((item): item is string => Boolean(item));
+        setClosedDateKeys(new Set(normalized));
+
 
       } catch (err) {
         console.error('Error fetching packages:', err);
@@ -246,9 +352,16 @@ export default function BookingPage() {
       <Modal isOpen={show.package.show} handleClose={() => {
         setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
       }}>
-        <PackageModalContent packages={packages} setSelectedPackage={setSelectedPackage} showModal={show.package.show} closePackageModal={() => {
-          setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
-        }} />
+        <PackageModalContent
+          packages={packages}
+          setSelectedPackage={setSelectedPackage}
+          showModal={show.package.show}
+          hasSelectedDate={!!show.date.value}
+          isPackageUnavailableForSelectedDate={(pkg) => isPackageUnavailableForDate(pkg, show.date.value)}
+          closePackageModal={() => {
+            setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
+          }}
+        />
       </Modal>
 
       <Modal isOpen={show.fun.show} handleClose={() => {
@@ -374,7 +487,17 @@ export default function BookingPage() {
                 <BookingCalendar bookingData={bookingData}
 
                   onDateClick={(date) => {
+                    const nextDateLabel = date.toLocaleDateString("en-US", { dateStyle: "medium" });
+                    const packageIsFull = show.package.value
+                      ? isPackageUnavailableForDate(show.package.value, nextDateLabel)
+                      : false;
+
                     setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
+
+                    if (packageIsFull) {
+                      setShow(prev => ({ ...prev, package: { ...prev.package, value: null } }))
+                      toast.warning("Selected package is fully booked for this date. Please choose another package or day.")
+                    }
 
                   }} />
               </div>

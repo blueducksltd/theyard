@@ -7,9 +7,11 @@ import { sendBookingEmail } from "@/lib/mailer";
 import { sendBookingWhatsApp } from "@/lib/whatsapp";
 import { sendNotification } from "@/lib/notification";
 import Booking from "@/models/Booking";
+import ClosedDay from "@/models/ClosedDay";
 import Customer from "@/models/Customer";
 import Package from "@/models/Package";
 import AddOn from "@/models/AddOn";
+import { isShutdownPackage } from "@/lib/packageRules";
 import {
   CreateBookingDto,
   CreateBookingInput,
@@ -20,6 +22,7 @@ import {
   parse,
   parseISO,
   startOfDay,
+  endOfDay,
   startOfToday,
   isWeekend
 } from "date-fns";
@@ -140,6 +143,57 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
   const _package = await Package.findById(body.packageId);
   if (!_package) throw APIError.NotFound("Package not found");
+
+  const manuallyClosedDay = await ClosedDay.findOne({
+    date: {
+      $gte: startOfDay(bookingDate),
+      $lte: endOfDay(bookingDate),
+    },
+  });
+
+  if (manuallyClosedDay) {
+    throw APIError.BadRequest(
+      "This date has been closed by the admin. Please choose another day.",
+    );
+  }
+
+  const isRequestedShutdownPackage = isShutdownPackage(_package);
+  const dayBookings = await Booking.find({
+    eventDate: {
+      $gte: startOfDay(bookingDate),
+      $lte: endOfDay(bookingDate),
+    },
+    status: { $ne: "cancelled" },
+  }).populate("package");
+
+  const hasShutdownBooking = dayBookings.some((booking) =>
+    isShutdownPackage(booking.package as unknown as { name?: string; description?: string; specs?: string[] }),
+  );
+
+  if (hasShutdownBooking) {
+    throw APIError.BadRequest(
+      "This date is already reserved by the shutdown package. Please choose another day.",
+    );
+  }
+
+  if (isRequestedShutdownPackage && dayBookings.length > 0) {
+    throw APIError.BadRequest(
+      "The shutdown package reserves the full day. Please choose an empty date.",
+    );
+  }
+
+  const packageCapacity = Number(_package.capacity ?? 0);
+  if (!isRequestedShutdownPackage && packageCapacity > 0) {
+    const existingBookingsCount = dayBookings.filter((booking) =>
+      booking.package && booking.package.toString() === _package.id,
+    ).length;
+
+    if (existingBookingsCount >= packageCapacity) {
+      throw APIError.BadRequest(
+        "This package is fully booked for the selected date. Please choose another day.",
+      );
+    }
+  }
 
   // Ensure customer exists (upsert)
   const customer = await Customer.findOneAndUpdate(
