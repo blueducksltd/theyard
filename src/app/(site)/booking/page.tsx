@@ -14,7 +14,8 @@ import { IPackageClient } from '@/types/Package';
 import { motion } from "motion/react";
 import { initiatePayment } from '@/util/payment';
 import { IBooking } from '@/types/Booking';
-import { getBookings } from '@/util';
+import { getBookings, getClosedDays } from '@/util';
+import { isShutdownPackage } from '@/lib/packageRules';
 type FormErrors = Partial<{
   package: string;
   guest: string;
@@ -31,8 +32,7 @@ const FieldError = ({ message }: { message?: string }) => {
   return <p className="text-red-500 text-xs mt-1.5 font-lato">{message}</p>;
 };
 
-import { getBookings, getClosedDays } from '@/util';
-import { isShutdownPackage } from '@/lib/packageRules';
+
 type ShowState = {
   package: {
     show: boolean;
@@ -86,7 +86,7 @@ const PackageModalContent = ({
 }) => {
 
   const [viewing, setViewing] = useState<IPackageFun | null>(null);
-  const {selectedDate} = useBookingStore()
+  const { selectedDate } = useBookingStore()
 
   if (viewing) {
     return <ModalContent
@@ -131,51 +131,37 @@ const PackageModalContent = ({
           message="There are no packages available at the moment. Please check back soon."
         />
       )}
-      {packages.map((pkg, index) => (
-        <PackageCard
-          key={pkg.id}
-          pkg={pkg}
-          index={index}
-          onSelect={() => {
-            setViewing(pkg)
-          }}
-          selectedDate={selectedDate}
-        />
-      ))}
-    </div>
-    {packages.length === 0 && (
-      <EmptyState
-        icon={PackageX}
-        title="No Packages"
-        message="There are no packages available at the moment. Please check back soon."
-      />
-    )}
-    {packages.map((pkg, index) => {
-      const isSoldOut = hasSelectedDate && isPackageUnavailableForSelectedDate(pkg);
 
-      return (
-        <div key={pkg.id} className='relative'>
-          <div className={isSoldOut ? 'pointer-events-none opacity-45' : ''}>
-            <PackageCard
-              pkg={pkg}
-              index={index}
-              onSelect={() => {
-                if (isSoldOut) {
-                  toast.error('This package is fully booked for the selected date. Please choose another day.');
-                  return;
-                }
-                setViewing(pkg)
-              }}
-            />
-          </div>
-          {isSoldOut && (
-            <div className='absolute top-3 right-3 bg-[#CA1919] text-white text-[10px] px-2 py-1 rounded-sm'>
-              Fully booked on this date
+      {packages.map((pkg, index) => {
+        const isSoldOut = hasSelectedDate && isPackageUnavailableForSelectedDate(pkg);
+
+        return (
+          <div key={pkg.id} className='relative'>
+            <div className={isSoldOut ? 'pointer-events-none opacity-45' : ''}>
+              <PackageCard
+                pkg={pkg}
+                index={index}
+                onSelect={() => {
+                  if (isSoldOut) {
+                    toast.error('This package is fully booked for the selected date. Please choose another day.');
+                    return;
+                  }
+                  setViewing(pkg)
+                }}
+                selectedDate={selectedDate}
+
+              />
             </div>
-          )}
-        </div>
-      );
-    })}
+            {isSoldOut && (
+              <div className='absolute top-3 right-3 bg-[#CA1919] text-white text-[10px] px-2 py-1 rounded-sm'>
+                Fully booked on this date
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+
   </div>
 }
 
@@ -472,7 +458,7 @@ export default function BookingPage() {
               <ArrowLeft size={10} /> <span>Back to calendar</span>
             </Link>
           }
-          
+
           <h1 className={`font-semibold text-primaryGreen text-3xl md:text-2xl md:italic font-playfair-display  relative `}>Booking Form
 
             <Image width={150} height={100} alt="" src={"/images/paint_design.png"} className="object-contain absolute left-0 md:block hidden" />
