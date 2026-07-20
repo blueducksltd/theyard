@@ -234,8 +234,15 @@ export default function BookingPage() {
 
   }
 
+  const baseGuestLimit = show.package.value?.capacity ?? 0;
+  const extraGuestCount = Math.max(0, (inputs.guest || 0) - baseGuestLimit);
+  const extraGuestFee = extraGuestCount > 0
+    ? extraGuestCount * Number(show.package.value?.extraGuestFee ?? 0)
+    : 0;
+
   const total = pricing
     .concat(show.package.value?.selectedAddon?.map(item => ({ title: item.name, subtitle: Number((item.price ?? item.pricePerMin ?? 0) * item.quantity) })) ?? [])
+    .concat(extraGuestFee > 0 ? [{ title: `Extra Guest Fee (${extraGuestCount})`, subtitle: extraGuestFee }] : [])
     .reduce((sum, item) => sum + item.subtitle, 0);
 
   function formatDate(dateString: string) {
@@ -567,6 +574,12 @@ export default function BookingPage() {
                 <p className="text-primaryGreen text-right font-bold">{item.subtitle.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </React.Fragment>
             ))}
+            {extraGuestFee > 0 && (
+              <>
+                <p className="text-[#717068]">Extra Guest Fee ({extraGuestCount} x {show.package.value?.extraGuestFee})</p>
+                <p className="text-primaryGreen text-right font-bold">{extraGuestFee.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              </>
+            )}
 
 
             <div className="col-span-2 border-t border-gray-200 mt-2 pt-3 flex justify-between font-semibold text-primaryGreen text-sm">
