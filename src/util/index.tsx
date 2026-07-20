@@ -26,8 +26,23 @@ export const getSpaces = async () => {
 };
 
 // Get reviews
-export const getReviews = async () => {
-  const response = await axios.get(`/reviews`);
+export const getReviews = async (params?: {
+  status?: string;
+  sort?: string;
+  direction?: "ASC" | "DESC";
+  page?: number;
+  limit?: number;
+}) => {
+  const searchParams = new URLSearchParams();
+
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.sort) searchParams.set("sort", params.sort);
+  if (params?.direction) searchParams.set("direction", params.direction);
+  if (params?.page) searchParams.set("page", String(params.page));
+  if (params?.limit) searchParams.set("limit", String(params.limit));
+
+  const query = searchParams.toString();
+  const response = await axios.get(`/reviews${query ? `?${query}` : ""}`);
   return response.data;
 };
 
@@ -100,6 +115,12 @@ export const getBookings = async () => {
   return response.data;
 };
 
+export const getClosedDays = async (month?: string) => {
+  const query = month ? `?month=${month}` : "";
+  const response = await axios.get(`/closed-days${query}`);
+  return response.data;
+};
+
 // Get bookings by date
 export const getBookingsByDate = async (date: string) => {
   const response = await axios.get(`/calendar/days?date=${date}`);
@@ -133,6 +154,22 @@ export const getActiveBookings = async () => {
 // Get dashboard Data
 export const getDashboardData = async () => {
   const response = await axios.get(`/admin/dashboard`);
+  return response.data;
+};
+
+export const getAdminClosedDays = async (month?: string) => {
+  const query = month ? `?month=${month}` : "";
+  const response = await axios.get(`/admin/closed-days${query}`);
+  return response.data;
+};
+
+export const closeAdminDay = async (date: string, reason = "") => {
+  const response = await axios.post(`/admin/closed-days`, { date, reason });
+  return response.data;
+};
+
+export const reopenAdminDay = async (date: string) => {
+  const response = await axios.delete(`/admin/closed-days?date=${date}`);
   return response.data;
 };
 

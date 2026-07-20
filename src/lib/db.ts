@@ -29,6 +29,7 @@ export async function connectDB(): Promise<Mongoose> {
         import("@/models/Package"),
         import("@/models/Gallery"),
         import("@/models/Booking"),
+        import("@/models/ClosedDay"),
         import("@/models/Service"),
         import("@/models/AddOn"),
       ]);

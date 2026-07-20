@@ -3,11 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { getDashboardData, publishOrIgnoreReview } from "@/util";
 import moment from "moment";
-import { IPackage } from "@/types/Package";
-import { IReview } from "@/types/Review";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { IEvent } from "@/types/Event";
 
 interface IPageBooking {
   id: string;
@@ -56,6 +53,40 @@ export default function HomeContent() {
   const [reviews, setReviews] = useState<IPageReview | null>(null);
   const [totalNum, setTotalNum] = useState<Record<string, string>>({});
 
+  const fetchDashboardData = useCallback(async (showLoadingToast = true) => {
+    const loadingToast = showLoadingToast
+      ? toast.loading("Loading data...", {
+          position: "bottom-right",
+        })
+      : undefined;
+
+    try {
+      const response = await getDashboardData();
+      if (response.success) {
+        setActiveBookings(response.data.dashboard.bookings?.recent);
+        setEvents(response.data.dashboard.events?.upcoming);
+        setPackages(response.data.dashboard.packages?.recent);
+        setReviews(response.data.dashboard.reviews?.latest);
+
+        setTotalNum({
+          bookings: response.data.dashboard.bookings?.count,
+          events: response.data.dashboard.events?.count,
+          packages: response.data.dashboard.packages?.count,
+          reviews: response.data.dashboard.reviews?.count,
+        });
+      }
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+      toast.error("Failed to load dashboard data", {
+        position: "bottom-right",
+      });
+    } finally {
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
+    }
+  }, []);
+
   const handleReviewAction = async (id: string, status: string) => {
     const loadingToast = toast.loading("Loading data...", {
       position: "bottom-right",
@@ -67,6 +98,7 @@ export default function HomeContent() {
     try {
       const response = await publishOrIgnoreReview(data);
       if (response) {
+        await fetchDashboardData(false);
         toast.success(`${response.message}`, {
           position: "bottom-right",
         });
@@ -81,38 +113,8 @@ export default function HomeContent() {
   };
 
   useEffect(() => {
-    const loadingToast = toast.loading("Loading data...", {
-      position: "bottom-right",
-    });
-    const fetchData = async () => {
-      try {
-        const response = await getDashboardData();
-        if (response.success) {
-          setActiveBookings(response.data.dashboard.bookings?.recent);
-          setEvents(response.data.dashboard.events?.upcoming);
-          setPackages(response.data.dashboard.packages?.recent);
-          setReviews(response.data.dashboard.reviews?.latest);
-
-          // Set total Numbers
-          setTotalNum({
-            bookings: response.data.dashboard.bookings?.count,
-            events: response.data.dashboard.events?.count,
-            packages: response.data.dashboard.packages?.count,
-            reviews: response.data.dashboard.reviews?.count,
-          });
-        }
-      } catch (error) {
-        console.error("Error loading dashboard data:", error);
-        toast.error("Failed to load dashboard data", {
-          position: "bottom-right",
-        });
-      } finally {
-        toast.dismiss(loadingToast);
-      }
-    };
-
-    fetchData();
-  }, []);
+    void fetchDashboardData();
+  }, [fetchDashboardData]);
 
   return (
     <main className="flex-1 py-4 px-5 md:h-[600px] 2xl:h-[770px] overflow-y-auto">
@@ -326,27 +328,35 @@ export default function HomeContent() {
             </div>
 
             {/*Actions*/}
-            <div className="w-full flex justify-end absolute bottom-0 gap-2">
-              <button
-                onClick={() =>
-                  handleReviewAction(reviews?._id as string, "ignored")
-                }
-                type="button"
-                className="w-[114px] h-7 border-[1.5px] border-[#A44B4B] text-[#A44B4B] font-medium text-[16px] leading-6 tracking-[0.4px] font-sen px-6 py-5 rounded2px flex justify-center items-center cursor-pointer group relative overflow-hidden hover:text-yard-dark-primary"
-              >
-                <span className="z-40">Ignore</span>
-                <div className="absolute top-0 left-0 bg-yard-hover text w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-              </button>
-              <button
-                onClick={() =>
-                  handleReviewAction(reviews?._id as string, "published")
-                }
-                type="button"
-                className="w-[114px] h-7 border-[1.5px] border-[#fdfdfd] bg-yard-primary text-[#EEEEE6] font-medium text-[16px] leading-6 tracking-[0.4px] font-sen px-6 py-5 rounded2px flex justify-center items-center cursor-pointer group relative overflow-hidden"
-              >
-                <span className="z-40">Publish</span>
-                <div className="absolute top-0 left-0 bg-yard-dark-primary text w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-              </button>
+            <div className="absolute bottom-0 flex w-full justify-end gap-2">
+              {reviews?.status === "pending" ? (
+                <>
+                  <button
+                    onClick={() =>
+                      handleReviewAction(reviews?._id as string, "ignored")
+                    }
+                    type="button"
+                    className="w-[114px] h-7 border-[1.5px] border-[#A44B4B] text-[#A44B4B] font-medium text-[16px] leading-6 tracking-[0.4px] font-sen px-6 py-5 rounded2px flex justify-center items-center cursor-pointer group relative overflow-hidden hover:text-yard-dark-primary"
+                  >
+                    <span className="z-40">Ignore</span>
+                    <div className="absolute top-0 left-0 bg-yard-hover text w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleReviewAction(reviews?._id as string, "published")
+                    }
+                    type="button"
+                    className="w-[114px] h-7 border-[1.5px] border-[#fdfdfd] bg-yard-primary text-[#EEEEE6] font-medium text-[16px] leading-6 tracking-[0.4px] font-sen px-6 py-5 rounded2px flex justify-center items-center cursor-pointer group relative overflow-hidden"
+                  >
+                    <span className="z-40">Publish</span>
+                    <div className="absolute top-0 left-0 bg-yard-dark-primary text w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
+                  </button>
+                </>
+              ) : reviews ? (
+                <p className="font-sen text-[16px] font-medium capitalize leading-6 tracking-[0.4px] text-[#999999]">
+                  {reviews.status}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>

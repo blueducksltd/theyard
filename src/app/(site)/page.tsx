@@ -214,7 +214,7 @@ export default function Home() {
         ] = await Promise.all([
           axios.get(`/api/packages`),
           axios.get(`/api/events`),
-          axios.get(`/api/reviews`),
+          axios.get(`/api/reviews?status=published`),
           axios.get(`/api/gallery`),
         ]);
 
@@ -763,7 +763,7 @@ export default function Home() {
       <ReviewModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onSubmitted={(review) => setTestimonials((prev) => [review, ...prev])}
+        onSubmitted={() => undefined}
       />
 
 

@@ -35,7 +35,7 @@ export const GET = errorHandler(async (request: NextRequest) => {
 
     // --- Query Params ---
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
+    const status = searchParams.get("status") || "published";
     const sort = searchParams.get("sort") || "createdAt";
     const direction = (searchParams.get("direction") as "ASC" | "DESC") || "ASC";
     const page = parseInt(searchParams.get("page") || "1", 10);
@@ -46,7 +46,7 @@ export const GET = errorHandler(async (request: NextRequest) => {
 
     // --- Filtering ---
     const filter: Record<string, string> = {};
-    if (status) filter.status = status;
+    if (status !== "all") filter.status = status;
 
     // --- Fetch Reviews ---
     const reviews = await Review.filter(filter, sort, direction);
