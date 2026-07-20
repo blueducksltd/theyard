@@ -182,19 +182,6 @@ export const POST = errorHandler(async (request: NextRequest) => {
     );
   }
 
-  const packageCapacity = Number(_package.capacity ?? 0);
-  if (!isRequestedShutdownPackage && packageCapacity > 0) {
-    const existingBookingsCount = dayBookings.filter((booking) =>
-      booking.package && booking.package.toString() === _package.id,
-    ).length;
-
-    if (existingBookingsCount >= packageCapacity) {
-      throw APIError.BadRequest(
-        "This package is fully booked for the selected date. Please choose another day.",
-      );
-    }
-  }
-
   // Ensure customer exists (upsert)
   const customer = await Customer.findOneAndUpdate(
     { email: body.email },
@@ -235,14 +222,27 @@ export const POST = errorHandler(async (request: NextRequest) => {
     ? _package.weekendPrice
     : _package.price;
 
-  // Calculate totalPrice using guestCount, guestLimit, and extraGuestFee
+  // Calculate totalPrice using baseLimit, guestLimit, and extraGuestFee
+  const baseLimit = Number(_package.capacity ?? 0);
   const guestLimit = _package.guestLimit as unknown as number;
   const extraGuestFee = _package.extraGuestFee as unknown as number;
   const guestCount = body.guestCount;
 
-  let totalPrice = basePrice as unknown as number;
   if (guestCount > guestLimit) {
-    const extraGuests = guestCount - guestLimit;
+    throw APIError.BadRequest(
+      `Guest count exceeds package guest limit of ${guestLimit}.`,
+    );
+  }
+
+  if (baseLimit > guestLimit) {
+    throw APIError.Internal(
+      "Package configuration is invalid: base limit is greater than guest limit.",
+    );
+  }
+
+  let totalPrice = basePrice as unknown as number;
+  if (guestCount > baseLimit) {
+    const extraGuests = guestCount - baseLimit;
     totalPrice += extraGuests * extraGuestFee;
   }
 
@@ -295,6 +295,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         package: {
           name: _package.name,
           price: _package.price,
+          baseLimit: _package.capacity,
           guestLimit: _package.guestLimit,
           extraGuestFee: _package.extraGuestFee,
         },

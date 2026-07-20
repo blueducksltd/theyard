@@ -36,21 +36,9 @@ export default function BookingContent() {
   const [allBookingsToday, setAllBookingsToday] = useState<number>(0);
   const [section, setSection] = useState<string>("pending");
 
-  const toggleSelect = (id: string) => {
-    const selected = bookings.map((booking) =>
-      booking.id === id ? { ...booking, selected: !booking.selected } : booking,
-    );
-    setBookings(selected);
+  const formatBookingDate = (date: Date | string) => {
+    return moment(date).format("DD MMM YYYY");
   };
-
-  const toggleSelectAll = () => {
-    const allSelected = bookings.every((b) => b.selected);
-    setBookings(
-      bookings.map((booking) => ({ ...booking, selected: !allSelected })),
-    );
-  };
-
-  const allSelected = bookings.length > 0 && bookings.every((b) => b.selected);
 
   const handleSection = (_section: string) => {
     setSection(_section);
@@ -294,31 +282,11 @@ export default function BookingContent() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200">
-                    <th className="px-6 py-4 text-left">
-                      <input
-                        type="checkbox"
-                        checked={allSelected}
-                        onChange={toggleSelectAll}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
-                      Name...
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
-                      Event
-                    </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
                       Package
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
                       Date
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
-                      Price (N)
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
-                      Duration
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
                       Total (N)
@@ -339,38 +307,11 @@ export default function BookingContent() {
                         index % 2 === 0 ? "bg-white" : "bg-gray-50"
                       }`}
                     >
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          checked={booking.selected}
-                          onChange={() => toggleSelect(booking.id)}
-                          className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-[#737373]">
-                        {booking.event?.title}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.event?.title || "N/A"}
-                      </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
                         {booking.package.name}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {moment(booking.eventDate).format("d/MM/YYYY")}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.totalPrice.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.startTime && booking.endTime
-                          ? moment(booking.endTime, "HH:mm").diff(
-                              moment(booking.startTime, "HH:mm"),
-                              "hours",
-                              true,
-                            )
-                          : 0}{" "}
-                        hr(s)
+                        {formatBookingDate(booking.eventDate)}
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
                         {booking.totalPrice.toLocaleString()}

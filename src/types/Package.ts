@@ -93,6 +93,9 @@ export const CreatePackageDTO = z.object({
   }, z.array(z.string())),
   description: z.string(),
   imageUrl: z.string().url().optional()
+}).refine((data) => data.guestLimit >= data.capacity, {
+  message: "Guest limit cannot be less than base limit",
+  path: ["guestLimit"],
 });
 
 export const UpdatePackageDTO = z.object({
@@ -115,7 +118,13 @@ export const UpdatePackageDTO = z.object({
   }, z.array(z.string())).optional(),
   description: z.string().optional(),
   imageUrl: z.string().url().optional()
-});
+}).refine(
+  (data) => data.capacity == null || data.guestLimit == null || data.guestLimit >= data.capacity,
+  {
+    message: "Guest limit cannot be less than base limit",
+    path: ["guestLimit"],
+  }
+);
 
 export type CreatePackageInput = z.infer<typeof CreatePackageDTO>;
 export type UpdatePackageInput = z.infer<typeof UpdatePackageDTO>;

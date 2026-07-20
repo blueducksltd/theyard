@@ -174,16 +174,7 @@ export default function BookingPage() {
       return dayBookings.length > 0;
     }
 
-    const capacity = Number(pkg.capacity ?? 0);
-    if (capacity <= 0) return false;
-
-    const bookedCount = dayBookings.reduce((count, booking) => {
-      const bookingPackageId = getBookingPackageId(booking);
-      if (!bookingPackageId || bookingPackageId !== pkg.id) return count;
-      return count + 1;
-    }, 0);
-
-    return bookedCount >= capacity;
+    return false;
   }, [closedDateKeys, getBookingsForDate]);
 
 
@@ -227,11 +218,27 @@ export default function BookingPage() {
 
   ]
 
+  const baseLimit = show.package.value?.capacity ?? 0;
+  const guestLimit = show.package.value?.guestLimit ?? 0;
+  const guestCount = inputs.guest || 0;
+  const extraGuestCount = show.package.value
+    ? Math.max(guestCount - baseLimit, 0)
+    : 0;
+  const extraGuestFee = show.package.value?.extraGuestFee ?? 0;
+  const extraGuestTotal = extraGuestCount * extraGuestFee;
+
   const pricing: { title: string; subtitle: number; }[] = [{
     title: "Full Party Package",
     subtitle: show.package.value?.price ?? 0,
 
   },
+
+    ...(extraGuestCount > 0
+      ? [{
+        title: `Extra Guests (${extraGuestCount} x ${extraGuestFee.toLocaleString()})`,
+        subtitle: extraGuestTotal,
+      }]
+      : []),
 
   ]
   const setSelectedPackage = (selectedPackage: IPackageFun) => {
@@ -424,8 +431,8 @@ export default function BookingPage() {
                     return;
                   }
 
-                  if (Number(e.target.value) > show.package.value.guestLimit) {
-                    toast(`Guest exceeds max guest of ${show.package.value.guestLimit}.`, { type: "error" })
+                  if (Number(e.target.value) > guestLimit) {
+                    toast(`Guest exceeds max guest of ${guestLimit}.`, { type: "error" })
                     return;
                   }
                   setInputs(prev => ({ ...prev, guest: Number(e.target.value) }))

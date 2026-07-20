@@ -172,7 +172,7 @@ export default function PackagesContent() {
       name: "Name",
       description: "Description",
       price: "Price",
-      capacity: "Capacity",
+      capacity: "Base limit",
       guestLimit: "Guest limit",
       extraGuestFee: "Extra guest fee",
       specs: "Specs",
@@ -192,6 +192,31 @@ export default function PackagesContent() {
         autoClose: 8000,
       });
       return;
+    }
+
+    if (section === "packages") {
+      const baseLimit = Number(payload.capacity);
+      const guestLimit = Number(payload.guestLimit);
+
+      if (Number.isNaN(baseLimit) || baseLimit < 1) {
+        toast.update(toastId, {
+          render: "Base limit must be at least 1.",
+          type: "error",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
+
+      if (Number.isNaN(guestLimit) || guestLimit < baseLimit) {
+        toast.update(toastId, {
+          render: "Guest limit cannot be less than base limit.",
+          type: "error",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
     }
 
     const formData = new FormData();
@@ -432,6 +457,35 @@ export default function PackagesContent() {
 
     if (inputs.price) {
       inputs.price = inputs.price.toString().replace(/[.,]/g, "");
+    }
+
+    if (inputs.extraGuestFee) {
+      inputs.extraGuestFee = inputs.extraGuestFee.toString().replace(/[.,]/g, "");
+    }
+
+    if (section === "packages") {
+      const baseLimit = Number(inputs.capacity);
+      const guestLimit = Number(inputs.guestLimit);
+
+      if (Number.isNaN(baseLimit) || baseLimit < 1) {
+        toast.update(toastId, {
+          render: "Base limit must be at least 1.",
+          type: "error",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
+
+      if (Number.isNaN(guestLimit) || guestLimit < baseLimit) {
+        toast.update(toastId, {
+          render: "Guest limit cannot be less than base limit.",
+          type: "error",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
     }
 
 
@@ -1347,7 +1401,7 @@ export default function PackagesContent() {
                   htmlFor="capacity"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
-                  Enter package capacity
+                  Enter base limit
                 </label>
                 <input
                   type="number"
@@ -1355,7 +1409,7 @@ export default function PackagesContent() {
                   name="capacity"
                   value={inputs.capacity ?? ""}
                   onChange={(e) => setInputs({ ...inputs, capacity: e.target.value })}
-                  placeholder="Package capacity (100)"
+                  placeholder="Base limit (100)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1367,7 +1421,7 @@ export default function PackagesContent() {
                   htmlFor="guestLimit"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
-                  Enter Guest Limit
+                  Enter guest limit
                 </label>
                 <input
                   type="number"
@@ -1375,7 +1429,7 @@ export default function PackagesContent() {
                   name="guestLimit"
                   value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
-                  placeholder="Guest Limit (2)"
+                  placeholder="Guest limit (120)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1767,7 +1821,7 @@ export default function PackagesContent() {
                   htmlFor="updateCapacity"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
-                  Enter package capacity
+                  Enter base limit
                 </label>
                 <input
                   type="number"
@@ -1775,7 +1829,7 @@ export default function PackagesContent() {
                   name="updateCapacity"
                   value={inputs.capacity ?? ""}
                   onChange={(e) => setInputs({ ...inputs, capacity: e.target.value })}
-                  placeholder="Package capacity (100)"
+                  placeholder="Base limit (100)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1787,7 +1841,7 @@ export default function PackagesContent() {
                   htmlFor="guestLimit"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
-                  Enter Guest Limit
+                  Enter guest limit
                 </label>
                 <input
                   type="number"
@@ -1795,7 +1849,7 @@ export default function PackagesContent() {
                   name="guestLimit"
                   value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
-                  placeholder="Guest Limit (2)"
+                  placeholder="Guest limit (120)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
