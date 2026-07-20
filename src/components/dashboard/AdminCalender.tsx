@@ -20,6 +20,7 @@ import { saveToLS } from "@/util/helper";
 import moment from "moment";
 import Modal from "../Modal";
 import { toast } from "react-toastify";
+import { DESCRIPTION_WORD_LIMIT, limitWords } from "./GalleryContent";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
@@ -107,7 +108,12 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-    const val = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    const val = type === "checkbox" ? (e.target as HTMLInputElement).checked : ["description", "title"].includes(name) ? limitWords(
+      value,
+      name === "description" ? DESCRIPTION_WORD_LIMIT : 20,
+    ) : value;
+
+    // setInputs({ ...inputs, description: limited })
     setInputs((prev) => ({
       ...prev,
       [name]: val,
@@ -1115,7 +1121,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           <div className="form-group flex flex-col md:flex-row items-start gap-6">
             <div className="w-full input-group flex flex-col gap-3">
               <label htmlFor="title" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
-                Event Title *
+                Event Title * <small>(Max 20 words)</small>
               </label>
               <input
                 type="text"
@@ -1134,11 +1140,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           <div className="form-group flex flex-col md:flex-row items-start gap-6">
             <div className="w-full input-group flex flex-col gap-3">
               <label htmlFor="description" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
-                Description (Maximum characters 100)
+                Event Description  <small>(Max 150 words)</small>
               </label>
               <textarea
                 id="description"
-                maxLength={100}
+
                 name="description"
                 value={inputs.description}
                 onChange={handleInputChange}

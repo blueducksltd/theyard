@@ -37,7 +37,8 @@ export default function BookingContent() {
   const [section, setSection] = useState<string>("pending");
 
   const formatBookingDate = (date: Date | string) => {
-    return moment(date).format("DD MMM YYYY");
+    const bookingDate = moment.utc(date);
+    return bookingDate.isValid() ? bookingDate.format("DD MMM YYYY") : "-";
   };
 
   const handleSection = (_section: string) => {
@@ -197,6 +198,8 @@ export default function BookingContent() {
     })();
   }, []);
 
+  console.log(bookings);
+
   return (
     <main className="flex-1 py-4 md:h-[600px] 2xl:h-[770px] overflow-y-auto">
       <section className="flex flex-col gap-5">
@@ -283,13 +286,10 @@ export default function BookingContent() {
                 <thead>
                   <tr className="bg-gray-100 border-b border-gray-200">
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
-                      Package
+                      Booking details
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
                       Date
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
-                      Total (N)
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-[#737373] leading-[22px] tracking-[0.5px]">
                       Status
@@ -308,13 +308,15 @@ export default function BookingContent() {
                       }`}
                     >
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.package.name}
+                        <div className="flex flex-col gap-1">
+                          <span>{booking.package.name}</span>
+                          <span className="text-xs font-normal text-[#999999]">
+                            {booking.totalPrice.toLocaleString()}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
                         {formatBookingDate(booking.eventDate)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
-                        {booking.totalPrice.toLocaleString()}
                       </td>
                       <td className="px-6 py-4">
                         <span

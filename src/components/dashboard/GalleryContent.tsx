@@ -21,6 +21,14 @@ import { toast } from "react-toastify";
 import { IEvent } from "@/types/Event";
 import { compressImage } from "@/util/helper";
 
+export const DESCRIPTION_WORD_LIMIT = 150;
+
+export function limitWords(value: string, limit: number) {
+  const words = value.split(/\s+/).filter(Boolean);
+  if (words.length <= limit) return value;
+  return words.slice(0, limit).join(" ");
+}
+
 export default function GalleryContent() {
   const [mediaModal, setMediaModal] = React.useState<boolean>(false);
   const [editModal, setEditModal] = React.useState<boolean>(false);

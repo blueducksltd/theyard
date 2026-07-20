@@ -156,7 +156,7 @@ export const ModalContent = React.memo(function ModalContent({
                         type="button"
                         className="p-2 bg-primaryGreen text-white cursor-pointer"
                         onClick={() => {
-                            if(bookPackage){
+                            if (bookPackage) {
                                 bookPackage();
                                 return;
                             }
@@ -446,12 +446,14 @@ interface PackageCardProps {
     pkg: IPackageFun;
     index: number;
     onSelect: (index: number) => void;
+    selectedDate: Date | null;
 }
 
 export const PackageCard = React.memo(function PackageCard({
     pkg,
     index,
     onSelect,
+    selectedDate
 }: PackageCardProps) {
     const pathname = usePathname()
     const isBooking = pathname.includes('booking');
@@ -460,6 +462,9 @@ export const PackageCard = React.memo(function PackageCard({
         hidden: { opacity: 0, y: 16 },
         visible: { opacity: 1, y: 0 },
     };
+
+
+
 
     return (
         <motion.div
@@ -471,7 +476,8 @@ export const PackageCard = React.memo(function PackageCard({
             variants={cardReveal}
             transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
         >
-            <div className="bg-white p-3 rounded border border-primaryBrown">
+            <div className="bg-white p-3 rounded border border-[#E9D9C0]">
+
                 <div className="h-50 relative">
                     <Image
                         src={pkg.imageUrl}
@@ -490,12 +496,18 @@ export const PackageCard = React.memo(function PackageCard({
                                 <b className="font-playfair-display text-sm">{formatNaira(pkg.price)}</b>/Person
                             </span>
                             <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                                {pkg.guestLimit} {pkg.guestLimit === 1 ? "Person" : "Persons"} <b className="font-playfair-display text-sm">Max</b>
+                                {pkg.guestLimit} {pkg.guestLimit === 1 ? "Person" : "Persons"}
+                                {" "}
+                                Left
+                                {" "}
+                                {!selectedDate && <b className="font-playfair-display text-sm">Today</b>}
                             </span>
 
-                        </div> : <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                            Starting at <b className="font-playfair-display">{formatNaira(pkg.price)}</b>
-                        </span>
+                        </div>
+                            :
+                            <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
+                                Starting at <b className="font-playfair-display">{formatNaira(pkg.price)}</b>
+                            </span>
                     }
                 </div>
 
@@ -554,6 +566,8 @@ export default function PackagesPage() {
         },
         [selectedIndex]
     );
+
+    const { selectedDate } = useBookingStore()
 
     useEffect(() => {
         let cancelled = false;
@@ -615,6 +629,7 @@ export default function PackagesPage() {
                         pkg={pkg}
                         index={index}
                         onSelect={handleShowPackage}
+                        selectedDate={selectedDate}
                     />
                 ))}
             </div>
