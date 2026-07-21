@@ -7,9 +7,11 @@ import { sendBookingEmail } from "@/lib/mailer";
 import { sendBookingWhatsApp } from "@/lib/whatsapp";
 import { sendNotification } from "@/lib/notification";
 import Booking from "@/models/Booking";
+import ClosedDay from "@/models/ClosedDay";
 import Customer from "@/models/Customer";
 import Package from "@/models/Package";
 import AddOn from "@/models/AddOn";
+import { isShutdownPackage } from "@/lib/packageRules";
 import {
   CreateBookingDto,
   CreateBookingInput,
@@ -20,6 +22,7 @@ import {
   parse,
   parseISO,
   startOfDay,
+  endOfDay,
   startOfToday,
   isWeekend
 } from "date-fns";
@@ -141,6 +144,44 @@ export const POST = errorHandler(async (request: NextRequest) => {
   const _package = await Package.findById(body.packageId);
   if (!_package) throw APIError.NotFound("Package not found");
 
+  const manuallyClosedDay = await ClosedDay.findOne({
+    date: {
+      $gte: startOfDay(bookingDate),
+      $lte: endOfDay(bookingDate),
+    },
+  });
+
+  if (manuallyClosedDay) {
+    throw APIError.BadRequest(
+      "This date has been closed by the admin. Please choose another day.",
+    );
+  }
+
+  const isRequestedShutdownPackage = isShutdownPackage(_package);
+  const dayBookings = await Booking.find({
+    eventDate: {
+      $gte: startOfDay(bookingDate),
+      $lte: endOfDay(bookingDate),
+    },
+    status: { $ne: "cancelled" },
+  }).populate("package");
+
+  const hasShutdownBooking = dayBookings.some((booking) =>
+    isShutdownPackage(booking.package as unknown as { name?: string; description?: string; specs?: string[] }),
+  );
+
+  if (hasShutdownBooking) {
+    throw APIError.BadRequest(
+      "This date is already reserved by the shutdown package. Please choose another day.",
+    );
+  }
+
+  if (isRequestedShutdownPackage && dayBookings.length > 0) {
+    throw APIError.BadRequest(
+      "The shutdown package reserves the full day. Please choose an empty date.",
+    );
+  }
+
   // Ensure customer exists (upsert)
   const customer = await Customer.findOneAndUpdate(
     { email: body.email },
@@ -181,14 +222,27 @@ export const POST = errorHandler(async (request: NextRequest) => {
     ? _package.weekendPrice
     : _package.price;
 
-  // Calculate totalPrice using guestCount, guestLimit, and extraGuestFee
+  // Calculate totalPrice using baseLimit, guestLimit, and extraGuestFee
+  const baseLimit = Number(_package.capacity ?? 0);
   const guestLimit = _package.guestLimit as unknown as number;
   const extraGuestFee = _package.extraGuestFee as unknown as number;
   const guestCount = body.guestCount;
 
-  let totalPrice = basePrice as unknown as number;
   if (guestCount > guestLimit) {
-    const extraGuests = guestCount - guestLimit;
+    throw APIError.BadRequest(
+      `Guest count exceeds package guest limit of ${guestLimit}.`,
+    );
+  }
+
+  if (baseLimit > guestLimit) {
+    throw APIError.Internal(
+      "Package configuration is invalid: base limit is greater than guest limit.",
+    );
+  }
+
+  let totalPrice = basePrice as unknown as number;
+  if (guestCount > baseLimit) {
+    const extraGuests = guestCount - baseLimit;
     totalPrice += extraGuests * extraGuestFee;
   }
 
@@ -241,6 +295,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
         package: {
           name: _package.name,
           price: _package.price,
+          baseLimit: _package.capacity,
           guestLimit: _package.guestLimit,
           extraGuestFee: _package.extraGuestFee,
         },

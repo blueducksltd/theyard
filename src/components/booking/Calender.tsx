@@ -4,11 +4,12 @@ import React, { useState, useMemo, useEffect } from "react";
 import Modal from "../Modal";
 import { useRouter } from "next/navigation";
 import { IBooking } from "@/types/Booking";
-import { getPackages } from "@/util";
+import { getClosedDays, getPackages } from "@/util";
 import { IPackage } from "@/types/Package";
 import { loadFromLS, saveToLS } from "@/util/helper";
 import { toast } from "react-toastify";
 import moment from "moment";
+import { isShutdownPackage } from "@/lib/packageRules";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
@@ -33,7 +34,12 @@ const BookingCalendar: React.FC<CalendarProps> = ({
   const [packages, setPackages] = useState<IPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState({});
   const [expandedPackages, setExpandedPackages] = React.useState<Set<string>>(new Set());
+  const [closedDays, setClosedDays] = useState<Set<string>>(new Set());
   const router = useRouter();
+
+  const currentMonthKey = useMemo(() => {
+    return `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
+  }, [currentDate]);
 
   const months: string[] = [
     "JANUARY",
@@ -85,11 +91,14 @@ const BookingCalendar: React.FC<CalendarProps> = ({
 
   // Get booking status for a specific date
   const getDateStatus = (dateKey: string): BookingStatus | null => {
+    if (closedDays.has(dateKey)) return "unavailable";
+
     const bookings = bookingsByDate[dateKey];
     if (!bookings || bookings.length === 0) return "available";
 
-    // Check if any booking is cancelled
-    const hasCancelled = bookings.some((b) => b.status === "cancelled");
+    if (bookings.some((booking) => isShutdownPackage(booking.package as unknown as { name?: string; description?: string; specs?: string[] }))) {
+      return "unavailable";
+    }
 
     // Check if all bookings are confirmed (fully booked)
     const allConfirmed = bookings.every((b) => b.status === "confirmed");
@@ -268,6 +277,26 @@ const BookingCalendar: React.FC<CalendarProps> = ({
       }
     })();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await getClosedDays(currentMonthKey);
+        const rawDates: string[] = response?.data?.closedDays?.map(
+          (item: { date: string }) => item.date,
+        ) || [];
+
+        const normalized = rawDates.map((dateStr) => {
+          const parsed = new Date(dateStr);
+          return `${parsed.getFullYear()}-${parsed.getMonth() + 1}-${parsed.getDate()}`;
+        });
+
+        setClosedDays(new Set(normalized));
+      } catch (error) {
+        console.error("Failed to load closed days:", error);
+      }
+    })();
+  }, [currentMonthKey]);
 
   return (
     <>

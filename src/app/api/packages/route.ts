@@ -40,6 +40,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
     description: form.get("description") as string,
     price: z.coerce.number().parse(form.get("price")),
     weekendPrice: z.coerce.number().parse(form.get("weekendPrice")),
+    capacity: z.coerce.number().parse(form.get("capacity")),
     extraGuestFee: z.coerce.number().parse(form.get("extraGuestFee")),
     guestLimit: z.coerce.number().parse(form.get("guestLimit")),
     specs,

@@ -13,7 +13,7 @@ import "swiper/css/effect-fade";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { IPackage } from "@/types/Package";
 import { IEvent } from "@/types/Event";
@@ -198,6 +198,10 @@ export default function Home() {
 
   const [showModal, setShowModal] = useState(false);
 
+  const featuredPackages = useMemo(() => {
+    return [...packages].sort(() => Math.random() - 0.5).slice(0, 4);
+  }, [packages]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -210,7 +214,7 @@ export default function Home() {
         ] = await Promise.all([
           axios.get(`/api/packages`),
           axios.get(`/api/events`),
-          axios.get(`/api/reviews`),
+          axios.get(`/api/reviews?status=published`),
           axios.get(`/api/gallery`),
         ]);
 
@@ -528,8 +532,8 @@ export default function Home() {
               (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
             ).map((testimony, index) => (
               <SwiperSlide key={index} className="relative w-full h-full">
-                <div className={"bg-white md:bg-[#EEE8DE] p-10 h-full flex flex-col justify-between gap-6 font-inter"}>
-                  <p>{testimony.comment}</p>
+                <div className={"bg-white p-10 h-full flex flex-col justify-between gap-6 font-inter"}>
+                  <p className="h-30 no-scroll overflow-auto">{testimony.comment}</p>
                   <p className="font-semibold">{testimony.name}</p>
                 </div>
               </SwiperSlide>
@@ -577,7 +581,7 @@ export default function Home() {
                 variants={revealItem}
                 transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
               >
-                Featured Services
+                Featured Packages
               </motion.h1>
 
               <motion.p
@@ -593,7 +597,7 @@ export default function Home() {
               transition={{ duration: 0.55, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
             >
               <Link href={"/packages"} className={"border py-2 px-6 bg-white text-primaryGreen font-semibold w-fit font-lato"}>
-                Explore all services
+                Explore all packages
               </Link>
             </motion.div>
           </div>
@@ -606,7 +610,7 @@ export default function Home() {
           // variants={staggerContainer}
           // transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            {packages.slice(4, 8).map((service, index) => (
+            {featuredPackages.map((service, index) => (
               <motion.div
                 key={index}
                 className={"border border-[#E9D9C0]/50 text-[#F6F6F6] p-3 grid gap-2  font-inter "}
@@ -759,7 +763,7 @@ export default function Home() {
       <ReviewModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onSubmitted={(review) => setTestimonials((prev) => [review, ...prev])}
+        onSubmitted={() => undefined}
       />
 
 

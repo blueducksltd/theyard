@@ -22,11 +22,13 @@ import { compressImage } from "@/util/helper";
 import Image from "next/image";
 import React, { DragEvent, FormEvent, useEffect } from "react";
 import { toast } from "react-toastify";
+import { DESCRIPTION_WORD_LIMIT, limitWords } from "../GalleryContent";
 
 const DEFAULT_INPUTS = {
   name: "",
   description: "",
   price: "",
+  capacity: "",
   guestLimit: "",
   extraGuestFee: "",
   specs: "",
@@ -115,7 +117,7 @@ export default function PackagesContent() {
   };
 
   const formatAddonPrice = (addon: SafeAddOn) => {
-    if (addon.category === "food" && addon.price != null) {
+    if (addon.category !== "game" && addon.price != null) {
       return `₦${addon.price.toLocaleString()}`;
     }
     if (addon.category === "game" && addon.pricePerMin != null) {
@@ -141,18 +143,51 @@ export default function PackagesContent() {
       });
       return;
     }
-    inputs.image = (await compressImage(preview)) || "null";
-    if (inputs.price) {
-      inputs.price = inputs.price.toString().replace(/[.,]/g, "");
+    const payload: Record<string, any> = {
+      ...inputs,
+      image: (await compressImage(preview)) || "null",
+    };
+
+    if (payload.price) {
+      payload.price = payload.price.toString().replace(/[.,]/g, "");
     }
 
-    if (
-      section == "services"
-        ? Object.keys(inputs).length < 3
-        : Object.keys(inputs).length < 5
-    ) {
+    if (payload.extraGuestFee) {
+      payload.extraGuestFee = payload.extraGuestFee.toString().replace(/[.,]/g, "");
+    }
+
+    const requiredFields =
+      section === "services"
+        ? ["name", "description"]
+        : [
+            "name",
+            "description",
+            "price",
+            "capacity",
+            "guestLimit",
+            "extraGuestFee",
+            "specs",
+          ];
+
+    const FIELD_LABELS: Record<string, string> = {
+      name: "Name",
+      description: "Description",
+      price: "Price",
+      capacity: "Base limit",
+      guestLimit: "Guest limit",
+      extraGuestFee: "Extra guest fee",
+      specs: "Specs",
+    };
+
+    const firstMissingRequiredField = requiredFields.find((field) => {
+      const value = payload[field];
+      if (typeof value === "string") return value.trim() === "";
+      return value == null;
+    });
+
+    if (firstMissingRequiredField) {
       toast.update(toastId, {
-        render: "All inputs are needed!",
+        render: `${FIELD_LABELS[firstMissingRequiredField] ?? "This field"} is required!`,
         type: "error",
         isLoading: false,
         autoClose: 8000,
@@ -160,21 +195,36 @@ export default function PackagesContent() {
       return;
     }
 
-    Object.values(inputs).map((val) => {
-      if (val == "" || val == null) {
+    if (section === "packages") {
+      const baseLimit = Number(payload.capacity);
+      const guestLimit = Number(payload.guestLimit);
+
+      if (Number.isNaN(baseLimit) || baseLimit < 1) {
         toast.update(toastId, {
-          render: "All inputs are needed!",
+          render: "Base limit must be at least 1.",
           type: "error",
           isLoading: false,
           autoClose: 8000,
         });
         return;
       }
-    });
+
+      if (Number.isNaN(guestLimit) || guestLimit < baseLimit) {
+        toast.update(toastId, {
+          render: "Guest limit cannot be less than base limit.",
+          type: "error",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
+    }
 
     const formData = new FormData();
-    Object.entries(inputs).map(([key, value]) => {
-      formData.append(key, value);
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value != null) {
+        formData.append(key, String(value));
+      }
     });
 
     try {
@@ -234,9 +284,9 @@ export default function PackagesContent() {
       return;
     }
 
-    if (category === "food" && (inputs.price === "" || inputs.price == null)) {
+    if (category !== "game" && (inputs.price === "" || inputs.price == null)) {
       toast.update(toastId, {
-        render: "Price is required for food add-ons!",
+        render: "Price is required for this add-on!",
         type: "error",
         isLoading: false,
         autoClose: 8000,
@@ -260,7 +310,7 @@ export default function PackagesContent() {
     if (inputs.description?.trim()) {
       formData.append("description", inputs.description.trim());
     }
-    if (category === "food") {
+    if (category !== "game") {
       formData.append("price", String(Number(inputs.price)));
     }
     if (category === "game") {
@@ -326,9 +376,9 @@ export default function PackagesContent() {
       return;
     }
 
-    if (category === "food" && (inputs.price === "" || inputs.price == null)) {
+    if (category !== "game" && (inputs.price === "" || inputs.price == null)) {
       toast.update(toastId, {
-        render: "Price is required for food add-ons!",
+        render: "Price is required for this add-on!",
         type: "error",
         isLoading: false,
         autoClose: 8000,
@@ -352,7 +402,7 @@ export default function PackagesContent() {
     if (inputs.description?.trim()) {
       formData.append("description", inputs.description.trim());
     }
-    if (category === "food") {
+    if (category !== "game") {
       formData.append("price", String(Number(inputs.price)));
     }
     if (category === "game") {
@@ -408,6 +458,35 @@ export default function PackagesContent() {
 
     if (inputs.price) {
       inputs.price = inputs.price.toString().replace(/[.,]/g, "");
+    }
+
+    if (inputs.extraGuestFee) {
+      inputs.extraGuestFee = inputs.extraGuestFee.toString().replace(/[.,]/g, "");
+    }
+
+    if (section === "packages") {
+      const baseLimit = Number(inputs.capacity);
+      const guestLimit = Number(inputs.guestLimit);
+
+      if (Number.isNaN(baseLimit) || baseLimit < 1) {
+        toast.update(toastId, {
+          render: "Base limit must be at least 1.",
+          type: "error",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
+
+      if (Number.isNaN(guestLimit) || guestLimit < baseLimit) {
+        toast.update(toastId, {
+          render: "Guest limit cannot be less than base limit.",
+          type: "error",
+          isLoading: false,
+          autoClose: 8000,
+        });
+        return;
+      }
     }
 
 
@@ -900,8 +979,15 @@ export default function PackagesContent() {
                   id="serviceName"
                   name="serviceName"
                   value={inputs.name ?? ""}
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
-                  placeholder="Enter service name"
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT,
+                    );
+
+                    setInputs({ ...inputs, name: limited })
+                  }}
+                  placeholder="Enter 50 words"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -919,7 +1005,17 @@ export default function PackagesContent() {
                   id="desc"
                   name="desc"
                   value={inputs.description ?? ""}
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    {
+                      const limited = limitWords(
+                        e.target.value,
+                        DESCRIPTION_WORD_LIMIT,
+                      );
+
+                      setInputs({ ...inputs, description: limited })
+                    }
+
+                  }}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -1070,7 +1166,7 @@ export default function PackagesContent() {
               </div>
             </div>
 
-            {inputs.category === "food" && (
+            {inputs.category !== "game" && (
               <div className="form-group flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full input-group flex flex-col gap-3">
                   <label htmlFor="updateAddonPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
@@ -1271,8 +1367,16 @@ export default function PackagesContent() {
                   type="text"
                   id="packageName"
                   name="packageName"
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
-                  placeholder="Enter package name"
+                  onChange={(e) => {
+
+                    const limited = limitWords(
+                      e.target.value,
+                      50,
+                    );
+
+                    setInputs({ ...inputs, name: limited })
+                  }}
+                  placeholder="50 Words"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1287,10 +1391,17 @@ export default function PackagesContent() {
                   Enter description
                 </label>
                 <textarea
-                value={inputs.description || ""}
+                  value={inputs.description || ""}
                   id="desc"
                   name="desc"
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT,
+                    );
+                    setInputs(prev => ({ ...prev, description: limited }))
+
+                  }}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -1320,10 +1431,30 @@ export default function PackagesContent() {
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label
+                  htmlFor="capacity"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter base limit
+                </label>
+                <input
+                  type="number"
+                  id="capacity"
+                  name="capacity"
+                  value={inputs.capacity ?? ""}
+                  onChange={(e) => setInputs({ ...inputs, capacity: e.target.value })}
+                  placeholder="Base limit (100)"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
                   htmlFor="guestLimit"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
-                  Enter Guest Limit
+                  Enter guest limit
                 </label>
                 <input
                   type="number"
@@ -1331,7 +1462,7 @@ export default function PackagesContent() {
                   name="guestLimit"
                   value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
-                  placeholder="Guest Limit (2)"
+                  placeholder="Guest limit (120)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1475,14 +1606,20 @@ export default function PackagesContent() {
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label htmlFor="addonName" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
-                  Add-on name *
+                  Add-on name * <small>20 words max</small>
                 </label>
                 <input
                   type="text"
                   id="addonName"
                   name="addonName"
                   value={inputs.name || ""}
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      20
+                    )
+                    setInputs({ ...inputs, name: limited })
+                  }}
                   placeholder="e.g. Balloon decoration"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -1517,14 +1654,20 @@ export default function PackagesContent() {
                   id="addonDesc"
                   name="addonDesc"
                   value={inputs.description || ""}
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT
+                    )
+                    setInputs({ ...inputs, name: limited })
+                  }}
                   placeholder="Short description of the add-on"
                   className="w-full h-[120px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
             </div>
 
-            {inputs.category === "food" && (
+            {inputs.category !== "game" && (
               <div className="form-group flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full input-group flex flex-col gap-3">
                   <label htmlFor="addonPrice" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]">
@@ -1671,8 +1814,15 @@ export default function PackagesContent() {
                   id="packageName"
                   name="packageName"
                   value={inputs.name || ""}
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
-                  placeholder="Enter package name"
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      50,
+                    );
+
+                    setInputs({ ...inputs, name: limited })
+                  }}
+                  placeholder="50 Words"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1690,7 +1840,14 @@ export default function PackagesContent() {
                   id="desc"
                   name="desc"
                   value={inputs.description || ""}
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT,
+                    );
+
+                    setInputs({ ...inputs, description: limited })
+                  }}
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>
@@ -1720,10 +1877,30 @@ export default function PackagesContent() {
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label
+                  htmlFor="updateCapacity"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Enter base limit
+                </label>
+                <input
+                  type="number"
+                  id="updateCapacity"
+                  name="updateCapacity"
+                  value={inputs.capacity ?? ""}
+                  onChange={(e) => setInputs({ ...inputs, capacity: e.target.value })}
+                  placeholder="Base limit (100)"
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
                   htmlFor="guestLimit"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
-                  Enter Guest Limit
+                  Enter guest limit
                 </label>
                 <input
                   type="number"
@@ -1731,7 +1908,7 @@ export default function PackagesContent() {
                   name="guestLimit"
                   value={inputs.guestLimit ?? ""}
                   onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
-                  placeholder="Guest Limit (2)"
+                  placeholder="Guest limit (120)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
               </div>
@@ -1887,7 +2064,14 @@ export default function PackagesContent() {
                   id="serviceName"
                   name="serviceName"
                   value={inputs.name || ""}
-                  onChange={(e) => setInputs({ ...inputs, name: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      50,
+                    );
+
+                    setInputs({ ...inputs, name: limited })
+                  }}
                   placeholder="Enter service name"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
@@ -1906,7 +2090,15 @@ export default function PackagesContent() {
                   id="desc"
                   name="desc"
                   value={inputs.description || ""}
-                  onChange={(e) => setInputs({ ...inputs, description: e.target.value })}
+                  onChange={(e) => {
+                    const limited = limitWords(
+                      e.target.value,
+                      DESCRIPTION_WORD_LIMIT,
+                    );
+
+                    setInputs({ ...inputs, description: limited })
+                  }
+                  }
                   placeholder="150 words"
                   className="w-full h-[147px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 ></textarea>

@@ -4,12 +4,23 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { IBooking } from "@/types/Booking";
-import { getPackages, createEvent, getEvents, getEventRegistrations, updateEvent, deleteEvent } from "@/util";
+import {
+  getPackages,
+  createEvent,
+  getEvents,
+  getEventRegistrations,
+  updateEvent,
+  deleteEvent,
+  getAdminClosedDays,
+  closeAdminDay,
+  reopenAdminDay,
+} from "@/util";
 import { IPackage } from "@/types/Package";
 import { saveToLS } from "@/util/helper";
 import moment from "moment";
 import Modal from "../Modal";
 import { toast } from "react-toastify";
+import { DESCRIPTION_WORD_LIMIT, limitWords } from "./GalleryContent";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
@@ -88,6 +99,8 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   const [eventDateFilter, setEventDateFilter] = useState<EventDateFilter>("all");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [closedDays, setClosedDays] = useState<Set<string>>(new Set());
+  const [isDayActionLoading, setIsDayActionLoading] = useState(false);
 
   const [inputs, setInputs] = useState<Record<string, any>>({ ...DEFAULT_EVENT_INPUTS });
 
@@ -95,7 +108,12 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-    const val = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
+    const val = type === "checkbox" ? (e.target as HTMLInputElement).checked : ["description", "title"].includes(name) ? limitWords(
+      value,
+      name === "description" ? DESCRIPTION_WORD_LIMIT : 20,
+    ) : value;
+
+    // setInputs({ ...inputs, description: limited })
     setInputs((prev) => ({
       ...prev,
       [name]: val,
@@ -103,6 +121,14 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   };
 
   const router = useRouter();
+
+  const getDateKeyFromDate = (date: Date): string => {
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  };
+
+  const currentMonthKey = useMemo(() => {
+    return `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
+  }, [currentDate]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -443,6 +469,8 @@ const AdminCalendar: React.FC<CalendarProps> = ({
 
   // Get booking status for a specific date
   const getDateStatus = (dateKey: string): BookingStatus | null => {
+    if (closedDays.has(dateKey)) return "unavailable";
+
     const bookings = bookingsByDate[dateKey];
     if (!bookings || bookings.length === 0) return "available";
 
@@ -552,6 +580,41 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`;
   };
 
+  const handleToggleDayClosure = async (day: number): Promise<void> => {
+    const targetDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day,
+    );
+    const dateKey = getDateKeyFromDate(targetDate);
+    const apiDate = moment(targetDate).format("YYYY-MM-DD");
+    const isClosed = closedDays.has(dateKey);
+
+    setIsDayActionLoading(true);
+    try {
+      if (isClosed) {
+        await reopenAdminDay(apiDate);
+        setClosedDays((prev) => {
+          const next = new Set(prev);
+          next.delete(dateKey);
+          return next;
+        });
+        toast.success("Day reopened successfully", { position: "bottom-right" });
+      } else {
+        await closeAdminDay(apiDate);
+        setClosedDays((prev) => new Set(prev).add(dateKey));
+        toast.success("Day closed successfully", { position: "bottom-right" });
+      }
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to update day status", {
+        position: "bottom-right",
+      });
+    } finally {
+      setIsDayActionLoading(false);
+    }
+  };
+
   const handleDateClick = (day: number, status: BookingStatus | null): void => {
     const clickedDate = new Date(
       currentDate.getFullYear(),
@@ -615,6 +678,26 @@ const AdminCalendar: React.FC<CalendarProps> = ({
       await loadEvents();
     })();
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await getAdminClosedDays(currentMonthKey);
+        const rawDates: string[] = response?.data?.closedDays?.map(
+          (item: { date: string }) => item.date,
+        ) || [];
+
+        const normalized = rawDates.map((dateStr) => {
+          const parsed = new Date(dateStr);
+          return `${parsed.getFullYear()}-${parsed.getMonth() + 1}-${parsed.getDate()}`;
+        });
+
+        setClosedDays(new Set(normalized));
+      } catch (error) {
+        console.error("Failed to load closed days:", error);
+      }
+    })();
+  }, [currentMonthKey]);
 
   const sortedEvents = useMemo(() => {
     const searchTerm = eventSearch.trim().toLowerCase();
@@ -747,15 +830,33 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                 const bookingCount = dateKey ? getBookingCount(dateKey) : 0;
                 const todayDate = isToday(day);
                 const pastDay = isPastDay(day);
+                const isClosedByAdmin = dateKey ? closedDays.has(dateKey) : false;
 
                 return (
                   <div
                     key={index}
-                    onClick={() => handleDateClick(day!, status!)}
+                    onClick={() => day && handleDateClick(day, status!)}
                     className={`relative h-20 flex items-center justify-center duration-10 rounded-sm group overflow-hidden cursor-pointer ${todayDate ? "bg-[#C7CFC9]" : null}`}
                   >
                     {day && (
                       <>
+                        {!pastDay && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleDayClosure(day);
+                            }}
+                            disabled={isDayActionLoading}
+                            className={`absolute right-1 top-1 z-50 rounded px-1.5 py-0.5 text-[10px] font-medium ${isClosedByAdmin
+                              ? "bg-[#CA1919] text-white"
+                              : "bg-[#EDF0EE] text-yard-primary"
+                              } ${isDayActionLoading ? "opacity-60 cursor-wait" : "cursor-pointer"}`}
+                            title={isClosedByAdmin ? "Reopen this day" : "Close this day"}
+                          >
+                            {isClosedByAdmin ? "Open" : "Close"}
+                          </button>
+                        )}
                         <div className="flex flex-col gap-2 items-center">
                           <button
                             className="w-full h-full flex items-center justify-center text-[#33322F] rounded z-40 font-semibold text-2xl leading-8 tracking-[0.1px]"
@@ -766,6 +867,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                           {bookingCount > 0 && (
                             <small className="text-yard-primary text-[10px] leading-[100%] tracking-[0.5px] italic font-medium z-40">
                               {bookingCount} booking{bookingCount !== 1 ? "s" : ""}
+                            </small>
+                          )}
+                          {isClosedByAdmin && (
+                            <small className="text-[#CA1919] text-[10px] leading-[100%] tracking-[0.5px] font-semibold z-40">
+                              manually closed
                             </small>
                           )}
                           <div className="absolute top-0 -left-0 bg-[#E4E8E5] group-hover:w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
@@ -1015,7 +1121,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           <div className="form-group flex flex-col md:flex-row items-start gap-6">
             <div className="w-full input-group flex flex-col gap-3">
               <label htmlFor="title" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
-                Event Title *
+                Event Title * <small>(Max 20 words)</small>
               </label>
               <input
                 type="text"
@@ -1034,11 +1140,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           <div className="form-group flex flex-col md:flex-row items-start gap-6">
             <div className="w-full input-group flex flex-col gap-3">
               <label htmlFor="description" className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
-                Description (Maximum characters 100)
+                Event Description  <small>(Max 150 words)</small>
               </label>
               <textarea
                 id="description"
-                maxLength={100}
+
                 name="description"
                 value={inputs.description}
                 onChange={handleInputChange}

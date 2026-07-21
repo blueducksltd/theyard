@@ -3,7 +3,7 @@ import Modal from '@/components/v2/Modal';
 import { ArrowLeft, CalendarDays, ChevronDown, PackageX } from 'lucide-react';
 import EmptyState from '@/components/v2/EmptyState';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AddMoreFun, IPackageFun, ModalContent, PackageCard, SelectedAddon } from '../packages/page';
 import BookingCalendar from '@/components/booking/Calender';
 import { toast } from 'react-toastify';
@@ -14,7 +14,7 @@ import { IPackageClient } from '@/types/Package';
 import { motion } from "motion/react";
 import { initiatePayment } from '@/util/payment';
 import { IBooking } from '@/types/Booking';
-import { getBookings } from '@/util';
+import { getBookings, getClosedDays } from '@/util';
 type ShowState = {
   package: {
     show: boolean;
@@ -34,9 +34,41 @@ type ShowState = {
   };
 };
 
-const PackageModalContent = ({ packages, showModal, setSelectedPackage, closePackageModal }: { packages: IPackageFun[], showModal: boolean, setSelectedPackage: (selectedPackage: IPackageFun) => void, closePackageModal: () => void; }) => {
+const normalizeDateKey = (value: Date | string): string | null => {
+  const parsedDate = new Date(value);
+  if (isNaN(parsedDate.getTime())) return null;
+
+  const year = parsedDate.getFullYear();
+  const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(parsedDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getBookingPackageId = (booking: IBooking): string | null => {
+  const bookingPackage = booking.package as unknown as { id?: string; _id?: string } | string | null;
+  if (!bookingPackage) return null;
+  if (typeof bookingPackage === 'string') return bookingPackage;
+  return bookingPackage.id || bookingPackage._id || null;
+};
+
+const PackageModalContent = ({
+  packages,
+  showModal,
+  setSelectedPackage,
+  closePackageModal,
+  hasSelectedDate,
+  isPackageUnavailableForSelectedDate,
+}: {
+  packages: IPackageFun[];
+  showModal: boolean;
+  setSelectedPackage: (selectedPackage: IPackageFun) => void;
+  closePackageModal: () => void;
+  hasSelectedDate: boolean;
+  isPackageUnavailableForSelectedDate: (pkg: IPackageFun) => boolean;
+}) => {
 
   const [viewing, setViewing] = useState<IPackageFun | null>(null)
+  const { selectedDate } = useBookingStore()
 
   if (viewing) {
     return <ModalContent
@@ -61,23 +93,42 @@ const PackageModalContent = ({ packages, showModal, setSelectedPackage, closePac
       : "opacity-0 scale-0 w-0 h-0 overflow-hidden pointer-events-none"
       } grid grid-cols-1 md:grid-cols-2 gap-4 h-100 overflow-auto`}>
 
-    {packages.length === 0 && (
-      <EmptyState
-        icon={PackageX}
-        title="No Packages"
-        message="There are no packages available at the moment. Please check back soon."
-      />
-    )}
-    {packages.map((pkg, index) => (
-      <PackageCard
-        key={pkg.id}
-        pkg={pkg}
-        index={index}
-        onSelect={() => {
-          setViewing(pkg)
-        }}
-      />
-    ))}
+
+      {packages.length === 0 && (
+        <EmptyState
+          icon={PackageX}
+          title="No Packages"
+          message="There are no packages available at the moment. Please check back soon."
+        />
+      )}
+
+      {packages.map((pkg, index) => {
+        const isSoldOut = hasSelectedDate && isPackageUnavailableForSelectedDate(pkg);
+
+        return (
+          <div key={pkg.id} className='relative'>
+            <div className={isSoldOut ? 'pointer-events-none opacity-45' : ''}>
+              <PackageCard
+                pkg={pkg}
+                index={index}
+                onSelect={() => {
+                  if (isSoldOut) {
+                    toast.error('This package is fully booked for the selected date. Please choose another day.');
+                    return;
+                  }
+                  setViewing(pkg)
+                }}
+                selectedDate={selectedDate}
+              />
+            </div>
+            {isSoldOut && (
+              <div className='absolute top-3 right-3 bg-[#CA1919] text-white text-[10px] px-2 py-1 rounded-sm'>
+                Fully booked on this date
+              </div>
+            )}
+          </div>
+        );
+      })}
   </div>
 }
 
@@ -93,6 +144,42 @@ export default function BookingPage() {
 
   const [loading, setLoading] = useState<boolean>(false)
   const [bookingData, setBookingData] = useState<IBooking[]>([])
+  const [closedDateKeys, setClosedDateKeys] = useState<Set<string>>(new Set());
+
+  const getBookingsForDate = useCallback((dateValue?: string) => {
+    if (!dateValue) return [] as IBooking[];
+
+    const selectedDateKey = normalizeDateKey(dateValue);
+    if (!selectedDateKey) return [] as IBooking[];
+
+    return bookingData.filter((booking) => {
+      if ((booking as unknown as { status?: string }).status === 'cancelled') return false;
+
+      const bookingDateKey = normalizeDateKey(booking.eventDate as unknown as string | Date);
+      return bookingDateKey === selectedDateKey;
+    });
+  }, [bookingData]);
+
+  const isPackageUnavailableForDate = useCallback((pkg: IPackageFun, dateValue?: string) => {
+    if (!dateValue) return false;
+
+    const selectedDateKey = normalizeDateKey(dateValue);
+    if (selectedDateKey && closedDateKeys.has(selectedDateKey)) {
+      return true;
+    }
+
+    const dayBookings = getBookingsForDate(dateValue);
+    const capacity = Number(pkg.capacity ?? 0);
+    if (capacity <= 0) return false;
+
+    const bookedCount = dayBookings.reduce((count, booking) => {
+      const bookingPackageId = getBookingPackageId(booking);
+      if (!bookingPackageId || bookingPackageId !== pkg.id) return count;
+      return count + 1;
+    }, 0);
+
+    return bookedCount >= capacity;
+  }, [closedDateKeys, getBookingsForDate]);
 
 
   const [inputs, setInputs] = useState<{
@@ -140,17 +227,22 @@ export default function BookingPage() {
     subtitle: show.package.value?.price ?? 0,
 
   },
-
   ]
   const setSelectedPackage = (selectedPackage: IPackageFun) => {
 
     setShow(prev => ({ ...prev, package: { ...prev.package, value: selectedPackage } }));
 
-
   }
+
+  const baseGuestLimit = show.package.value?.capacity ?? 0;
+  const extraGuestCount = Math.max(0, (inputs.guest || 0) - baseGuestLimit);
+  const extraGuestFee = extraGuestCount > 0
+    ? extraGuestCount * Number(show.package.value?.extraGuestFee ?? 0)
+    : 0;
 
   const total = pricing
     .concat(show.package.value?.selectedAddon?.map(item => ({ title: item.name, subtitle: Number((item.price ?? item.pricePerMin ?? 0) * item.quantity) })) ?? [])
+    .concat(extraGuestFee > 0 ? [{ title: `Extra Guest Fee (${extraGuestCount})`, subtitle: extraGuestFee }] : [])
     .reduce((sum, item) => sum + item.subtitle, 0);
 
   function formatDate(dateString: string) {
@@ -164,12 +256,21 @@ export default function BookingPage() {
   }
 
   const handleSubmit = async () => {
+    if (!show.package.value) return;
+
     if (!show.package.value) return toast("Please select a package.", { type: "error" });
     if (!inputs.firstname.trim()) return toast("Please enter your first name.", { type: "error" });
     if (!inputs.lastname.trim()) return toast("Please enter your last name.", { type: "error" });
     if (!inputs.email.trim()) return toast("Please enter your email address.", { type: "error" });
     if (!inputs.phonenumber.trim()) return toast("Please enter your phone number.", { type: "error" });
     if (!show.date.value) return toast("Please select an event date.", { type: "error" });
+    const selectedDateKey = normalizeDateKey(show.date.value);
+    if (selectedDateKey && closedDateKeys.has(selectedDateKey)) {
+      return toast("This day has been closed by the admin. Please choose another date.", { type: "error" });
+    }
+    if (isPackageUnavailableForDate(show.package.value, show.date.value)) {
+      return toast("This package is fully booked for the selected date. Please choose another date or package.", { type: "error" });
+    }
     if (!show.time.value) return toast("Please select an event time.", { type: "error" });
     if (!inputs.guest || inputs.guest < 1) return toast("Please enter the number of guests.", { type: "error" });
     const data = {
@@ -199,9 +300,7 @@ export default function BookingPage() {
           lastname: "",
           note: ""
         });
-      } catch (err) {
-        console.error(err)
-      } finally {
+      } catch {
         setLoading(false);
       }
 
@@ -219,7 +318,7 @@ export default function BookingPage() {
       setShow(prev => ({ ...prev, date: { ...prev.date, value: selectedDate.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
     }
 
-  }, [])
+  }, [selectedPackage, selectedDate])
 
   useEffect(() => {
     (async () => {
@@ -229,12 +328,19 @@ export default function BookingPage() {
 
         setBookingData((await getBookings()).data.bookings)
 
+        const closedDaysRes = await getClosedDays();
+        const rawDates: string[] = closedDaysRes?.data?.closedDays?.map((item: { date: string }) => item.date) || [];
+        const normalized = rawDates
+          .map((dateStr) => normalizeDateKey(dateStr))
+          .filter((item): item is string => Boolean(item));
+        setClosedDateKeys(new Set(normalized));
 
-      } catch (err) {
-        console.error('Error fetching packages:', err);
+
+      } catch {
+        console.error('Error fetching packages:');
       }
     })()
-  }, [])
+  }, [selectedPackage, selectedDate])
 
   const handleSelectedAddon = (selectedAddon: SelectedAddon[]) => {
     setShow(prev => ({ ...prev, package: { ...prev.package, value: prev.package.value ? { ...prev.package.value, selectedAddon } : null } }));
@@ -246,9 +352,16 @@ export default function BookingPage() {
       <Modal isOpen={show.package.show} handleClose={() => {
         setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
       }}>
-        <PackageModalContent packages={packages} setSelectedPackage={setSelectedPackage} showModal={show.package.show} closePackageModal={() => {
-          setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
-        }} />
+        <PackageModalContent
+          packages={packages}
+          setSelectedPackage={setSelectedPackage}
+          showModal={show.package.show}
+          hasSelectedDate={!!show.date.value}
+          isPackageUnavailableForSelectedDate={(pkg) => isPackageUnavailableForDate(pkg, show.date.value)}
+          closePackageModal={() => {
+            setShow(prev => ({ ...prev, package: { ...prev.package, show: false } }))
+          }}
+        />
       </Modal>
 
       <Modal isOpen={show.fun.show} handleClose={() => {
@@ -273,11 +386,13 @@ export default function BookingPage() {
               <ArrowLeft size={10} /> <span>Back to packages</span>
             </Link>
           }
+
           {
             selectedDate && <Link className='border-b flex w-fit font-sen text-xs items-center gap-1 text-primaryGreen my-6' href={"/booking/calendar"}>
               <ArrowLeft size={10} /> <span>Back to calendar</span>
             </Link>
           }
+
           <h1 className={`font-semibold text-primaryGreen text-3xl md:text-2xl md:italic font-playfair-display  relative `}>Booking Form
 
             <Image width={150} height={100} alt="" src={"/images/paint_design.png"} className="object-contain absolute left-0 md:block hidden" />
@@ -374,7 +489,18 @@ export default function BookingPage() {
                 <BookingCalendar bookingData={bookingData}
 
                   onDateClick={(date) => {
+                    setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }));
+                    const nextDateLabel = date.toLocaleDateString("en-US", { dateStyle: "medium" });
+                    const packageIsFull = show.package.value
+                      ? isPackageUnavailableForDate(show.package.value, nextDateLabel)
+                      : false;
+
                     setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
+
+                    if (packageIsFull) {
+                      setShow(prev => ({ ...prev, package: { ...prev.package, value: null } }))
+                      toast.warning("Selected package is fully booked for this date. Please choose another package or day.")
+                    }
 
                   }} />
               </div>
@@ -403,7 +529,7 @@ export default function BookingPage() {
             </div>
 
             <button onClick={() => {
-              if (!!!show.package.value) {
+              if (!show.package.value) {
                 toast("Please select a package.", { type: "error" })
                 return;
               }
@@ -448,6 +574,12 @@ export default function BookingPage() {
                 <p className="text-primaryGreen text-right font-bold">{item.subtitle.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </React.Fragment>
             ))}
+            {extraGuestFee > 0 && (
+              <>
+                <p className="text-[#717068]">Extra Guest Fee ({extraGuestCount} x {show.package.value?.extraGuestFee})</p>
+                <p className="text-primaryGreen text-right font-bold">{extraGuestFee.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+              </>
+            )}
 
 
             <div className="col-span-2 border-t border-gray-200 mt-2 pt-3 flex justify-between font-semibold text-primaryGreen text-sm">
