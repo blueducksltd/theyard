@@ -130,7 +130,7 @@ function TermsSection({ section }: { section: TermsSectionData }) {
 
 export default function Page() {
     return (
-        <div className='relatve '>
+        <div className='relatve'>
             <HeaderTextComp
                 pageName=''
                 subtitleText='Go through our terms of service, so a better client business relationship is established.'

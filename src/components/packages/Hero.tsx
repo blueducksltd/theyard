@@ -3,6 +3,7 @@ import { IPackage } from "@/types/Package";
 import Link from "next/link";
 import { useState } from "react";
 import Modal from "../Modal";
+import Image from "next/image";
 
 interface HeroProps {
   packages: IPackage[];
@@ -95,7 +96,7 @@ const Hero = ({ packages }: HeroProps) => {
                   onClick={() => handleShowAllSpecs(pk)}
                   className="flex items-center gap-3 text-[16px] leading-6 tracking-[0.5px] text-yard-primary hover:underline cursor-pointer"
                 >
-                  <img src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
+                  <Image width={10} height={10} src={"/icons/checkmark.svg"} alt="Checkmark Icon" />
                   <p>+ {pk.specs.length - 3} more (click to see all)</p>
                 </button>
               )}
