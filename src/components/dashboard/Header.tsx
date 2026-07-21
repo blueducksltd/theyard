@@ -35,10 +35,11 @@ export default function Header({ section }: IProps) {
   const fetchNotifications = async () => {
     try {
       const response = await getAdminNotifications();
-      if (response) {
-        setDefaultNotifications(response.notifications);
-        setNotifications(response.notifications);
-      }
+      const safeNotifications = Array.isArray(response?.notifications)
+        ? response.notifications
+        : [];
+      setDefaultNotifications(safeNotifications);
+      setNotifications(safeNotifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }
@@ -47,11 +48,14 @@ export default function Header({ section }: IProps) {
   const fetchNotificationByInterval = async () => {
     try {
       const response = await getAdminNotifications();
-      if (response) {
-        const newNotifications: IPageNotifications[] = response.notifications;
-        if (newNotifications.length !== defaultNotifications.length) {
-          setDefaultNotifications(newNotifications);
-        }
+      const newNotifications: IPageNotifications[] = Array.isArray(
+        response?.notifications,
+      )
+        ? response.notifications
+        : [];
+
+      if (newNotifications.length !== defaultNotifications.length) {
+        setDefaultNotifications(newNotifications);
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -339,7 +343,7 @@ export default function Header({ section }: IProps) {
           {/*Main Notification*/}
           <section className="w-full flex flex-col">
             {notifications.length > 0 ? (
-              notifications.toReversed().map((notification) => {
+              [...notifications].reverse().map((notification) => {
                 const title = getNotificationTitle(notification);
                 const icon = getNotificationIcon(notification);
                 return (

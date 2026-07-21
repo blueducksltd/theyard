@@ -36,6 +36,19 @@ export default function BookingContent() {
   const [allBookingsToday, setAllBookingsToday] = useState<number>(0);
   const [section, setSection] = useState<string>("pending");
 
+  const resetBookingState = () => {
+    setBookings([]);
+    setAllBookings([]);
+    setAllPending([]);
+    setAllActive([]);
+    setAllCancelled([]);
+    setAllCompleted([]);
+    setAllActiveToday(0);
+    setAllPendingToday(0);
+    setAllCancelledToday(0);
+    setAllBookingsToday(0);
+  };
+
   const formatBookingDate = (date: Date | string) => {
     const bookingDate = moment.utc(date);
     return bookingDate.isValid() ? bookingDate.format("DD MMM YYYY") : "-";
@@ -123,73 +136,91 @@ export default function BookingContent() {
   };
 
   const fetchBookings = async () => {
-    const [fetchBookings] = await Promise.all([getBookings()]);
-    const initialData = fetchBookings.data.bookings.map(
-      (booking: IPageBooking) => ({
-        ...booking,
-        selected: false,
-      }),
-    );
+    try {
+      const [fetchBookings] = await Promise.all([getBookings()]);
+      const rawBookings = fetchBookings?.data?.bookings;
 
-    const allPending = initialData.filter(
-      (booking: IPageBooking) => booking.status === "pending",
-    );
-    const allActive = initialData.filter((booking: IPageBooking) => {
-      const bookingDate = moment(booking.eventDate);
-      const today = moment().startOf("day");
-      return (
-        (bookingDate.isAfter(today) || bookingDate.isSame(today)) &&
-        booking.status === "confirmed"
+      if (!Array.isArray(rawBookings)) {
+        resetBookingState();
+        toast.error("Unable to load bookings right now.", {
+          position: "bottom-right",
+        });
+        return;
+      }
+
+      const initialData = rawBookings
+        .filter((booking: unknown) => booking && typeof booking === "object")
+        .map((booking: IPageBooking) => ({
+          ...booking,
+          selected: false,
+        }));
+
+      const allPending = initialData.filter(
+        (booking: IPageBooking) => booking.status === "pending",
       );
-    });
-    const allCancelled = initialData.filter(
-      (booking: IPageBooking) => booking.status === "cancelled",
-    );
-    const allCompleted = initialData.filter((booking: IPageBooking) => {
-      const bookingDate = moment(booking.eventDate);
-      const today = moment().startOf("day");
-      return bookingDate.isBefore(today);
-    });
+      const allActive = initialData.filter((booking: IPageBooking) => {
+        const bookingDate = moment(booking.eventDate);
+        const today = moment().startOf("day");
+        return (
+          (bookingDate.isAfter(today) || bookingDate.isSame(today)) &&
+          booking.status === "confirmed"
+        );
+      });
+      const allCancelled = initialData.filter(
+        (booking: IPageBooking) => booking.status === "cancelled",
+      );
+      const allCompleted = initialData.filter((booking: IPageBooking) => {
+        const bookingDate = moment(booking.eventDate);
+        const today = moment().startOf("day");
+        return bookingDate.isBefore(today);
+      });
 
-    const allCancelledToday = allCancelled.filter((booking: IPageBooking) => {
-      const bookingDate = moment(booking.eventDate);
-      const today = moment().startOf("day");
-      return bookingDate.isSame(today) && booking.status === "cancelled";
-    });
+      const allCancelledToday = allCancelled.filter((booking: IPageBooking) => {
+        const bookingDate = moment(booking.eventDate);
+        const today = moment().startOf("day");
+        return bookingDate.isSame(today) && booking.status === "cancelled";
+      });
 
-    const allPendingToday = allPending.filter((booking: IPageBooking) => {
-      const bookingDate = moment(booking.eventDate);
-      const today = moment().startOf("day");
-      return bookingDate.isSame(today);
-    });
+      const allPendingToday = allPending.filter((booking: IPageBooking) => {
+        const bookingDate = moment(booking.eventDate);
+        const today = moment().startOf("day");
+        return bookingDate.isSame(today);
+      });
 
-    const allActiveToday = allActive.filter((booking: IPageBooking) => {
-      const bookingDate = moment(booking.eventDate);
-      const today = moment().startOf("day");
-      return bookingDate.isSame(today) && booking.status === "confirmed";
-    });
+      const allActiveToday = allActive.filter((booking: IPageBooking) => {
+        const bookingDate = moment(booking.eventDate);
+        const today = moment().startOf("day");
+        return bookingDate.isSame(today) && booking.status === "confirmed";
+      });
 
-    const allBoookingToday = allActive.filter((booking: IPageBooking) => {
-      const bookingDate = moment(booking.createdAt).format("YYYY/DD/MM");
-      const today = moment().format("YYYY/DD/MM");
-      return bookingDate == today;
-    });
+      const allBoookingToday = initialData.filter((booking: IPageBooking) => {
+        if (!booking.createdAt) return false;
+        const bookingDate = moment(booking.createdAt).format("YYYY/DD/MM");
+        const today = moment().format("YYYY/DD/MM");
+        return bookingDate == today;
+      });
 
-    // console.log(moment(initialData[4].createdAt).isSame(moment()));
-    // nug7mcc8
+      // console.log(moment(initialData[4].createdAt).isSame(moment()));
+      // nug7mcc8
 
-    setAllBookings(initialData);
-    setAllPending(allPending);
-    setAllActive(allActive);
-    setAllCancelled(allCancelled);
-    setAllCompleted(allCompleted);
-    setAllActiveToday(allActiveToday.length);
-    setAllPendingToday(allPendingToday.length);
-    setAllCancelledToday(allCancelledToday.length);
-    setAllBookingsToday(allBoookingToday.length);
+      setAllBookings(initialData);
+      setAllPending(allPending);
+      setAllActive(allActive);
+      setAllCancelled(allCancelled);
+      setAllCompleted(allCompleted);
+      setAllActiveToday(allActiveToday.length);
+      setAllPendingToday(allPendingToday.length);
+      setAllCancelledToday(allCancelledToday.length);
+      setAllBookingsToday(allBoookingToday.length);
 
-    // Set initialData
-    setBookings(allPending);
+      // Set initialData
+      setBookings(allPending);
+    } catch {
+      resetBookingState();
+      toast.error("Unable to load bookings right now.", {
+        position: "bottom-right",
+      });
+    }
   };
 
   useEffect(() => {
@@ -197,8 +228,6 @@ export default function BookingContent() {
       await fetchBookings();
     })();
   }, []);
-
-  console.log(bookings);
 
   return (
     <main className="flex-1 py-4 md:h-[600px] 2xl:h-[770px] overflow-y-auto">
@@ -309,9 +338,9 @@ export default function BookingContent() {
                     >
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
                         <div className="flex flex-col gap-1">
-                          <span>{booking.package.name}</span>
+                          <span>{booking.package?.name ?? "Unknown package"}</span>
                           <span className="text-xs font-normal text-[#999999]">
-                            {booking.totalPrice.toLocaleString()}
+                            {Number(booking.totalPrice ?? 0).toLocaleString()}
                           </span>
                         </div>
                       </td>
