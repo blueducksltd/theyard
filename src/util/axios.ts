@@ -1,8 +1,11 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
+const publicApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+const normalizedApiUrl = publicApiUrl?.replace(/\/$/, "");
+
 const axiosInstance = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL}/api`,
+  baseURL: normalizedApiUrl ? `${normalizedApiUrl}/api` : "/api",
   headers: {
     "Content-Type": "application/json",
   },
