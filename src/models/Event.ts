@@ -19,10 +19,10 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
     // },
     public: { type: Boolean, default: false },
     date: { type: Date, required: true },
-    // time: {
-    //   start: { type: String, required: true },
-    //   end: { type: String, required: true }
-    // },
+    time: {
+      start: { type: String, default: "09:00" },
+      end: { type: String, default: "18:00" }
+    },
     audienceType: {
       type: String,
       enum: ["children", "adults", "both"],

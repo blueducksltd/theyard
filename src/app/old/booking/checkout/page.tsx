@@ -31,6 +31,14 @@ const Page = () => {
   const [totalPrice, setTotalPrice] = useState<any>("0");
 
   const handleSubmit = async () => {
+    if (!inputs.spaceId && savedBookingDetails?.spaceId) {
+      inputs.spaceId = savedBookingDetails.spaceId;
+    }
+
+    if (!inputs.time && savedBookingDetails?.time) {
+      inputs.time = savedBookingDetails.time;
+    }
+
     const [hours, minutes] = startTime?.split(":") || ["0", "0"];
 
     // Create booking datetime
@@ -179,6 +187,12 @@ const Page = () => {
   };
 
   const handleSpace = (e: ChangeEvent<HTMLSelectElement>) => {
+    if (e.target.value === "null") {
+      setSelectedSpace(null);
+      delete inputs.spaceId;
+      return;
+    }
+
     const _selectedSpace = spaces.find((space) => space.id === e.target.value);
     setSelectedSpace(_selectedSpace || null);
     inputs.spaceId = e.target.value;
@@ -229,19 +243,43 @@ const Page = () => {
 
     setSavedBookingDetails(bookingData);
     setTotalPrice(bookingData.package.price)
+
+    if (bookingData.time) {
+      inputs.time = bookingData.time;
+      setStartTime(bookingData.time);
+    }
+
+    if (bookingData.spaceId) {
+      inputs.spaceId = bookingData.spaceId;
+    }
+
+    if (bookingData.date) {
+      inputs.date = bookingData.date;
+      setEventDate(bookingData.date);
+    }
+
     setIsLoading(false);
 
     toast.info("Bookings made today must be made at least 1 hour in advance");
-  }, [router]);
+  }, [inputs, router]);
 
   useEffect(() => {
     (async () => {
       const response = await getSpaces();
       if (response.success == true) {
         setSpaces(response.data.spaces);
+
+        if (savedBookingDetails?.spaceId) {
+          const lockedSpace = response.data.spaces.find(
+            (space: ISpace) => space.id === savedBookingDetails.spaceId,
+          );
+          setSelectedSpace(lockedSpace || null);
+        }
       }
     })();
-  }, []);
+  }, [savedBookingDetails]);
+
+  const hasLockedSlot = Boolean(savedBookingDetails?.spaceId && savedBookingDetails?.time);
 
   // Show loading state while checking for booking details
   if (isLoading) {
@@ -472,8 +510,9 @@ const Page = () => {
                   <select
                     id="space"
                     name="space"
-                    defaultValue={"null"}
+                    value={selectedSpace?.id || savedBookingDetails?.spaceId || "null"}
                     onChange={(e) => handleSpace(e)}
+                    disabled={hasLockedSlot}
                     className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                   >
                     <option value="null" disabled>
@@ -487,6 +526,26 @@ const Page = () => {
                   </select>
                 </div>
               </div>
+
+              {hasLockedSlot ? (
+                <div className="form-group flex flex-col md:flex-row items-start gap-6">
+                  <div className="w-full input-group flex flex-col gap-3">
+                    <label
+                      htmlFor="selected-time"
+                      className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                    >
+                      Selected time slot
+                    </label>
+                    <input
+                      id="selected-time"
+                      type="text"
+                      readOnly
+                      value={`${savedBookingDetails.spaceName || selectedSpace?.name || "Selected space"} at ${savedBookingDetails.time}`}
+                      className="w-full h-[52px] rounded2px bg-[#F5F7F5] p-3 border-[1px] border-[#BFBFBF] text-[#55544E] outline-none"
+                    />
+                  </div>
+                </div>
+              ) : null}
 
               <div className="form-group flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full input-group flex flex-col gap-3">
