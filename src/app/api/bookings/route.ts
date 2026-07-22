@@ -28,6 +28,40 @@ import {
 } from "date-fns";
 import { NextRequest } from "next/server";
 
+function normalizeBookingTime(time?: string | null): string | null {
+  if (!time) return null;
+
+  const trimmedTime = time.trim();
+  const twentyFourHourMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})$/);
+  if (twentyFourHourMatch) {
+    const hours = Number(twentyFourHourMatch[1]);
+    const minutes = Number(twentyFourHourMatch[2]);
+
+    if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+    }
+  }
+
+  const meridiemMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!meridiemMatch) return null;
+
+  let hours = Number(meridiemMatch[1]);
+  const minutes = Number(meridiemMatch[2]);
+  const meridiem = meridiemMatch[3].toUpperCase();
+
+  if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+    return null;
+  }
+
+  if (meridiem === "AM") {
+    hours = hours === 12 ? 0 : hours;
+  } else if (hours !== 12) {
+    hours += 12;
+  }
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
 export const POST = errorHandler(async (request: NextRequest) => {
   await connectDB();
 
@@ -182,6 +216,36 @@ export const POST = errorHandler(async (request: NextRequest) => {
     );
   }
 
+  const requestedTime = body.time ? normalizeBookingTime(body.time) : null;
+  if (body.time && !requestedTime) {
+    throw APIError.BadRequest("Invalid time format. Please use HH:mm.");
+  }
+
+  if (body.spaceId) {
+    const conflictingBooking = dayBookings.find((booking) => {
+      if (booking.space?.toString() !== body.spaceId) {
+        return false;
+      }
+
+      const existingTime = normalizeBookingTime(booking.time);
+
+      if (!existingTime || !requestedTime) {
+        return true;
+      }
+
+      return existingTime === requestedTime;
+    });
+
+    if (conflictingBooking) {
+      const conflictingTime = normalizeBookingTime(conflictingBooking.time);
+      throw APIError.BadRequest(
+        conflictingTime
+          ? `This space is already booked at ${conflictingTime} on this date. Please choose another time.`
+          : "This space is already booked for this date. Please choose another space or date.",
+      );
+    }
+  }
+
   // Ensure customer exists (upsert)
   const customer = await Customer.findOneAndUpdate(
     { email: body.email },
@@ -262,7 +326,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
     space: body.spaceId,
     eventDate: bookingDate,
     guestCount,
-    time: body.time,
+    time: requestedTime ?? undefined,
     addon: body.addon,
     status: "pending",
     totalPrice,
@@ -270,7 +334,17 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
   try {
     await sendBookingEmail(customer.email, booking.id);
+  } catch (error) {
+    throw APIError.Internal(`Error sending booking email: ${(error as Error).message}`);
+  }
+
+  try {
     await sendBookingWhatsApp(booking.id);
+  } catch (error) {
+    console.error("Failed to send booking WhatsApp notification:", error);
+  }
+
+  try {
     await sendNotification({
       type: "booking",
       title: "New Booking",
@@ -279,7 +353,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
       permission: 2,
     });
   } catch (error) {
-    throw APIError.Internal(`Error sending email: ${(error as Error).message}`);
+    console.error("Failed to send admin booking notification:", error);
   }
 
   return APIResponse.success(

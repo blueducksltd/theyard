@@ -62,6 +62,7 @@ const UpdateEventDTO = z.object({
             "Invalid date format"
         )
         .optional(),
+    time: z.string().optional(),
     location: z.string().min(1, "Location is required").optional(),
     public: z.boolean().optional(),
     status: z.enum(["active", "completed", "cancelled", "pending"]),
@@ -99,6 +100,7 @@ export const PUT = errorHandler<{ params: { id: string } }>(
                 title: form.get("title") as UpdateEventInput["title"] || undefined,
                 description: form.get("description") as UpdateEventInput["description"] || undefined,
                 date: form.get("date") as UpdateEventInput["date"] || undefined,
+                time: form.get("time") as UpdateEventInput["time"] || undefined,
                 location: form.get("location") as UpdateEventInput["location"] || undefined,
                 public: publicRaw === null ? undefined : publicRaw === "true",
                 images: imageUrls.length > 0 ? imageUrls : undefined,
@@ -130,10 +132,10 @@ export const PUT = errorHandler<{ params: { id: string } }>(
                 slug: newSlug,
                 description: data.description ?? event.description,
                 date: data.date ? new Date(data.date) : event.date,
+                time: data.time ? { start: data.time, end: data.time } : event.time,
                 location: data.location,
                 public: data.public ?? event.public,
                 images: data.images ?? event.images,
-                // time field not included - keeps existing/default values
             },
             { new: true }
         );

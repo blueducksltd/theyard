@@ -110,8 +110,9 @@ export const sendInquiries = async (data: {
 };
 
 // Get bookings
-export const getBookings = async () => {
-  const response = await axios.get(`/bookings`);
+export const getBookings = async (query = "") => {
+  const search = query ? `?${query}` : "";
+  const response = await axios.get(`/bookings${search}`);
   return response.data;
 };
 
@@ -325,6 +326,18 @@ export const confirmOrCancelBookings = async (data: {
 // Create tag
 export const createTag = async (name: string) => {
   const response = await axios.post(`/tags`, { name });
+  return response.data;
+};
+
+// Update tag
+export const updateTag = async (id: string, name: string) => {
+  const response = await axios.put(`/tags/${id}`, { name });
+  return response.data;
+};
+
+// Delete tag
+export const deleteTag = async (id: string) => {
+  const response = await axios.delete(`/tags/${id}`);
   return response.data;
 };
 
