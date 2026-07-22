@@ -127,6 +127,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
     );
 
     const total = packageTotal + funTotal;
+    const coverImage = event.images?.find((img) => typeof img === "string" && img.trim().length > 0) ?? null;
 
     const summary = useMemo(() => [
         { label: "Package", value: event.title },
@@ -183,13 +184,17 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
             {/* ── STEP 1: Overview ── */}
             <div className={`${PANEL_BASE} ${isVisible('overview') ? `${PANEL_VISIBLE} min-h-100` : PANEL_HIDDEN}`}>
                 <div className="h-40 relative shrink-0">
-                    <Image
-                        src={event.images[0]}
-                        fill
-                        alt={event.title}
-                        className="object-cover object-center rounded"
-                        sizes="(max-width: 768px) 100vw, 560px"
-                    />
+                    {coverImage ? (
+                        <Image
+                            src={coverImage}
+                            fill
+                            alt={event.title}
+                            className="object-cover object-center rounded"
+                            sizes="(max-width: 768px) 100vw, 560px"
+                        />
+                    ) : (
+                        <div className="h-full w-full bg-[#E4E8E5] rounded" aria-hidden="true" />
+                    )}
                     <button
                         type="button"
                         onClick={onClose}
@@ -271,7 +276,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
 
                 <div className="flex items-center gap-3 font-lato text-black/70 text-sm font-medium shrink-0">
                     <p>{eventDate.toLocaleDateString("en-US", { dateStyle: "medium" })}</p>
-                    <p>{eventDate.toLocaleTimeString("en-US", { timeStyle: "short", hour12: true })}</p>
+                    <p>{`${formatTime(event.startTime)} - ${formatTime(event.endTime)}`}</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-lato text-xs">
@@ -412,6 +417,8 @@ interface EventCardProps {
 }
 
 const EventCard = React.memo(function EventCard({ event, index, onOpen, onShare }: EventCardProps) {
+    const coverImage = event.images?.find((img) => typeof img === "string" && img.trim().length > 0) ?? null;
+    const description = event.description?.trim() ?? "";
     return (
         <div className="relative">
             <div
@@ -419,22 +426,31 @@ const EventCard = React.memo(function EventCard({ event, index, onOpen, onShare 
                 onClick={() => onOpen(index)}
             >
                 <div className="h-50 relative">
-                    <Image
-                        src={event.images[0]}
-                        fill
-                        alt={event.title}
-                        className="object-cover"
-                    />
+                    {coverImage ? (
+                        <Image
+                            src={coverImage}
+                            fill
+                            alt={event.title}
+                            className="object-cover"
+                        />
+                    ) : (
+                        <div className="h-full w-full bg-[#E4E8E5]" aria-hidden="true" />
+                    )}
                 </div>
                 <div className="grid gap-1">
                     <p className="font-semibold text-lg font-playfair-display text-primaryGreen">
                         {event.title}
                     </p>
                     <p className="font-lato text-[#4B6450] text-sm font-light">
-                        {event.description.length > 100 ? event.description.slice(0, 100) + "..." : event.description}
+                        {description
+                            ? (description.length > 100 ? description.slice(0, 100) + "..." : description)
+                            : "Event details will be shared soon."}
                     </p>
                     <p className="font-lato text-primaryGreen text-sm mt-6 font-medium">
                         {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}
+                    </p>
+                    <p className="font-lato text-primaryGreen/80 text-xs font-medium">
+                        {`${formatTime(event.startTime)} - ${formatTime(event.endTime)}`}
                     </p>
                 </div>
             </div>
@@ -592,7 +608,7 @@ export default function EventsFeed({ initialSlug }: EventsFeedProps) {
                 {selectedEvent && (
                     // key forces a fresh mount (and state reset) when a different event is opened
                     <EventModalContent
-                        key={selectedEvent.slug}
+                        key={selectedEvent.id ?? selectedEvent.slug ?? String(selectedIndex)}
                         event={selectedEvent}
                         onClose={handleCloseModal}
                         onConfirmFun={handleConfirmFun}
@@ -637,7 +653,7 @@ export default function EventsFeed({ initialSlug }: EventsFeedProps) {
                 )}
                 {filteredEvents.map(({ event, index }) => (
                     <EventCard
-                        key={event.slug}
+                        key={event.id ?? `${event.slug}-${index}`}
                         event={event}
                         index={index}
                         onOpen={handleOpenModal}

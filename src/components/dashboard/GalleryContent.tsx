@@ -9,10 +9,12 @@ import { IGallery } from "@/types/Gallery";
 import {
   createGallery,
   createTag,
+  deleteTag,
   deleteGallery,
   getEvents,
   getGallery,
   getTags,
+  updateTag,
   updateGallery,
 } from "@/util";
 import moment from "moment";
@@ -42,6 +44,7 @@ export default function GalleryContent() {
   const [events, setEvents] = React.useState<IEvent[]>([]);
   const [defaultGallery, setDefaultGallery] = React.useState<IGallery[]>([]);
   const [tagInput, setTagInput] = React.useState<string>("");
+  const [tagToEdit, setTagToEdit] = React.useState<ITag | null>(null);
   const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
   const [selectedTag, setSelectedTag] = React.useState<string>("");
   const [mediaDate, setMediaDate] = React.useState<string>("");
@@ -278,10 +281,11 @@ export default function GalleryContent() {
 
   // Create a new tag
   const handleSubmitTag = async () => {
+    const normalizedTagName = tagInput.trim().toLowerCase();
     const toastId = toast.loading("Creating tag...", {
       position: "bottom-right",
     });
-    if (tagInput == "" || tagInput == null) {
+    if (normalizedTagName === "") {
       return toast.update(toastId, {
         render: "Please provide tag name!",
         type: "error",
@@ -291,7 +295,10 @@ export default function GalleryContent() {
     }
 
     try {
-      const response = await createTag(tagInput);
+      const response = tagToEdit?.id
+        ? await updateTag(tagToEdit.id as string, normalizedTagName)
+        : await createTag(normalizedTagName);
+
       if (response.success == true) {
         toast.update(toastId, {
           render: `${response.message}`,
@@ -300,6 +307,8 @@ export default function GalleryContent() {
           autoClose: 6000,
         });
         setTagInput("");
+        setTagToEdit(null);
+        await refreshTags();
       } else {
         toast.update(toastId, {
           render: `${response.message}`,
@@ -310,7 +319,71 @@ export default function GalleryContent() {
       }
     } catch (error) {
       return toast.update(toastId, {
-        render: `There was an error trying to create tag, please try again! ${error}`,
+        render: `There was an error trying to save tag, please try again! ${error}`,
+        type: "error",
+        isLoading: false,
+        autoClose: 6000,
+      });
+    }
+  };
+
+  const refreshTags = async () => {
+    try {
+      const response = await getTags();
+      setTags(response?.data?.tags || []);
+    } catch (error) {
+      console.error("Failed to load tags:", error);
+      setTags([]);
+    }
+  };
+
+  const handleStartEditTag = (tag: ITag) => {
+    setTagToEdit(tag);
+    setTagInput(tag.name);
+  };
+
+  const handleCancelTagEdit = () => {
+    setTagToEdit(null);
+    setTagInput("");
+  };
+
+  const handleDeleteTag = async (tag: ITag) => {
+    if (!tag.id) return;
+
+    const toastId = toast.loading("Deleting tag...", {
+      position: "bottom-right",
+    });
+
+    try {
+      const response = await deleteTag(tag.id as string);
+      if (response.success === true) {
+        toast.update(toastId, {
+          render: response.message,
+          type: "success",
+          isLoading: false,
+          autoClose: 6000,
+        });
+
+        if (selectedTag === tag.name) {
+          setSelectedTag("");
+        }
+
+        if (tagToEdit?.id === tag.id) {
+          handleCancelTagEdit();
+        }
+
+        await refreshTags();
+      } else {
+        toast.update(toastId, {
+          render: response.message,
+          type: "warning",
+          isLoading: false,
+          autoClose: 6000,
+        });
+      }
+    } catch (error) {
+      toast.update(toastId, {
+        render: `There was an error trying to delete tag, please try again! ${error}`,
         type: "error",
         isLoading: false,
         autoClose: 6000,
@@ -433,13 +506,12 @@ export default function GalleryContent() {
 
   React.useEffect(() => {
     (async () => {
-      const [fetchTags] = await Promise.all([getTags()]);
-      setTags(fetchTags.data.tags);
+      await refreshTags();
     })();
     //clean up
     return () => {
     };
-  }, [tagInput]);
+  }, []);
 
   React.useEffect(() => {
     const toastId = toast.loading("Loading data...", {
@@ -598,7 +670,7 @@ export default function GalleryContent() {
                 className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
                 onClick={() => setTagModal(true)}
               >
-                <button>Create tags</button>
+                <button>Manage tags</button>
               </li>
             </ul>
           </div>
@@ -766,11 +838,14 @@ export default function GalleryContent() {
         <section className="w-full">
           <div className="w-full flex items-center justify-between">
             <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary">
-              Create tag
+              Manage tags
             </h2>
             <div
               className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-              onClick={() => setTagModal(false)}
+              onClick={() => {
+                handleCancelTagEdit();
+                setTagModal(false);
+              }}
             >
               <img
                 src={"/icons/cancel.svg"}
@@ -781,6 +856,39 @@ export default function GalleryContent() {
             </div>
           </div>
         </section>
+
+        <div className="w-full mt-5 max-h-[180px] overflow-y-auto border border-[#E4E8E5] rounded-[4px] p-3">
+          {tags.length === 0 ? (
+            <p className="text-sm text-[#999999]">No tags yet. Create your first tag below.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {tags.map((tag) => (
+                <div
+                  key={tag.id as string}
+                  className="flex items-center justify-between gap-3 border border-[#EDF0EE] rounded-[4px] px-3 py-2"
+                >
+                  <span className="text-[#55544E] font-medium">{tag.name}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="text-xs px-2 py-1 rounded bg-[#EDF0EE] text-yard-primary hover:bg-[#DDE5DE]"
+                      onClick={() => handleStartEditTag(tag)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="text-xs px-2 py-1 rounded bg-[#FDECEC] text-[#B42318] hover:bg-[#FBD5D5]"
+                      onClick={() => handleDeleteTag(tag)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/*Form*/}
         <form className="w-full flex flex-col gap-4 mt-8">
@@ -798,18 +906,33 @@ export default function GalleryContent() {
                 name="title"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                placeholder="Enter tag name"
+                placeholder={tagToEdit ? "Update tag name" : "Enter tag name"}
                 className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
               />
             </div>
           </div>
+
+          {tagToEdit && (
+            <div className="flex items-center justify-between bg-[#EDF0EE] rounded-[4px] px-3 py-2">
+              <p className="text-sm text-yard-primary">
+                Editing tag: <span className="font-semibold">{tagToEdit.name}</span>
+              </p>
+              <button
+                type="button"
+                onClick={handleCancelTagEdit}
+                className="text-xs text-[#66655E] hover:text-yard-primary"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
 
           <button
             type="button"
             onClick={() => handleSubmitTag()}
             className="w-full flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden rounded-[5px]"
           >
-            <span className="z-40">Create tag</span>
+            <span className="z-40">{tagToEdit ? "Update tag" : "Create tag"}</span>
             <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
           </button>
         </form>

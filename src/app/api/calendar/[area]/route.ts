@@ -13,8 +13,57 @@ import {
     endOfMonth,
     addDays,
     format,
+    isValid,
+    parse,
 } from "date-fns";
 import { ISpace } from "@/types/Space";
+
+const DAY_SLOT_START = "09:00";
+const DAY_SLOT_END = "18:00";
+
+function parseCalendarDate(dateParam: string): Date {
+    const parsedDate = parse(dateParam, "yyyy-MM-dd", new Date());
+
+    if (!isValid(parsedDate)) {
+        throw new Error("Invalid date parameter (YYYY-MM-DD)");
+    }
+
+    return parsedDate;
+}
+
+function normalizeBookingTime(time?: string | null): string | null {
+    if (!time) return null;
+
+    const trimmedTime = time.trim();
+    const twentyFourHourMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})$/);
+    if (twentyFourHourMatch) {
+        const hours = Number(twentyFourHourMatch[1]);
+        const minutes = Number(twentyFourHourMatch[2]);
+
+        if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+            return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+        }
+    }
+
+    const meridiemMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!meridiemMatch) return null;
+
+    let hours = Number(meridiemMatch[1]);
+    const minutes = Number(meridiemMatch[2]);
+    const meridiem = meridiemMatch[3].toUpperCase();
+
+    if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+        return null;
+    }
+
+    if (meridiem === "AM") {
+        hours = hours === 12 ? 0 : hours;
+    } else if (hours !== 12) {
+        hours += 12;
+    }
+
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
 
 export const GET = errorHandler<{ params: { area: string } }>(
 
@@ -30,15 +79,22 @@ export const GET = errorHandler<{ params: { area: string } }>(
             const dateParam = searchParams.get("date");
             if (!dateParam) throw new Error("Missing date parameter (YYYY-MM-DD)");
 
-            const date = new Date(dateParam);
+            const date = parseCalendarDate(dateParam);
             const dayStart = startOfDay(date);
             const dayEnd = endOfDay(date);
+            const slotTimes = Array.from({ length: Number(DAY_SLOT_END.slice(0, 2)) - Number(DAY_SLOT_START.slice(0, 2)) + 1 }, (_, index) => {
+                const hour = Number(DAY_SLOT_START.slice(0, 2)) + index;
+                return `${String(hour).padStart(2, "0")}:00`;
+            });
 
             const spaces = await Space.find();
             const bookings = await Booking.find({
                 eventDate: { $gte: dayStart, $lte: dayEnd },
                 status: { $ne: "cancelled" }
-            }).populate("package");
+            })
+                .populate("package")
+                .populate("customer")
+                .populate("event");
             const manuallyClosedDay = await ClosedDay.findOne({
                 date: { $gte: dayStart, $lte: dayEnd },
             });
@@ -47,16 +103,54 @@ export const GET = errorHandler<{ params: { area: string } }>(
                 isShutdownPackage(booking.package as unknown as { name?: string; description?: string; specs?: string[] })
             );
 
-            // Day-based availability - a space is either available or unavailable for the whole day
             const spacesWithAvailability = spaces.map((space: ISpace) => {
-                const isBooked = hasShutdownBooking || bookings.some(
-                    (b) => b.space?.toString() === space.id
+                const spaceBookings = bookings.filter(
+                    (booking) => booking.space?.toString() === space.id
                 );
+
+                const bookedSlots = spaceBookings.map((booking) => {
+                    const normalizedTime = normalizeBookingTime(booking.time);
+                    const customer = booking.customer as { firstname?: string; lastname?: string } | null;
+                    const packageInfo = booking.package as { name?: string } | null;
+                    const event = booking.event as { title?: string } | null;
+                    const customerName = [customer?.firstname, customer?.lastname]
+                        .filter(Boolean)
+                        .join(" ")
+                        .trim();
+
+                    return {
+                        bookingId: booking.id,
+                        time: normalizedTime,
+                        coversAllDay: !normalizedTime,
+                        customerName: customerName || "Unknown customer",
+                        packageName: packageInfo?.name || "Unknown package",
+                        eventTitle: event?.title || null,
+                        status: booking.status,
+                    };
+                });
+
+                const hasAllDayBooking = bookedSlots.some((slot) => slot.coversAllDay);
+                const bookedSlotTimes = new Set(
+                    bookedSlots
+                        .map((slot) => slot.time)
+                        .filter((slotTime): slotTime is string => Boolean(slotTime))
+                );
+                const isFullyBookedBySlots = slotTimes.every((slotTime) => bookedSlotTimes.has(slotTime));
+                const hasBookedSlots = bookedSlots.length > 0;
+
+                let status: "available" | "partial" | "unavailable" = "available";
+
+                if (manuallyClosedDay || hasShutdownBooking || hasAllDayBooking || isFullyBookedBySlots) {
+                    status = "unavailable";
+                } else if (hasBookedSlots) {
+                    status = "partial";
+                }
 
                 return {
                     id: space.id,
                     name: space.name,
-                    status: manuallyClosedDay || isBooked ? "unavailable" : "available",
+                    status,
+                    bookedSlots,
                 };
             });
 

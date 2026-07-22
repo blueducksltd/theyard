@@ -154,6 +154,57 @@ export default function ReviewContent() {
     toast.dismiss(loadingToast);
   };
 
+  const getReviewActions = (status: IReview["status"], id?: string) => {
+    if (status === "pending") {
+      return [
+        {
+          id: `${id}-ignore`,
+          label: "Ignore",
+          status: "ignore",
+          className:
+            "w-[114px] h-[35px] flex items-center justify-center border-[1px] border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer",
+          overlayClassName: "bg-[#C7CFC9]",
+          textClassName: "font-sen font-medium",
+        },
+        {
+          id: `${id}-publish`,
+          label: "Publish",
+          status: "publish",
+          className:
+            "w-[114px] h-[35px] items-center flex justify-center border-[#8C5C5C] bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer",
+          overlayClassName: "bg-yard-dark-primary",
+          textClassName: "font-sen",
+        },
+      ];
+    }
+
+    if (status === "published") {
+      return [
+        {
+          id: `${id}-ignore`,
+          label: "Ignore",
+          status: "ignore",
+          className:
+            "w-[114px] h-[35px] flex items-center justify-center border-[1px] border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer",
+          overlayClassName: "bg-[#C7CFC9]",
+          textClassName: "font-sen font-medium",
+        },
+      ];
+    }
+
+    return [
+      {
+        id: `${id}-publish`,
+        label: "Publish",
+        status: "publish",
+        className:
+          "w-[114px] h-[35px] items-center flex justify-center border-[#8C5C5C] bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer",
+        overlayClassName: "bg-yard-dark-primary",
+        textClassName: "font-sen",
+      },
+    ];
+  };
+
   React.useEffect(() => {
     void fetchComments(true);
   }, []);
@@ -282,41 +333,30 @@ export default function ReviewContent() {
               </p>
 
               <div className="mt-auto flex w-full items-center justify-end gap-2 pt-6">
-                {comment.status === "pending" ? (
-                  <>
-                    <button
-                      className="w-[114px] h-[35px] flex items-center justify-center border-[1px] border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
-                      onClick={() => {
-                        setAction({
-                          id: comment.id,
-                          status: "ignore",
-                        });
-                        setConfModal(true);
-                      }}
-                    >
-                      <span className="z-40 font-sen font-medium">Ignore</span>
-                      <div className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-                    </button>
+                <p className="mr-auto font-sen font-medium text-[16px] leading-[24px] tracking-[0.4px] text-[#999999] capitalize">
+                  {comment.status}
+                </p>
 
-                    <button
-                      className="w-[114px] h-[35px] items-center flex justify-center border-[#8C5C5C] bg-yard-primary text-[#EEEEE6] group relative overflow-hidden rounded-[5px] cursor-pointer"
-                      onClick={() => {
-                        setAction({
-                          id: comment.id,
-                          status: "publish",
-                        });
-                        setConfModal(true);
-                      }}
-                    >
-                      <span className="z-40 font-sen">Publish</span>
-                      <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
-                    </button>
-                  </>
-                ) : (
-                  <p className="font-sen font-medium text-[16px] leading-[24px] tracking-[0.4px] text-[#999999]">
-                    {comment.status}
-                  </p>
-                )}
+                {getReviewActions(comment.status, comment.id).map((reviewAction) => (
+                  <button
+                    key={reviewAction.id}
+                    className={reviewAction.className}
+                    onClick={() => {
+                      setAction({
+                        id: comment.id,
+                        status: reviewAction.status,
+                      });
+                      setConfModal(true);
+                    }}
+                  >
+                    <span className={`z-40 ${reviewAction.textClassName}`}>
+                      {reviewAction.label}
+                    </span>
+                    <div
+                      className={`absolute top-0 left-0 ${reviewAction.overlayClassName} w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0`}
+                    ></div>
+                  </button>
+                ))}
               </div>
             </div>
           ))

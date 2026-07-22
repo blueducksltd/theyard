@@ -20,7 +20,22 @@ interface IProps {
 interface IBookSpace {
   id: string;
   name: string;
-  status: "available" | "unavailable";
+  status: "available" | "partial" | "unavailable";
+  bookedSlots: {
+    bookingId: string;
+    time: string | null;
+    coversAllDay: boolean;
+    customerName: string;
+    packageName: string;
+    eventTitle: string | null;
+    status: "pending" | "confirmed" | "cancelled";
+  }[];
+}
+
+interface ISelectedSlot {
+  spaceId: string;
+  spaceName: string;
+  time: string;
 }
 
 const Page = ({ searchParams }: IProps) => {
@@ -32,6 +47,7 @@ const Page = ({ searchParams }: IProps) => {
   const [packages, setPackages] = useState<IPackage[]>([]); // Replace 'any' with your package type
   const [selectedPackage, setSelectedPackage] = useState({});
   const [expandedPackages, setExpandedPackages] = useState<Set<string>>(new Set());
+  const [selectedSlot, setSelectedSlot] = useState<ISelectedSlot | null>(null);
   const router = useRouter();
 
   const toggleExpand = (packageId: string) => {
@@ -67,19 +83,46 @@ const Page = ({ searchParams }: IProps) => {
   }, [date]);
 
   const handleProcessPackage = () => {
+    if (!selectedSlot) {
+      toast.warning("Please select an available time slot", {
+        position: "bottom-right",
+      });
+      return;
+    }
+
     if (Object.entries(selectedPackage).length === 0) {
       toast.warning("Please select a package", { position: "bottom-right" });
       return;
     }
 
-    const savedBookingDetails = loadFromLS("booking");
-    savedBookingDetails["package"] = selectedPackage;
-    // return;
-    saveToLS("booking", savedBookingDetails);
+    const savedBookingDetails = loadFromLS("booking") ?? {};
+    saveToLS("booking", {
+      ...savedBookingDetails,
+      date: savedBookingDetails.date ?? date,
+      package: selectedPackage,
+      spaceId: selectedSlot.spaceId,
+      spaceName: selectedSlot.spaceName,
+      time: selectedSlot.time,
+    });
     router.push(`/booking/checkout`);
   };
 
   const timeSlots = generateSlots("09:00", "18:00");
+
+  const getSlotBooking = (space: IBookSpace, time: string) => {
+    return space.bookedSlots.find(
+      (slot) => slot.coversAllDay || slot.time === time,
+    );
+  };
+
+  const handleSelectSlot = (space: IBookSpace, time: string) => {
+    setSelectedSlot({
+      spaceId: space.id,
+      spaceName: space.name,
+      time,
+    });
+    setIsModalOpen(true);
+  };
 
   if (loading) {
     return (
@@ -151,7 +194,10 @@ const Page = ({ searchParams }: IProps) => {
                     </div>
 
                     {bookingsByDate.map((space) => {
-                      const isAvailable = space.status === "available";
+                      const slotBooking = getSlotBooking(space, time);
+                      const isDayBlocked =
+                        space.status === "unavailable" && space.bookedSlots.length === 0;
+                      const isAvailable = !slotBooking && !isDayBlocked;
 
                       return (
                         <div
@@ -160,15 +206,27 @@ const Page = ({ searchParams }: IProps) => {
                         >
                           {isAvailable ? (
                             <span
-                              onClick={() => setIsModalOpen(true)}
+                              onClick={() => handleSelectSlot(space, time)}
                               className="flex items-center bg-yard-primary-active md:mx-5 p-2 rounded-sm border-[1px] border-yard-primary justify-center text-[10px] md:text-xs text-yard-primary font-medium font-sen cursor-pointer hover:bg-yard-primary hover:text-white transition-colors"
                             >
                               Available
                             </span>
                           ) : (
-                            <span className="flex items-center p-2 justify-center text-xs text-[#A44B4B] font-semibold">
-                              Taken
-                            </span>
+                            <div className="flex flex-col items-center justify-center rounded-sm bg-[#F9E8E8] px-2 py-2 text-center">
+                              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#A44B4B]">
+                                {isDayBlocked ? "Unavailable" : "Taken"}
+                              </span>
+                              {slotBooking ? (
+                                <span className="mt-1 text-[10px] leading-4 text-[#6E3E3E]">
+                                  {slotBooking.eventTitle || slotBooking.packageName}
+                                </span>
+                              ) : null}
+                              {slotBooking ? (
+                                <span className="text-[10px] leading-4 text-[#8B6666]">
+                                  {slotBooking.customerName}
+                                </span>
+                              ) : null}
+                            </div>
                           )}
                         </div>
                       );
@@ -209,6 +267,11 @@ const Page = ({ searchParams }: IProps) => {
               <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
             </div>
           </div>
+          {selectedSlot ? (
+            <p className="mt-4 text-sm text-[#55544E]">
+              {selectedSlot.spaceName} at {selectedSlot.time}
+            </p>
+          ) : null}
         </section>
         <div className="w-full flex flex-col mt-8 md:my-5 md:ml-10 gap-5 h-[40rem] overflow-scroll">
           {packages.map((pck) => {

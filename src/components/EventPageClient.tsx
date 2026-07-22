@@ -18,6 +18,8 @@ const EventPageClient = ({ event }: IProps) => {
   const [events, setEvents] = React.useState<IEvent[]>([]);
   const [shareModal, setShareModal] = React.useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = React.useState<IEvent | null>(null);
+  const startTime = event?.time?.start || (event as unknown as { startTime?: string })?.startTime || "09:00";
+  const endTime = event?.time?.end || (event as unknown as { endTime?: string })?.endTime || "18:00";
 
   React.useEffect(() => {
     (async () => {
@@ -74,8 +76,7 @@ const EventPageClient = ({ event }: IProps) => {
           <h2 className="text-yard-primary font-playfair font-bold text-[40px] leading-11 mt-8 md:mt-5 flex flex-col md:flex-row justify-between md:items-center">
             {event?.title}
             <span className="font-[400] leading-[22px] font-lato text-[14px]">
-              {moment(event?.date).format("DD/MM/YYYY")} {event?.time?.start} -{" "}
-              {event?.time?.end}
+              {moment(event?.date).format("DD/MM/YYYY")} {startTime} - {endTime}
             </span>
           </h2>
           <p className="paragraph mt-7 md:mt-4">{event?.description}</p>

@@ -329,6 +329,18 @@ export const createTag = async (name: string) => {
   return response.data;
 };
 
+// Update tag
+export const updateTag = async (id: string, name: string) => {
+  const response = await axios.put(`/tags/${id}`, { name });
+  return response.data;
+};
+
+// Delete tag
+export const deleteTag = async (id: string) => {
+  const response = await axios.delete(`/tags/${id}`);
+  return response.data;
+};
+
 // Create gallery
 export const createGallery = async (data: FormData) => {
   const response = await axios.post(`/gallery`, data, {
