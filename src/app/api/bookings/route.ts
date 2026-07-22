@@ -270,7 +270,17 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
   try {
     await sendBookingEmail(customer.email, booking.id);
+  } catch (error) {
+    throw APIError.Internal(`Error sending booking email: ${(error as Error).message}`);
+  }
+
+  try {
     await sendBookingWhatsApp(booking.id);
+  } catch (error) {
+    console.error("Failed to send booking WhatsApp notification:", error);
+  }
+
+  try {
     await sendNotification({
       type: "booking",
       title: "New Booking",
@@ -279,7 +289,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
       permission: 2,
     });
   } catch (error) {
-    throw APIError.Internal(`Error sending email: ${(error as Error).message}`);
+    console.error("Failed to send admin booking notification:", error);
   }
 
   return APIResponse.success(
