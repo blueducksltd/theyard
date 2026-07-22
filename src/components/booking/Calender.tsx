@@ -354,11 +354,11 @@ const BookingCalendar: React.FC<CalendarProps> = ({
             // const bookingCount = dateKey ? getBookingCount(dateKey) : 0;
             const todayDate = isToday(day);
             const pastDay = isPastDay(day);
-
+            console.log(dateKey, status);
             return (
               <div
                 key={index}
-                onClick={() => day && !pastDay && handleDateClick(day, status)}
+                onClick={() => day && !pastDay && status !== "unavailable" && handleDateClick(day, status)}
                 className={`relative h-20 flex items-center justify-center duration-10 rounded-sm group overflow-hidden ${pastDay ? "cursor-not-allowed opacity-40" : "cursor-pointer"
                   } ${todayDate ? "bg-[#C7CFC9]" : ""}`}
               >
@@ -487,7 +487,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
           })}
           <button
             onClick={() => handleProcessPackage()}
-            className="w-full md:w-[554px] flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden cursor-pointer mb-5"
+            className="w-full md:w-138.5 flex justify-center cta-btn bg-yard-primary text-yard-milk group relative overflow-hidden cursor-pointer mb-5"
           >
             <span className="z-40">Select package</span>
             <div className="absolute top-0 left-0 bg-yard-dark-primary w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
