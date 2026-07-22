@@ -8,6 +8,7 @@ import Event from "@/models/Event";
 import { IBooking, sanitizeBooking, UpdateBookingDto, UpdateBookingInput } from "@/types/Booking";
 import { NextRequest } from "next/server";
 import { sendBookingConfirmedEmail } from "@/lib/mailer";
+import { sendBookingDeclinedEmail } from "@/lib/mailer";
 import { sendBookingConfirmedWhatsApp } from "@/lib/whatsapp";
 import { ICustomer } from "@/types/Customer";
 
@@ -24,7 +25,9 @@ export const PUT = errorHandler<{ params: { id: string } }>(
 
         // ✅ Check previous status of the booking
         const oldBooking = await Booking.findById(id);
-        const wasConfirmed = oldBooking?.status === "confirmed";
+        const oldStatus = oldBooking?.status;
+        const wasConfirmed = oldStatus === "confirmed";
+        const wasCancelled = oldStatus === "cancelled";
 
         // ✅ Update the booking
         await Booking.findByIdAndUpdate(id, data);
@@ -49,7 +52,7 @@ export const PUT = errorHandler<{ params: { id: string } }>(
             }
         }
 
-        // ✅ Send confirmation email & WhatsApp if status is changed to "confirmed"
+        // ✅ Send notifications only when status actually changes.
         if (data.status === "confirmed" && !wasConfirmed) {
             const customer = booking.customer as unknown as ICustomer;
             if (customer && customer.email) {
@@ -58,6 +61,17 @@ export const PUT = errorHandler<{ params: { id: string } }>(
                     await sendBookingConfirmedWhatsApp(booking.id);
                 } catch (error) {
                     console.error("Failed to send booking confirmation notification:", error);
+                }
+            }
+        }
+
+        if (data.status === "cancelled" && !wasCancelled) {
+            const customer = booking.customer as unknown as ICustomer;
+            if (customer && customer.email) {
+                try {
+                    await sendBookingDeclinedEmail(customer.email, booking.id);
+                } catch (error) {
+                    console.error("Failed to send booking decline notification:", error);
                 }
             }
         }

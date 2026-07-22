@@ -256,6 +256,7 @@ export default function BookingPage() {
   }
 
   const handleSubmit = async () => {
+    if (loading) return;
     if (!show.package.value) return;
 
     if (!show.package.value) return toast("Please select a package.", { type: "error" });
@@ -286,25 +287,39 @@ export default function BookingPage() {
       eventDescription: inputs.note
     }
     setLoading(true);
-    initiatePayment(inputs.email, total, async () => {
-      try {
-        await axios.post("/bookings", data);
-        toast.success("Transaction successful");
-        clearSelectedPackage();
-        clearDate();
-        setInputs({
-          email: "",
-          guest: 0,
-          firstname: "",
-          phonenumber: "",
-          lastname: "",
-          note: ""
-        });
-      } catch {
+    const paymentStarted = initiatePayment(
+      inputs.email,
+      total,
+      async () => {
+        try {
+          await axios.post("/bookings", data);
+          toast.success("Transaction successful");
+          clearSelectedPackage();
+          clearDate();
+          setInputs({
+            email: "",
+            guest: 0,
+            firstname: "",
+            phonenumber: "",
+            lastname: "",
+            note: ""
+          });
+        } catch {
+          toast.error("Payment was successful, but we could not complete your booking. Please contact support.");
+        } finally {
+          setLoading(false);
+        }
+      },
+      () => {
+        toast.info("Payment cancelled");
         setLoading(false);
-      }
+      },
+    );
 
-    });
+    if (!paymentStarted) {
+      toast.error("Payment service is not ready yet. Please try again.");
+      setLoading(false);
+    }
 
   };
 
@@ -590,6 +605,7 @@ export default function BookingPage() {
             <button
               type="button"
               onClick={handleSubmit}
+              disabled={loading}
               className='w-full h-10 bg-primaryGreen text-white font-sen text-sm mt-20 col-span-2 flex items-center justify-center'
             >
               {loading ? <motion.div

@@ -1,26 +1,42 @@
 "use client";
 import Image from "next/image";
 import { confirmOrCancelBookings, getBookings } from "@/util";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import moment from "moment";
-import { ICustomer } from "@/types/Customer";
-import { IEvent } from "@/types/Event";
-import { IPackage } from "@/types/Package";
 import { toast } from "react-toastify";
 
 interface IPageBooking {
   id: string;
-  customer: ICustomer["id"];
-  event: IEvent["id"];
-  package: IPackage["id"];
-  eventDate: Date;
+  customer?: {
+    id?: string;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    phone?: string;
+  } | string;
+  event?: {
+    id?: string;
+    title?: string;
+  } | string;
+  package?: {
+    id?: string;
+    name?: string;
+    price?: number;
+    capacity?: number;
+    guestLimit?: number;
+    extraGuestFee?: number;
+  } | string;
+  space?: unknown;
+  eventDate: Date | string;
+  guestCount?: number;
   startTime: string;
   endTime: string;
-  times: string[];
+  times?: string[];
   status: "pending" | "confirmed" | "cancelled";
   totalPrice: number;
   selected: boolean;
-  createdAt?: Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export default function BookingContent() {
@@ -35,6 +51,7 @@ export default function BookingContent() {
   const [allCancelledToday, setAllCancelledToday] = useState<number>(0);
   const [allBookingsToday, setAllBookingsToday] = useState<number>(0);
   const [section, setSection] = useState<string>("pending");
+  const [selectedBooking, setSelectedBooking] = useState<IPageBooking | null>(null);
 
   const resetBookingState = () => {
     setBookings([]);
@@ -52,6 +69,52 @@ export default function BookingContent() {
   const formatBookingDate = (date: Date | string) => {
     const bookingDate = moment.utc(date);
     return bookingDate.isValid() ? bookingDate.format("DD MMM YYYY") : "-";
+  };
+
+  const formatBookingDateTime = (date: Date | string | undefined) => {
+    if (!date) return "-";
+    const bookingDate = moment.utc(date);
+    return bookingDate.isValid() ? bookingDate.format("DD MMM YYYY, hh:mm A") : "-";
+  };
+
+  const getBookingCustomerName = (booking: IPageBooking) => {
+    if (booking.customer && typeof booking.customer === "object") {
+      const firstName = booking.customer.firstname ?? "";
+      const lastName = booking.customer.lastname ?? "";
+      return `${firstName} ${lastName}`.trim() || "Unknown customer";
+    }
+
+    return "Unknown customer";
+  };
+
+  const getBookingCustomerEmail = (booking: IPageBooking) => {
+    if (booking.customer && typeof booking.customer === "object") {
+      return booking.customer.email ?? "-";
+    }
+
+    return "-";
+  };
+
+  const getBookingCustomerPhone = (booking: IPageBooking) => {
+    if (booking.customer && typeof booking.customer === "object") {
+      return booking.customer.phone ?? "-";
+    }
+
+    return "-";
+  };
+
+  const getBookingPackageName = (booking: IPageBooking) => {
+    if (booking.package && typeof booking.package === "object") {
+      return booking.package.name ?? "Unknown package";
+    }
+
+    return "Unknown package";
+  };
+
+  const getBookingTimestamp = (date: Date | string | undefined) => {
+    if (!date) return 0;
+    const timestamp = new Date(date).getTime();
+    return Number.isNaN(timestamp) ? 0 : timestamp;
   };
 
   const handleSection = (_section: string) => {
@@ -135,9 +198,11 @@ export default function BookingContent() {
     }
   };
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
-      const [fetchBookings] = await Promise.all([getBookings()]);
+      const [fetchBookings] = await Promise.all([
+        getBookings("sort=createdAt&direction=DESC"),
+      ]);
       const rawBookings = fetchBookings?.data?.bookings;
 
       if (!Array.isArray(rawBookings)) {
@@ -153,7 +218,12 @@ export default function BookingContent() {
         .map((booking: IPageBooking) => ({
           ...booking,
           selected: false,
-        }));
+        }))
+        .sort((left: IPageBooking, right: IPageBooking) => {
+          const rightTime = getBookingTimestamp(right.createdAt ?? right.eventDate);
+          const leftTime = getBookingTimestamp(left.createdAt ?? left.eventDate);
+          return rightTime - leftTime;
+        });
 
       const allPending = initialData.filter(
         (booking: IPageBooking) => booking.status === "pending",
@@ -221,13 +291,13 @@ export default function BookingContent() {
         position: "bottom-right",
       });
     }
-  };
+  }, []);
 
   useEffect(() => {
     (async () => {
       await fetchBookings();
     })();
-  }, []);
+  }, [fetchBookings]);
 
   return (
     <main className="flex-1 py-4 md:h-[600px] 2xl:h-[770px] overflow-y-auto">
@@ -332,13 +402,22 @@ export default function BookingContent() {
                   {bookings.map((booking, index) => (
                     <tr
                       key={booking.id}
+                      onClick={() => setSelectedBooking(booking)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setSelectedBooking(booking);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
                       className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
                         index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      }`}
+                      } cursor-pointer`}
                     >
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
                         <div className="flex flex-col gap-1">
-                          <span>{booking.package?.name ?? "Unknown package"}</span>
+                          <span>{getBookingPackageName(booking)}</span>
                           <span className="text-xs font-normal text-[#999999]">
                             {Number(booking.totalPrice ?? 0).toLocaleString()}
                           </span>
@@ -362,9 +441,10 @@ export default function BookingContent() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <button
-                            onClick={() =>
-                              handleBooking(booking.id, "confirmed")
-                            }
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleBooking(booking.id, "confirmed");
+                            }}
                             className="p-2 hover:bg-green-50 rounded transition-colors bg-[#EDF0EE] cursor-pointer duration-500 hover:scale-110"
                             aria-label="Approve booking"
                           >
@@ -376,9 +456,10 @@ export default function BookingContent() {
                             />
                           </button>
                           <button
-                            onClick={() =>
-                              handleBooking(booking.id, "cancelled")
-                            }
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleBooking(booking.id, "cancelled");
+                            }}
                             className="p-2 hover:bg-red-50 rounded transition-colors bg-[#EDF0EE] cursor-pointer duration-500 hover:scale-110"
                             aria-label="Delete booking"
                           >
@@ -399,6 +480,112 @@ export default function BookingContent() {
           </div>
         </div>
       </div>
+
+      {selectedBooking ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6"
+          onClick={() => setSelectedBooking(null)}
+        >
+          <div
+            className="w-full max-w-3xl rounded-2xl bg-white p-6 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-gray-200 pb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#999999]">
+                  Booking details
+                </p>
+                <h3 className="mt-2 text-2xl font-bold text-[#1F2937]">
+                  {getBookingCustomerName(selectedBooking)}
+                </h3>
+                <p className="mt-1 text-sm text-[#737373]">
+                  {getBookingPackageName(selectedBooking)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBooking(null)}
+                className="rounded-full bg-[#EDF0EE] px-3 py-1 text-sm font-semibold text-[#737373] transition-colors hover:bg-[#E4E8E5]"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#999999]">
+                  Customer
+                </p>
+                <div className="mt-3 space-y-2 text-sm text-[#1F2937]">
+                  <p>
+                    <span className="font-semibold text-[#737373]">Name:</span> {getBookingCustomerName(selectedBooking)}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#737373]">Email:</span> {getBookingCustomerEmail(selectedBooking)}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#737373]">Phone:</span> {getBookingCustomerPhone(selectedBooking)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#999999]">
+                  Booking
+                </p>
+                <div className="mt-3 space-y-2 text-sm text-[#1F2937]">
+                  <p>
+                    <span className="font-semibold text-[#737373]">Date:</span> {formatBookingDate(selectedBooking.eventDate)}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#737373]">Created:</span> {formatBookingDateTime(selectedBooking.createdAt)}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#737373]">Guests:</span> {selectedBooking.guestCount ?? "-"}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#737373]">Total:</span> {Number(selectedBooking.totalPrice ?? 0).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#999999]">
+                  Package
+                </p>
+                <div className="mt-3 space-y-2 text-sm text-[#1F2937]">
+                  <p>
+                    <span className="font-semibold text-[#737373]">Name:</span> {getBookingPackageName(selectedBooking)}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#737373]">Package price:</span> {selectedBooking.package && typeof selectedBooking.package === "object" && selectedBooking.package.price != null ? Number(selectedBooking.package.price).toLocaleString() : "-"}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-[#737373]">Capacity:</span> {selectedBooking.package && typeof selectedBooking.package === "object" && selectedBooking.package.capacity != null ? selectedBooking.package.capacity : selectedBooking.package && typeof selectedBooking.package === "object" && selectedBooking.package.guestLimit != null ? selectedBooking.package.guestLimit : "-"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#999999]">
+                  Status
+                </p>
+                <div className="mt-3">
+                  <span
+                    className={`inline-flex rounded-md border px-3 py-1 text-sm font-semibold ${
+                      selectedBooking.status === "pending" || selectedBooking.status === "cancelled"
+                        ? "border-[#8C8273] text-[#8C8273]"
+                        : "border-green-400 bg-green-50 text-green-700"
+                    }`}
+                  >
+                    {selectedBooking.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
