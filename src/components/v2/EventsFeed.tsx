@@ -446,12 +446,14 @@ const EventCard = React.memo(function EventCard({ event, index, onOpen, onShare 
                             ? (description.length > 100 ? description.slice(0, 100) + "..." : description)
                             : "Event details will be shared soon."}
                     </p>
-                    <p className="font-lato text-primaryGreen text-sm mt-6 font-medium">
-                        {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}
-                    </p>
-                    <p className="font-lato text-primaryGreen/80 text-xs font-medium">
-                        {`${formatTime(event.startTime)} - ${formatTime(event.endTime)}`}
-                    </p>
+                    <div className='flex justify-between items-center mt-6'>
+                        <p className="font-lato text-primaryGreen text-sm  font-medium">
+                            {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}
+                        </p>
+                        <p className="font-lato text-primaryGreen/80 text-xs font-medium">
+                            {`${formatTime(event.startTime)}`}
+                        </p>
+                    </div>
                 </div>
             </div>
 

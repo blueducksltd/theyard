@@ -634,7 +634,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
       case "pending":
         saveToLS("booking", { date: clickedDate.toISOString() });
         return router.push(
-          `/booking/pending?date=${moment(clickedDate).format("YYYY-MM-DD")}`,
+          `/admin/events/bookings/pending?date=${moment(clickedDate).format("YYYY-MM-DD")}`,
         );
       default:
         saveToLS("booking", { date: clickedDate.toISOString() });

@@ -507,56 +507,67 @@ export default function Home() {
             </button>
           </div>
 
+          {testimonials.length === 0 ? (
+            <div className="w-full h-60  flex flex-col items-center justify-center gap-3 text-center px-6">
+              <p className="font-playfair-display text-lg text-[#1F2937]">
+                No reviews yet
+              </p>
+              <p className="font-lato text-sm text-[#5A5A53] max-w-sm">
+                Be the first to share your experience with us.
+              </p>
 
-
-          <Swiper
-            modules={[Autoplay, FreeMode]}
-            slidesPerView={1}
-            spaceBetween={0}
-            breakpoints={{ 720: { slidesPerView: 3, spaceBetween: 16 } }}
-            loop={true}
-            freeMode={true}
-            grabCursor={true}
-            simulateTouch={true}
-            touchRatio={1}
-            touchAngle={45}
-            threshold={5}
-            resistance={true}
-            resistanceRatio={0.85}
-            className="w-full h-60" // fixed height instead of h-full
-            onSwiper={(swiper) => {
-              swiperRef.current = swiper;
-            }}
-          >
-            {[...testimonials].sort(
-              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            ).map((testimony, index) => (
-              <SwiperSlide key={index} className="relative w-full h-full">
-                <div className={"bg-white p-10 h-full flex flex-col justify-between gap-6 font-inter"}>
-                  <p className="h-30 no-scroll overflow-auto">{testimony.comment}</p>
-                  <p className="font-semibold">{testimony.name}</p>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-
-          <div className="flex justify-center my-4 gap-4">
-            {/* Go left */}
-            <div
-              className="h-14 w-14 bg-[#EDF0EE] flex items-center justify-center cursor-pointer"
-              onClick={() => swiperRef.current?.slidePrev()}
-            >
-              <Image width={25} height={25} src={"/images/nav-arrow-left.png"} alt="" />
             </div>
-
-            {/* Go right */}
-            <div
-              className="h-14 w-14 bg-[#EDF0EE] flex items-center justify-center cursor-pointer"
-              onClick={() => swiperRef.current?.slideNext()}
+          ) : (
+            <Swiper
+              modules={[Autoplay, FreeMode]}
+              slidesPerView={1}
+              spaceBetween={0}
+              breakpoints={{ 720: { slidesPerView: 3, spaceBetween: 16 } }}
+              loop={true}
+              freeMode={true}
+              grabCursor={true}
+              simulateTouch={true}
+              touchRatio={1}
+              touchAngle={45}
+              threshold={5}
+              resistance={true}
+              resistanceRatio={0.85}
+              className="w-full h-60"
+              onSwiper={(swiper) => {
+                swiperRef.current = swiper;
+              }}
             >
-              <Image width={25} height={25} src={"/images/nav-arrow-right.png"} alt="" />
+              {[...testimonials].sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              ).map((testimony, index) => (
+                <SwiperSlide key={index} className="relative w-full h-full">
+                  <div className={"bg-white p-10 h-full flex flex-col justify-between gap-6 font-inter"}>
+                    <p className="h-30 no-scroll overflow-auto">{testimony.comment}</p>
+                    <p className="font-semibold">{testimony.name}</p>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          )}
+
+
+          {testimonials.length > 0 && (
+            <div className="flex justify-center my-4 gap-4">
+              <div
+                className="h-14 w-14 bg-[#EDF0EE] flex items-center justify-center cursor-pointer"
+                onClick={() => swiperRef.current?.slidePrev()}
+              >
+                <Image width={25} height={25} src={"/images/nav-arrow-left.png"} alt="" />
+              </div>
+              <div
+                className="h-14 w-14 bg-[#EDF0EE] flex items-center justify-center cursor-pointer"
+                onClick={() => swiperRef.current?.slideNext()}
+              >
+                <Image width={25} height={25} src={"/images/nav-arrow-right.png"} alt="" />
+              </div>
             </div>
-          </div>
+          )}
+
         </div>
 
 
