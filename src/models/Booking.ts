@@ -1,4 +1,4 @@
-import { Schema, models, model, Types } from "mongoose";
+import { FilterQuery, Schema, models, model, Types } from "mongoose";
 import {
   IBooking,
   IBookingMethods,
@@ -42,7 +42,7 @@ BookingSchema.statics.findByDateRange = async function (start: Date, end?: Date)
 };
 
 BookingSchema.statics.filter = async function (
-  filter: Record<string, string>,
+  filter: FilterQuery<IBooking>,
   sort: string,
   direction: "ASC" | "DESC"
 ) {

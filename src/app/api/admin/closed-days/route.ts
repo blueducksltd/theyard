@@ -48,6 +48,11 @@ export const GET = errorHandler(async (request: NextRequest) => {
       id: item.id,
       date: format(item.date, "yyyy-MM-dd"),
       reason: item.reason || "",
+      closureType: item.closureType || "internal",
+      isPrivate: Boolean(item.isPrivate),
+      eventTitle: item.eventTitle || "",
+      eventOrganizer: item.eventOrganizer || "",
+      eventDetails: item.eventDetails || "",
     })),
   });
 });
@@ -70,6 +75,15 @@ export const POST = errorHandler(async (request: NextRequest) => {
 
   const parsedDate = parseDateString(dateValue);
   const normalizedDate = startOfDay(parsedDate);
+  const closureType = body?.closureType === "event" ? "event" : "internal";
+  const isPrivate = body?.isPrivate !== undefined ? Boolean(body.isPrivate) : closureType === "internal";
+  const eventTitle = typeof body?.eventTitle === "string" ? body.eventTitle.trim() : "";
+  const eventOrganizer = typeof body?.eventOrganizer === "string" ? body.eventOrganizer.trim() : "";
+  const eventDetails = typeof body?.eventDetails === "string" ? body.eventDetails.trim() : "";
+
+  if (closureType === "event" && !isPrivate && !eventTitle) {
+    throw APIError.BadRequest("Event title is required when closing a day for a public event.");
+  }
 
   const existing = await ClosedDay.findOne({
     date: { $gte: startOfDay(normalizedDate), $lte: endOfDay(normalizedDate) },
@@ -81,6 +95,11 @@ export const POST = errorHandler(async (request: NextRequest) => {
         id: existing.id,
         date: format(existing.date, "yyyy-MM-dd"),
         reason: existing.reason || "",
+        closureType: existing.closureType || "internal",
+        isPrivate: Boolean(existing.isPrivate),
+        eventTitle: existing.eventTitle || "",
+        eventOrganizer: existing.eventOrganizer || "",
+        eventDetails: existing.eventDetails || "",
       },
     });
   }
@@ -88,6 +107,11 @@ export const POST = errorHandler(async (request: NextRequest) => {
   const closedDay = await ClosedDay.create({
     date: normalizedDate,
     reason: typeof body?.reason === "string" ? body.reason.trim() : "",
+    closureType,
+    isPrivate,
+    eventTitle: closureType === "event" && !isPrivate ? eventTitle : "",
+    eventOrganizer: closureType === "event" && !isPrivate ? eventOrganizer : "",
+    eventDetails: closureType === "event" && !isPrivate ? eventDetails : "",
     closedBy: payload.id,
   });
 
@@ -96,6 +120,11 @@ export const POST = errorHandler(async (request: NextRequest) => {
       id: closedDay.id,
       date: format(closedDay.date, "yyyy-MM-dd"),
       reason: closedDay.reason || "",
+      closureType: closedDay.closureType || "internal",
+      isPrivate: Boolean(closedDay.isPrivate),
+      eventTitle: closedDay.eventTitle || "",
+      eventOrganizer: closedDay.eventOrganizer || "",
+      eventDetails: closedDay.eventDetails || "",
     },
   });
 });

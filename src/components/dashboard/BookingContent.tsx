@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import moment from "moment";
 import { toast } from "react-toastify";
 
-interface IPageBooking {
+export interface IPageBooking {
   id: string;
   customer?: {
     id?: string;
@@ -411,9 +411,8 @@ export default function BookingContent() {
                       }}
                       role="button"
                       tabIndex={0}
-                      className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      } cursor-pointer`}
+                      className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        } cursor-pointer`}
                     >
                       <td className="px-6 py-4 text-sm text-[#737373] font-semibold leading-[22px] tracking-[0.5px]">
                         <div className="flex flex-col gap-1">
@@ -428,48 +427,84 @@ export default function BookingContent() {
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`p-1.5 rounded-md text-sm border ${
-                            booking.status === "pending" ||
+                          className={`p-1.5 rounded-md text-sm border ${booking.status === "pending" ||
                             booking.status === "cancelled"
-                              ? "border-[1px] border-[#8C8273] text-[#8C8273] rounded-sm italic leading-[22px] tracking-[0.5px] font-semibold"
-                              : "bg-green-50 border-[1px] border-green-400 text-green-700"
-                          }`}
+                            ? "border-[1px] border-[#8C8273] text-[#8C8273] rounded-sm italic leading-[22px] tracking-[0.5px] font-semibold"
+                            : "bg-green-50 border-[1px] border-green-400 text-green-700"
+                            }`}
                         >
                           {booking.status}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <button
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleBooking(booking.id, "confirmed");
-                            }}
-                            className="p-2 hover:bg-green-50 rounded transition-colors bg-[#EDF0EE] cursor-pointer duration-500 hover:scale-110"
-                            aria-label="Approve booking"
-                          >
-                            <Image
-                              src={"/icons/tick.svg"}
-                              width={20}
-                              height={20}
-                              alt="Tick Icon"
-                            />
-                          </button>
-                          <button
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleBooking(booking.id, "cancelled");
-                            }}
-                            className="p-2 hover:bg-red-50 rounded transition-colors bg-[#EDF0EE] cursor-pointer duration-500 hover:scale-110"
-                            aria-label="Delete booking"
-                          >
-                            <Image
-                              src={"/icons/close.svg"}
-                              width={20}
-                              height={20}
-                              alt="Trash Icon"
-                            />
-                          </button>
+                          {
+                            booking.status === "confirmed" ? <button
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleBooking(booking.id, "cancelled");
+                              }}
+                              className="p-2 hover:bg-red-50 rounded transition-colors bg-[#EDF0EE] cursor-pointer duration-500 hover:scale-110"
+                              aria-label="Delete booking"
+                            >
+                              <Image
+                                src={"/icons/close.svg"}
+                                width={20}
+                                height={20}
+                                alt="Trash Icon"
+                              />
+                            </button> : booking.status === "cancelled" ? <button
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleBooking(booking.id, "confirmed");
+                              }}
+                              className="p-2 hover:bg-green-50 rounded transition-colors bg-[#EDF0EE] cursor-pointer duration-500 hover:scale-110"
+                              aria-label="Approve booking"
+                            >
+                              <Image
+                                src={"/icons/tick.svg"}
+                                width={20}
+                                height={20}
+                                alt="Tick Icon"
+                              />
+                            </button> : <>
+
+                              <button
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleBooking(booking.id, "confirmed");
+                                }}
+                                className="p-2 hover:bg-green-50 rounded transition-colors bg-[#EDF0EE] cursor-pointer duration-500 hover:scale-110"
+                                aria-label="Approve booking"
+                              >
+                                <Image
+                                  src={"/icons/tick.svg"}
+                                  width={20}
+                                  height={20}
+                                  alt="Tick Icon"
+                                />
+                              </button>
+
+                              <button
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleBooking(booking.id, "cancelled");
+                                }}
+                                className="p-2 hover:bg-red-50 rounded transition-colors bg-[#EDF0EE] cursor-pointer duration-500 hover:scale-110"
+                                aria-label="Delete booking"
+                              >
+                                <Image
+                                  src={"/icons/close.svg"}
+                                  width={20}
+                                  height={20}
+                                  alt="Trash Icon"
+                                />
+                              </button>
+
+                            </>
+                          }
+
+
                         </div>
                       </td>
                     </tr>
@@ -572,11 +607,10 @@ export default function BookingContent() {
                 </p>
                 <div className="mt-3">
                   <span
-                    className={`inline-flex rounded-md border px-3 py-1 text-sm font-semibold ${
-                      selectedBooking.status === "pending" || selectedBooking.status === "cancelled"
-                        ? "border-[#8C8273] text-[#8C8273]"
-                        : "border-green-400 bg-green-50 text-green-700"
-                    }`}
+                    className={`inline-flex rounded-md border px-3 py-1 text-sm font-semibold ${selectedBooking.status === "pending" || selectedBooking.status === "cancelled"
+                      ? "border-[#8C8273] text-[#8C8273]"
+                      : "border-green-400 bg-green-50 text-green-700"
+                      }`}
                   >
                     {selectedBooking.status}
                   </span>

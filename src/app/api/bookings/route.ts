@@ -390,6 +390,7 @@ export const GET = errorHandler(async (request: NextRequest) => {
 
   // --- Query params ---
   const { searchParams } = new URL(request.url);
+  const dateParam = searchParams.get("date");
   const status = searchParams.get("status");
   const sort = searchParams.get("sort") || "date";
   const direction = (searchParams.get("direction") as "ASC" | "DESC") || "ASC";
@@ -400,7 +401,17 @@ export const GET = errorHandler(async (request: NextRequest) => {
   const limit = limitParam ? parseInt(limitParam, 10) : null;
 
   // --- Filter logic ---
-  const filter: Record<string, string> = {};
+  const filter: Record<string, unknown> = {};
+
+  if (dateParam) {
+    const selectedDate = parseISO(dateParam);
+    if (!Number.isNaN(selectedDate.getTime())) {
+      filter.eventDate = {
+        $gte: startOfDay(selectedDate),
+        $lte: endOfDay(selectedDate),
+      };
+    }
+  }
 
   if (status && status !== "past") {
     filter.status = status;

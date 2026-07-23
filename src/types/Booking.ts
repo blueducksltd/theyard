@@ -1,6 +1,5 @@
 // types/Booking.ts
-import { Document } from "mongoose";
-import { Model } from "mongoose";
+import { Document, FilterQuery, Model } from "mongoose";
 import { z } from "zod";
 import { ICustomer, SafeCustomer, sanitizeCustomer } from "./Customer";
 import { IEvent, SafeEvent, sanitizeEvent } from "./Event";
@@ -35,7 +34,7 @@ export interface IBookingMethods {
 // Statics
 export interface IBookingModel extends Model<IBooking, IBookingMethods> {
   filter(
-    filter: Record<string, string>,
+    filter: FilterQuery<IBooking>,
     sort: string,
     direction: "ASC" | "DESC",
     admin?: boolean,
