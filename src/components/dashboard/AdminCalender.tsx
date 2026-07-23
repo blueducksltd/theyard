@@ -27,6 +27,17 @@ type BookingStatus = "available" | "unavailable" | "pending";
 type EventDateCategory = "active" | "upcoming" | "past";
 type EventDateFilter = EventDateCategory | "all";
 
+type ClosedDayInfo = {
+  id?: string;
+  date: string;
+  reason?: string;
+  closureType?: "internal" | "event";
+  isPrivate?: boolean;
+  eventTitle?: string;
+  eventOrganizer?: string;
+  eventDetails?: string;
+};
+
 const EVENT_DATE_FILTER_OPTIONS: Array<{ label: string; value: EventDateFilter }> = [
   { label: "All", value: "all" },
   { label: "Active", value: "active" },
@@ -54,6 +65,14 @@ const DEFAULT_EVENT_INPUTS = {
   status: "pending",
 };
 
+const DEFAULT_CLOSE_DAY_INPUTS = {
+  closureType: "internal",
+  eventTitle: "",
+  eventOrganizer: "",
+  eventDetails: "",
+  reason: "",
+};
+
 const getEventDateCategory = (date: Date | string | null | undefined): EventDateCategory => {
   if (!date) return "past";
   const eventDate = moment(date).startOf("day");
@@ -77,11 +96,10 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   calenderWidth = "w-[813px]",
 }) => {
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [, setIsModalOpen] = useState(false);
   const [unavailableModal, setUnavailableModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [packages, setPackages] = useState<IPackage[]>([]);
-  const [selectedPackage, setSelectedPackage] = useState({});
+  const [, setPackages] = useState<IPackage[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // New event tabs, lists, and registration modal states
@@ -100,7 +118,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [closedDays, setClosedDays] = useState<Set<string>>(new Set());
+  const [closedDayDetails, setClosedDayDetails] = useState<Record<string, ClosedDayInfo>>({});
   const [isDayActionLoading, setIsDayActionLoading] = useState(false);
+  const [isCloseDayModalOpen, setIsCloseDayModalOpen] = useState(false);
+  const [closeDayDate, setCloseDayDate] = useState<Date | null>(null);
+  const [closeDayInputs, setCloseDayInputs] = useState({ ...DEFAULT_CLOSE_DAY_INPUTS });
 
   const [inputs, setInputs] = useState<Record<string, any>>({ ...DEFAULT_EVENT_INPUTS });
 
@@ -167,6 +189,18 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   const closeDeleteModal = () => {
     setEventToDelete(null);
     setIsDeleteModalOpen(false);
+  };
+
+  const openCloseDayModal = (targetDate: Date) => {
+    setCloseDayDate(targetDate);
+    setCloseDayInputs({ ...DEFAULT_CLOSE_DAY_INPUTS });
+    setIsCloseDayModalOpen(true);
+  };
+
+  const closeCloseDayModal = () => {
+    setIsCloseDayModalOpen(false);
+    setCloseDayDate(null);
+    setCloseDayInputs({ ...DEFAULT_CLOSE_DAY_INPUTS });
   };
 
   const populateEventForm = (event: any) => {
@@ -562,22 +596,15 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     return days;
   };
 
-  const getStatusColor = (status: BookingStatus): string => {
-    switch (status) {
-      case "available":
-        return "bg-[#33A510]";
-      case "unavailable":
-        return "bg-[#CA1919]";
-      case "pending":
-        return "bg-[#C2AC02]";
-      default:
-        return "bg-gray-300";
-    }
-  };
-
   const getDateKey = (day: number | null): string | null => {
     if (!day) return null;
     return `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`;
+  };
+
+  const getClosedDayInfoByDate = (date: Date | null): ClosedDayInfo | null => {
+    if (!date) return null;
+    const key = getDateKeyFromDate(date);
+    return closedDayDetails[key] || null;
   };
 
   const handleToggleDayClosure = async (day: number): Promise<void> => {
@@ -590,6 +617,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     const apiDate = moment(targetDate).format("YYYY-MM-DD");
     const isClosed = closedDays.has(dateKey);
 
+    if (!isClosed) {
+      openCloseDayModal(targetDate);
+      return;
+    }
+
     setIsDayActionLoading(true);
     try {
       if (isClosed) {
@@ -597,6 +629,11 @@ const AdminCalendar: React.FC<CalendarProps> = ({
         setClosedDays((prev) => {
           const next = new Set(prev);
           next.delete(dateKey);
+          return next;
+        });
+        setClosedDayDetails((prev) => {
+          const next = { ...prev };
+          delete next[dateKey];
           return next;
         });
         toast.success("Day reopened successfully", { position: "bottom-right" });
@@ -608,6 +645,85 @@ const AdminCalendar: React.FC<CalendarProps> = ({
       router.refresh();
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Failed to update day status", {
+        position: "bottom-right",
+      });
+    } finally {
+      setIsDayActionLoading(false);
+    }
+  };
+
+  const handleCloseDayInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target;
+    setCloseDayInputs((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmitCloseDay = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!closeDayDate) {
+      toast.error("No date selected for closure.", { position: "bottom-right" });
+      return;
+    }
+
+    const closureType = closeDayInputs.closureType === "event" ? "event" : "internal";
+    const isPrivate = closureType === "internal";
+
+    if (closureType === "event" && !closeDayInputs.eventTitle.trim()) {
+      toast.error("Please add the event title before closing this date.", {
+        position: "bottom-right",
+      });
+      return;
+    }
+
+    const apiDate = moment(closeDayDate).format("YYYY-MM-DD");
+    const dateKey = getDateKeyFromDate(closeDayDate);
+
+    setIsDayActionLoading(true);
+    const toastId = toast.loading("Closing day...", { position: "bottom-right" });
+
+    try {
+      await closeAdminDay(apiDate, {
+        closureType,
+        isPrivate,
+        reason: closeDayInputs.reason.trim(),
+        eventTitle: closureType === "event" ? closeDayInputs.eventTitle.trim() : "",
+        eventOrganizer: closureType === "event" ? closeDayInputs.eventOrganizer.trim() : "",
+        eventDetails: closureType === "event" ? closeDayInputs.eventDetails.trim() : "",
+      });
+
+      setClosedDays((prev) => new Set(prev).add(dateKey));
+      setClosedDayDetails((prev) => ({
+        ...prev,
+        [dateKey]: {
+          date: apiDate,
+          reason: closeDayInputs.reason.trim(),
+          closureType,
+          isPrivate,
+          eventTitle: closureType === "event" ? closeDayInputs.eventTitle.trim() : "",
+          eventOrganizer: closureType === "event" ? closeDayInputs.eventOrganizer.trim() : "",
+          eventDetails: closureType === "event" ? closeDayInputs.eventDetails.trim() : "",
+        },
+      }));
+      toast.update(toastId, {
+        render: "Day closed successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 5000,
+        position: "bottom-right",
+      });
+      closeCloseDayModal();
+      router.refresh();
+    } catch (error: any) {
+      toast.update(toastId, {
+        render: error?.response?.data?.message || "Failed to close this day",
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
         position: "bottom-right",
       });
     } finally {
@@ -683,16 +799,22 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     (async () => {
       try {
         const response = await getAdminClosedDays(currentMonthKey);
-        const rawDates: string[] = response?.data?.closedDays?.map(
-          (item: { date: string }) => item.date,
-        ) || [];
+        const rawClosedDays: ClosedDayInfo[] = response?.data?.closedDays || [];
 
-        const normalized = rawDates.map((dateStr) => {
-          const parsed = new Date(dateStr);
+        const normalized = rawClosedDays.map((item) => {
+          const parsed = new Date(item.date);
           return `${parsed.getFullYear()}-${parsed.getMonth() + 1}-${parsed.getDate()}`;
         });
 
+        const detailsMap = rawClosedDays.reduce<Record<string, ClosedDayInfo>>((acc, item) => {
+          const parsed = new Date(item.date);
+          const key = `${parsed.getFullYear()}-${parsed.getMonth() + 1}-${parsed.getDate()}`;
+          acc[key] = item;
+          return acc;
+        }, {});
+
         setClosedDays(new Set(normalized));
+        setClosedDayDetails(detailsMap);
       } catch (error) {
         console.error("Failed to load closed days:", error);
       }
@@ -831,11 +953,18 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                 const todayDate = isToday(day);
                 const pastDay = isPastDay(day);
                 const isClosedByAdmin = dateKey ? closedDays.has(dateKey) : false;
+                const closureInfo = dateKey ? closedDayDetails[dateKey] : undefined;
+                const closureHint = closureInfo?.closureType === "event"
+                  ? closureInfo.eventTitle || "Event closure"
+                  : "Internal event (private)";
+                const closureReason = closureInfo?.reason?.trim() ? closureInfo.reason : "";
+                const closureTitle = [closureHint, closureReason].filter(Boolean).join(" - ");
 
                 return (
                   <div
                     key={index}
                     onClick={() => day && handleDateClick(day, status!)}
+                    title={isClosedByAdmin ? closureTitle : undefined}
                     className={`relative h-20 flex items-center justify-center duration-10 rounded-sm group overflow-hidden cursor-pointer ${todayDate ? "bg-[#C7CFC9]" : null}`}
                   >
                     {day && (
@@ -870,9 +999,14 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                             </small>
                           )}
                           {isClosedByAdmin && (
-                            <small className="text-[#CA1919] text-[10px] leading-[100%] tracking-[0.5px] font-semibold z-40">
-                              manually closed
-                            </small>
+                            <div className="z-40 flex flex-col items-center gap-0.5">
+                              <small className="text-[#CA1919] text-[10px] leading-[100%] tracking-[0.5px] font-semibold">
+                                manually closed
+                              </small>
+                              <small className="rounded bg-[#FEE2E2] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.3px] text-[#9F1239]">
+                                {closureInfo?.closureType === "event" ? "event" : "internal"}
+                              </small>
+                            </div>
                           )}
                           <div className="absolute top-0 -left-0 bg-[#E4E8E5] group-hover:w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></div>
                         </div>
@@ -943,7 +1077,6 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {sortedEvents.map((event: any) => {
                 const eventDate = event.date ? new Date(event.date) : null;
                 const formattedDate = eventDate
@@ -1657,7 +1790,6 @@ const AdminCalendar: React.FC<CalendarProps> = ({
           ) : (
             <>
               <p className="text-sm text-[#555] font-sen mb-2">{registrations.length} attendee{registrations.length !== 1 ? "s" : ""} registered</p>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
               {registrations.map((reg: any, idx: number) => {
                 const name = reg.name || `${reg.firstname || ""} ${reg.lastname || ""}`.trim() || "Guest";
                 const email = reg.email || reg.customerEmail || "";
@@ -1699,6 +1831,208 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             </>
           )}
         </div>
+      </Modal>
+
+      <Modal isOpen={isCloseDayModalOpen}>
+        <section className="w-full">
+          <div className="w-full flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary font-playfair">
+                Close Date
+              </h2>
+              <p className="mt-1 text-sm text-[#666] font-sen">
+                {closeDayDate ? moment(closeDayDate).format("dddd, DD MMMM YYYY") : "Select date"}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
+              onClick={closeCloseDayModal}
+            >
+              <img src="/icons/cancel.svg" alt="Close Icon" className="z-40" />
+              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            </button>
+          </div>
+        </section>
+        <hr className="w-full h-[1px] bg-[#E4E8E5] border-0 my-5" />
+
+        <form className="w-full flex flex-col gap-5" onSubmit={handleSubmitCloseDay}>
+          <div className="form-group flex flex-col gap-3">
+            <label htmlFor="closureType" className="leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+              What is happening on this day?
+            </label>
+            <select
+              id="closureType"
+              name="closureType"
+              value={closeDayInputs.closureType}
+              onChange={handleCloseDayInputChange}
+              className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none bg-white"
+            >
+              <option value="internal">Internal event (private)</option>
+              <option value="event">Specific event</option>
+            </select>
+            <p className="text-xs text-[#777] font-sen">
+              Choose &quot;Internal event&quot; to close the day without filling event form details.
+            </p>
+          </div>
+
+          {closeDayInputs.closureType === "event" && (
+            <>
+              <div className="form-group flex flex-col gap-3">
+                <label htmlFor="eventTitle" className="leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                  Event title *
+                </label>
+                <input
+                  type="text"
+                  id="eventTitle"
+                  name="eventTitle"
+                  required={closeDayInputs.closureType === "event"}
+                  value={closeDayInputs.eventTitle}
+                  onChange={handleCloseDayInputChange}
+                  placeholder="e.g. Wedding Reception"
+                  className="w-full h-[52px] rounded2px p-3 border border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+
+              <div className="form-group flex flex-col gap-3">
+                <label htmlFor="eventOrganizer" className="leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                  Organizer (optional)
+                </label>
+                <input
+                  type="text"
+                  id="eventOrganizer"
+                  name="eventOrganizer"
+                  value={closeDayInputs.eventOrganizer}
+                  onChange={handleCloseDayInputChange}
+                  placeholder="Organizer name or team"
+                  className="w-full h-[52px] rounded2px p-3 border border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
+                />
+              </div>
+
+              <div className="form-group flex flex-col gap-3">
+                <label htmlFor="eventDetails" className="leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+                  Event details (optional)
+                </label>
+                <textarea
+                  id="eventDetails"
+                  name="eventDetails"
+                  rows={3}
+                  value={closeDayInputs.eventDetails}
+                  onChange={handleCloseDayInputChange}
+                  placeholder="Extra notes for admin records"
+                  className="w-full rounded2px p-3 border border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] resize-none"
+                />
+              </div>
+            </>
+          )}
+
+          <div className="form-group flex flex-col gap-3">
+            <label htmlFor="reason" className="leading-6 tracking-[0.5px] text-[#1A1A1A] font-medium font-sen">
+              Closure note (optional)
+            </label>
+            <textarea
+              id="reason"
+              name="reason"
+              rows={2}
+              value={closeDayInputs.reason}
+              onChange={handleCloseDayInputChange}
+              placeholder="Reason visible in admin data"
+              className="w-full rounded2px p-3 border border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px] resize-none"
+            />
+          </div>
+
+          <div className="mt-2 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={closeCloseDayModal}
+              className="rounded2px border border-[#C7CFC9] px-4 py-2 text-sm font-medium text-yard-primary transition-colors hover:bg-[#EDF0EE]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isDayActionLoading}
+              className="rounded2px bg-yard-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-yard-dark-primary disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isDayActionLoading ? "Closing..." : "Close this date"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={unavailableModal}>
+        <section className="w-full">
+          <div className="w-full flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-2xl leading-8 tracking-[0.1px] text-yard-primary font-playfair">
+                Closed Day Details
+              </h2>
+              <p className="mt-1 text-sm text-[#666] font-sen">
+                {selectedDate ? moment(selectedDate).format("dddd, DD MMMM YYYY") : "Selected date"}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
+              onClick={() => setUnavailableModal(false)}
+            >
+              <img src="/icons/cancel.svg" alt="Close Icon" className="z-40" />
+              <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
+            </button>
+          </div>
+        </section>
+        <hr className="w-full h-[1px] bg-[#E4E8E5] border-0 my-5" />
+
+        {(() => {
+          const info = getClosedDayInfoByDate(selectedDate);
+          const closureType = info?.closureType === "event" ? "event" : "internal";
+          const isInternal = closureType === "internal";
+
+          return (
+            <div className="w-full flex flex-col gap-4">
+              <div className="rounded-lg border border-[#E4E8E5] bg-[#FDFBF9] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.4px] text-[#777]">Closure type</p>
+                <p className="mt-1 text-base font-semibold text-yard-primary font-sen">
+                  {isInternal ? "Internal event (private)" : "Specific event"}
+                </p>
+              </div>
+
+              {!isInternal && (
+                <div className="rounded-lg border border-[#E4E8E5] bg-white p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.4px] text-[#777]">Event information</p>
+                  <div className="mt-2 space-y-2 text-sm text-[#333] font-sen">
+                    <p>
+                      <span className="font-semibold">Title:</span> {info?.eventTitle || "-"}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Organizer:</span> {info?.eventOrganizer || "-"}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Details:</span> {info?.eventDetails || "-"}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="rounded-lg border border-[#E4E8E5] bg-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.4px] text-[#777]">Admin note</p>
+                <p className="mt-2 text-sm text-[#333] font-sen whitespace-pre-wrap">
+                  {info?.reason?.trim() ? info.reason : "No note provided for this closure."}
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setUnavailableModal(false)}
+                  className="rounded2px border border-[#C7CFC9] px-4 py-2 text-sm font-medium text-yard-primary transition-colors hover:bg-[#EDF0EE]"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
     </main>
   );

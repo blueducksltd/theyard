@@ -164,8 +164,25 @@ export const getAdminClosedDays = async (month?: string) => {
   return response.data;
 };
 
-export const closeAdminDay = async (date: string, reason = "") => {
-  const response = await axios.post(`/admin/closed-days`, { date, reason });
+type CloseAdminDayOptions = {
+  reason?: string;
+  closureType?: "internal" | "event";
+  eventTitle?: string;
+  eventOrganizer?: string;
+  eventDetails?: string;
+  isPrivate?: boolean;
+};
+
+export const closeAdminDay = async (
+  date: string,
+  reasonOrOptions: string | CloseAdminDayOptions = "",
+) => {
+  const payload =
+    typeof reasonOrOptions === "string"
+      ? { date, reason: reasonOrOptions }
+      : { date, ...reasonOrOptions };
+
+  const response = await axios.post(`/admin/closed-days`, payload);
   return response.data;
 };
 
