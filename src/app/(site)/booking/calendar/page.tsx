@@ -1,5 +1,6 @@
 "use client";
 import BookingCalendar from '@/components/booking/Calender'
+import Modal from '@/components/v2/Modal';
 import { useBookingStore } from '@/store/bookingStore'
 import { IBooking } from '@/types/Booking';
 import { getBookings } from '@/util';
@@ -7,10 +8,52 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 
+const normalizeBookingTime = (value?: string | null): string | null => {
+    if (!value) return null;
+
+    const trimmedTime = value.trim();
+    const twentyFourHourMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})$/);
+    if (twentyFourHourMatch) {
+        const hours = Number(twentyFourHourMatch[1]);
+        const minutes = Number(twentyFourHourMatch[2]);
+
+        if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+    }
+
+    const meridiemMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!meridiemMatch) return null;
+
+    let hours = Number(meridiemMatch[1]);
+    const minutes = Number(meridiemMatch[2]);
+    const meridiem = meridiemMatch[3].toUpperCase();
+
+    if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+        return null;
+    }
+
+    if (meridiem === 'AM') {
+        hours = hours === 12 ? 0 : hours;
+    } else if (hours !== 12) {
+        hours += 12;
+    }
+
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+};
+
 export default function BookingCalendarPage() {
     const { setDate } = useBookingStore();
     const router = useRouter();
     const [bookingData, setBookingData] = useState<IBooking[]>([]);
+    const [selectedDatePreview, setSelectedDatePreview] = useState<Date | null>(null);
+    const [occupiedTimesPreview, setOccupiedTimesPreview] = useState<string[]>([]);
+    const [showOccupiedTimesPreviewModal, setShowOccupiedTimesPreviewModal] = useState(false);
+
+    const proceedToBookingForm = (date: Date) => {
+        setDate(date);
+        router.push("/booking");
+    };
     
   useEffect(() => {
     (async () => {
@@ -101,13 +144,70 @@ export default function BookingCalendarPage() {
 
                 {/*Calender*/}
                 <div className='bg-[#FDFBF9] w-full'>
-                    <BookingCalendar bookingData={bookingData} onDateClick={(date) => {
-                        setDate(date);
-                        router.push("/booking")
+                    <BookingCalendar bookingData={bookingData} onDateClick={(date, bookings) => {
+                        const occupiedTimes = Array.from(
+                            new Set(
+                                bookings
+                                    .map((booking) => normalizeBookingTime(booking.time))
+                                    .filter((time): time is string => Boolean(time)),
+                            ),
+                        ).sort();
 
+                        if (bookings.length > 0) {
+                            setSelectedDatePreview(date);
+                            setOccupiedTimesPreview(occupiedTimes);
+                            setShowOccupiedTimesPreviewModal(true);
+                            return;
+                        }
+
+                        proceedToBookingForm(date);
                     }} />
+
                 </div>
             </section>
+
+            <Modal
+                isOpen={showOccupiedTimesPreviewModal && !!selectedDatePreview}
+                handleClose={() => setShowOccupiedTimesPreviewModal(false)}
+            >
+                {selectedDatePreview && (
+                    <div className='w-[92vw] max-w-xl bg-white p-5 md:p-6'>
+                        <h3 className='font-playfair text-primaryGreen text-xl'>
+                            Occupied times for {selectedDatePreview.toLocaleDateString("en-US", { dateStyle: "medium" })}
+                        </h3>
+
+                        {occupiedTimesPreview.length > 0 ? (
+                            <p className='text-sm text-[#717068] mt-2'>
+                                {occupiedTimesPreview.join(', ')}
+                            </p>
+                        ) : (
+                            <p className='text-sm text-[#717068] mt-2'>
+                                This date already has bookings. No exact time blocks were recorded for those bookings yet.
+                            </p>
+                        )}
+
+                        <div className='mt-5 flex flex-wrap gap-3'>
+                            <button
+                                type='button'
+                                onClick={() => {
+                                    setShowOccupiedTimesPreviewModal(false);
+                                    proceedToBookingForm(selectedDatePreview);
+                                }}
+                                className='px-4 py-2 bg-primaryGreen text-white text-sm font-semibold'
+                            >
+                                Continue to booking form
+                            </button>
+                            <button
+                                type='button'
+                                onClick={() => setShowOccupiedTimesPreviewModal(false)}
+                                className='px-4 py-2 border border-primaryGreen text-primaryGreen text-sm font-semibold'
+                            >
+                                Choose another date
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
 
         </div>
     )
