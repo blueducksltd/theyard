@@ -3,7 +3,7 @@ import Modal from '@/components/v2/Modal';
 import { ArrowLeft, CalendarDays, ChevronDown, PackageX } from 'lucide-react';
 import EmptyState from '@/components/v2/EmptyState';
 import Image from 'next/image';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AddMoreFun, IPackageFun, ModalContent, PackageCard, SelectedAddon } from '../packages/page';
 import BookingCalendar from '@/components/booking/Calender';
 import { toast } from 'react-toastify';
@@ -42,6 +42,40 @@ const normalizeDateKey = (value: Date | string): string | null => {
   const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
   const day = String(parsedDate.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+const normalizeBookingTime = (value?: string | null): string | null => {
+  if (!value) return null;
+
+  const trimmedTime = value.trim();
+  const twentyFourHourMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})$/);
+  if (twentyFourHourMatch) {
+    const hours = Number(twentyFourHourMatch[1]);
+    const minutes = Number(twentyFourHourMatch[2]);
+
+    if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    }
+  }
+
+  const meridiemMatch = trimmedTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!meridiemMatch) return null;
+
+  let hours = Number(meridiemMatch[1]);
+  const minutes = Number(meridiemMatch[2]);
+  const meridiem = meridiemMatch[3].toUpperCase();
+
+  if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+    return null;
+  }
+
+  if (meridiem === 'AM') {
+    hours = hours === 12 ? 0 : hours;
+  } else if (hours !== 12) {
+    hours += 12;
+  }
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
 const getBookingPackageId = (booking: IBooking): string | null => {
@@ -146,6 +180,13 @@ export default function BookingPage() {
   const [bookingData, setBookingData] = useState<IBooking[]>([])
   const [closedDateKeys, setClosedDateKeys] = useState<Set<string>>(new Set());
 
+  const availableTimeSlots = useMemo(() => {
+    return Array.from({ length: 15 }).map((_, index) => {
+      const hour = String(index + 8).padStart(2, '0');
+      return `${hour}:00`;
+    });
+  }, []);
+
   const getBookingsForDate = useCallback((dateValue?: string) => {
     if (!dateValue) return [] as IBooking[];
 
@@ -180,6 +221,23 @@ export default function BookingPage() {
 
     return bookedCount >= capacity;
   }, [closedDateKeys, getBookingsForDate]);
+
+  const occupiedTimesForSelectedDate = useMemo(() => {
+    if (!show.date.value) return [] as string[];
+
+    const dayBookings = getBookingsForDate(show.date.value);
+    const occupiedTimes = dayBookings
+      .map((booking) => normalizeBookingTime(booking.time))
+      .filter((time): time is string => Boolean(time));
+
+    return Array.from(new Set(occupiedTimes)).sort();
+  }, [getBookingsForDate, show.date.value]);
+
+  const isSelectedTimeTaken = useMemo(() => {
+    const normalizedSelectedTime = normalizeBookingTime(show.time.value);
+    if (!normalizedSelectedTime) return false;
+    return occupiedTimesForSelectedDate.includes(normalizedSelectedTime);
+  }, [occupiedTimesForSelectedDate, show.time.value]);
 
 
   const [inputs, setInputs] = useState<{
@@ -273,6 +331,9 @@ export default function BookingPage() {
       return toast("This package is fully booked for the selected date. Please choose another date or package.", { type: "error" });
     }
     if (!show.time.value) return toast("Please select an event time.", { type: "error" });
+    if (isSelectedTimeTaken) {
+      return toast("This time is not available for the selected day. Please choose another time.", { type: "error" });
+    }
     if (!inputs.guest || inputs.guest < 1) return toast("Please enter the number of guests.", { type: "error" });
     const data = {
       firstName: inputs.firstname,
@@ -304,8 +365,16 @@ export default function BookingPage() {
             lastname: "",
             note: ""
           });
-        } catch {
-          toast.error("Payment was successful, but we could not complete your booking. Please contact support.");
+        } catch (error: unknown) {
+          const apiErrorMessage = typeof error === 'object' && error !== null && 'response' in error
+            ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message ?? '')
+            : '';
+
+          if (apiErrorMessage) {
+            toast.error(apiErrorMessage);
+          } else {
+            toast.error("Payment was successful, but we could not complete your booking. Please contact support.");
+          }
         } finally {
           setLoading(false);
         }
@@ -506,11 +575,19 @@ export default function BookingPage() {
                   onDateClick={(date) => {
                     setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }));
                     const nextDateLabel = date.toLocaleDateString("en-US", { dateStyle: "medium" });
+                    const occupiedTimes = getBookingsForDate(nextDateLabel)
+                      .map((booking) => normalizeBookingTime(booking.time))
+                      .filter((time): time is string => Boolean(time));
                     const packageIsFull = show.package.value
                       ? isPackageUnavailableForDate(show.package.value, nextDateLabel)
                       : false;
 
                     setShow(prev => ({ ...prev, date: { ...prev.date, show: false, value: date.toLocaleDateString("en-US", { dateStyle: "medium" }) } }))
+
+                    if (show.time.value && occupiedTimes.includes(show.time.value)) {
+                      setShow(prev => ({ ...prev, time: { ...prev.time, value: '' } }));
+                      toast.info("Your previously selected time is already occupied on this date. Please choose another time.");
+                    }
 
                     if (packageIsFull) {
                       setShow(prev => ({ ...prev, package: { ...prev.package, value: null } }))
@@ -532,12 +609,26 @@ export default function BookingPage() {
                 <ChevronDown size={20} />
               </div>
 
+              {!!show.date.value && occupiedTimesForSelectedDate.length > 0 && (
+                <p className='text-[11px] mt-1 text-[#CA1919]'>
+                  Occupied times: {occupiedTimesForSelectedDate.join(', ')}
+                </p>
+              )}
+
               <div className={`absolute bg-white z-10 overflow-auto transition-[height] duration-500 ease-in-out ${!show.time.show ? "w-0 h-0 p-0" : "w-full h-30 p-2 "}`}>
-                {Array.from({ length: 15 }).map((_, index) => {
-                  const hour = (index + 8).toLocaleString().padStart(2, "0");
-                  return <p key={index} onClick={() => {
-                    setShow(prev => ({ ...prev, time: { ...prev.time, value: hour + ":00" } }))
-                  }} className='p-3 z-50 hover:bg-black/5'>{hour}:00</p>
+                {availableTimeSlots.map((timeSlot) => {
+                  const isTaken = occupiedTimesForSelectedDate.includes(timeSlot);
+
+                  return <p key={timeSlot} onClick={() => {
+                    if (isTaken) {
+                      toast.error("This time is not available. Please choose another time.");
+                      return;
+                    }
+
+                    setShow(prev => ({ ...prev, time: { ...prev.time, value: timeSlot } }))
+                  }} className={`p-3 z-50 ${isTaken ? 'bg-[#FFF2F2] text-[#CA1919] cursor-not-allowed' : 'hover:bg-black/5 cursor-pointer'}`}>
+                    {timeSlot} {isTaken ? '(occupied)' : ''}
+                  </p>
                 })}
               </div>
 

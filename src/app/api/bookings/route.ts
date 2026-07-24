@@ -221,6 +221,20 @@ export const POST = errorHandler(async (request: NextRequest) => {
     throw APIError.BadRequest("Invalid time format. Please use HH:mm.");
   }
 
+  if (requestedTime) {
+    const conflictingTimeBooking = dayBookings.find((booking) => {
+      const existingTime = normalizeBookingTime(booking.time);
+      if (!existingTime) return false;
+      return existingTime === requestedTime;
+    });
+
+    if (conflictingTimeBooking) {
+      throw APIError.BadRequest(
+        `This time (${requestedTime}) is not available for this date. Please choose another time.`,
+      );
+    }
+  }
+
   if (body.spaceId) {
     const conflictingBooking = dayBookings.find((booking) => {
       if (booking.space?.toString() !== body.spaceId) {
