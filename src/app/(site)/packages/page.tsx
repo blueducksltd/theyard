@@ -126,7 +126,7 @@ export const ModalContent = React.memo(function ModalContent({
                             <b>{formatNaira(totalPrice)}</b> /Person
                         </span>
                         <span className="text-xs  p-2 bg-lightBrown text-black">
-                            {selectedPackage.guestLimit} {selectedPackage.guestLimit > 1 ? "slots" : "slot"}  <b>left</b>
+                            Includes up to {selectedPackage.capacity} {selectedPackage.capacity === 1 ? "guest" : "guests"}
                         </span>
                     </div>
                 </div>
@@ -446,14 +446,12 @@ interface PackageCardProps {
     pkg: IPackageFun;
     index: number;
     onSelect: (index: number) => void;
-    selectedDate: Date | null;
 }
 
 export const PackageCard = React.memo(function PackageCard({
     pkg,
     index,
     onSelect,
-    selectedDate
 }: PackageCardProps) {
     const pathname = usePathname()
     const isBooking = pathname.includes('booking');
@@ -496,11 +494,7 @@ export const PackageCard = React.memo(function PackageCard({
                                 <b className="font-playfair-display text-sm">{formatNaira(pkg.price)}</b>/Person
                             </span>
                             <span className="text-xs bg-[#C7CFC9]/50 p-2 text-primaryGreen">
-                                {pkg.guestLimit} {pkg.guestLimit === 1 ? "Person" : "Persons"}
-                                {" "}
-                                Left
-                                {" "}
-                                {!selectedDate && <b className="font-playfair-display text-sm">Today</b>}
+                                Includes up to {pkg.capacity} {pkg.capacity === 1 ? "guest" : "guests"}
                             </span>
 
                         </div>
@@ -567,8 +561,6 @@ export default function PackagesPage() {
         [selectedIndex]
     );
 
-    const { selectedDate } = useBookingStore()
-
     useEffect(() => {
         let cancelled = false;
         document.body.style.overflow = "hidden"; // Disable scrolling while loading
@@ -629,7 +621,6 @@ export default function PackagesPage() {
                         pkg={pkg}
                         index={index}
                         onSelect={handleShowPackage}
-                        selectedDate={selectedDate}
                     />
                 ))}
             </div>

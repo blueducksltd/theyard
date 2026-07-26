@@ -14,7 +14,8 @@ import { IPackageClient } from '@/types/Package';
 import { motion } from "motion/react";
 import { initiatePayment } from '@/util/payment';
 import { IBooking } from '@/types/Booking';
-import { getBookings, getClosedDays } from '@/util';
+import { getBookings, getClosedDays, getSpaces } from '@/util';
+import { SafeSpace } from '@/types/Space';
 type ShowState = {
   package: {
     show: boolean;
@@ -33,6 +34,9 @@ type ShowState = {
     value: string;
   };
 };
+
+type SpaceReference = { id?: string; _id?: string; name?: string };
+type PackageReference = { packageSpace?: string | SpaceReference };
 
 const normalizeDateKey = (value: Date | string): string | null => {
   const parsedDate = new Date(value);
@@ -102,7 +106,6 @@ const PackageModalContent = ({
 }) => {
 
   const [viewing, setViewing] = useState<IPackageFun | null>(null)
-  const { selectedDate } = useBookingStore()
 
   if (viewing) {
     return <ModalContent
@@ -152,7 +155,6 @@ const PackageModalContent = ({
                   }
                   setViewing(pkg)
                 }}
-                selectedDate={selectedDate}
               />
             </div>
             {isSoldOut && (
@@ -179,6 +181,7 @@ export default function BookingPage() {
   const [loading, setLoading] = useState<boolean>(false)
   const [bookingData, setBookingData] = useState<IBooking[]>([])
   const [closedDateKeys, setClosedDateKeys] = useState<Set<string>>(new Set());
+  const [spaces, setSpaces] = useState<SafeSpace[]>([]);
 
   const availableTimeSlots = useMemo(() => {
     return Array.from({ length: 15 }).map((_, index) => {
@@ -211,16 +214,88 @@ export default function BookingPage() {
 
     const dayBookings = getBookingsForDate(dateValue);
     const capacity = Number(pkg.capacity ?? 0);
-    if (capacity <= 0) return false;
+    if (capacity > 0) {
+      const bookedCount = dayBookings.reduce((count, booking) => {
+        const bookingPackageId = getBookingPackageId(booking);
+        if (!bookingPackageId || bookingPackageId !== pkg.id) return count;
+        return count + 1;
+      }, 0);
 
-    const bookedCount = dayBookings.reduce((count, booking) => {
-      const bookingPackageId = getBookingPackageId(booking);
-      if (!bookingPackageId || bookingPackageId !== pkg.id) return count;
-      return count + 1;
+      if (bookedCount >= capacity) return true;
+    }
+
+    // Check Space guest limit
+    const pkgSpaceRef = pkg.packageSpace;
+    if (pkgSpaceRef && spaces.length > 0) {
+      const pkgSpace = pkgSpaceRef as SpaceReference;
+      const pkgSpaceIdStr = typeof pkgSpaceRef === 'string' ? pkgSpaceRef : pkgSpace.id || pkgSpace._id;
+      const spaceObj = spaces.find(s => s.id === pkgSpaceIdStr || s.name.toLowerCase() === (typeof pkgSpaceRef === 'string' ? pkgSpaceRef.toLowerCase() : ''));
+
+      if (spaceObj) {
+        const spaceGuestLimit = Number(spaceObj.guestLimit ?? 0);
+        if (spaceGuestLimit > 0) {
+          const totalSpaceBookedGuests = dayBookings.reduce((sum, booking) => {
+            const bSpace = booking.space as unknown as SpaceReference | string | null;
+            const bSpaceId = typeof bSpace === 'string' ? bSpace : bSpace?.id || bSpace?._id;
+            const bPkg = booking.package as unknown as PackageReference | null;
+            const bPkgSpaceRef = bPkg?.packageSpace;
+            const bPkgSpaceId = typeof bPkgSpaceRef === 'string' ? bPkgSpaceRef : bPkgSpaceRef?.id || bPkgSpaceRef?._id || bPkgSpaceRef?.name;
+
+            const isMatchingSpace = (bSpaceId && (bSpaceId === spaceObj.id || bSpaceId === spaceObj.name)) ||
+              (bPkgSpaceId && (bPkgSpaceId === spaceObj.id || bPkgSpaceId === spaceObj.name || bPkgSpaceId.toLowerCase() === spaceObj.name.toLowerCase()));
+
+            return isMatchingSpace ? sum + (booking.guestCount || 0) : sum;
+          }, 0);
+
+          if (totalSpaceBookedGuests >= spaceGuestLimit) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }, [closedDateKeys, getBookingsForDate, spaces]);
+
+  const getSpaceGuestCapacity = useCallback((pkg: IPackageFun, dateValue?: string) => {
+    if (!dateValue || !pkg.packageSpace || spaces.length === 0) return null;
+
+    const packageSpace = pkg.packageSpace;
+    const packageSpaceId = typeof packageSpace === "string"
+      ? packageSpace
+      : packageSpace.id;
+    const packageSpaceName = typeof packageSpace === "string" ? packageSpace : packageSpace.name;
+    const space = spaces.find((item) =>
+      item.id === packageSpaceId || item.name.toLowerCase() === packageSpaceName?.toLowerCase(),
+    );
+
+    if (!space || Number(space.guestLimit) < 1) return null;
+
+    const bookedGuests = getBookingsForDate(dateValue).reduce((total, booking) => {
+      const bookingSpace = booking.space as unknown as { id?: string; _id?: string } | string | null;
+      const bookingSpaceId = typeof bookingSpace === "string"
+        ? bookingSpace
+        : bookingSpace?.id || bookingSpace?._id;
+      const bookingPackage = booking.package as unknown as PackageReference | null;
+      const bookingPackageSpace = bookingPackage?.packageSpace;
+      const bookingPackageSpaceId = typeof bookingPackageSpace === "string"
+        ? bookingPackageSpace
+        : bookingPackageSpace?.id || bookingPackageSpace?._id || bookingPackageSpace?.name;
+      const belongsToSpace = bookingSpaceId === space.id ||
+        bookingPackageSpaceId === space.id ||
+        bookingPackageSpaceId?.toLowerCase() === space.name.toLowerCase();
+
+      return belongsToSpace ? total + Number(booking.guestCount || 0) : total;
     }, 0);
 
-    return bookedCount >= capacity;
-  }, [closedDateKeys, getBookingsForDate]);
+    const limit = Number(space.guestLimit);
+    return {
+      name: space.name,
+      limit,
+      bookedGuests,
+      remainingGuests: Math.max(0, limit - bookedGuests),
+    };
+  }, [getBookingsForDate, spaces]);
 
   const occupiedTimesForSelectedDate = useMemo(() => {
     if (!show.date.value) return [] as string[];
@@ -255,6 +330,11 @@ export default function BookingPage() {
     lastname: "",
     note: ""
   })
+
+  const spaceGuestCapacity = useMemo(() => {
+    if (!show.package.value || !show.date.value) return null;
+    return getSpaceGuestCapacity(show.package.value, show.date.value);
+  }, [getSpaceGuestCapacity, show.date.value, show.package.value]);
 
   const summary: { title: string; subtitle: string; }[] = [{
     title: "Package",
@@ -335,6 +415,12 @@ export default function BookingPage() {
       return toast("This time is not available for the selected day. Please choose another time.", { type: "error" });
     }
     if (!inputs.guest || inputs.guest < 1) return toast("Please enter the number of guests.", { type: "error" });
+    const currentSpaceCapacity = getSpaceGuestCapacity(show.package.value, show.date.value);
+    if (currentSpaceCapacity && inputs.guest > currentSpaceCapacity.remainingGuests) {
+      return toast.error(
+        `${currentSpaceCapacity.name} has only ${currentSpaceCapacity.remainingGuests} guest ${currentSpaceCapacity.remainingGuests === 1 ? "spot" : "spots"} remaining for this date.`,
+      );
+    }
     const data = {
       firstName: inputs.firstname,
       lastName: inputs.lastname,
@@ -419,6 +505,10 @@ export default function BookingPage() {
           .filter((item): item is string => Boolean(item));
         setClosedDateKeys(new Set(normalized));
 
+        const spacesRes = await getSpaces();
+        if (spacesRes?.data?.spaces) {
+          setSpaces(spacesRes.data.spaces);
+        }
 
       } catch {
         console.error('Error fetching packages:');
@@ -510,13 +600,16 @@ export default function BookingPage() {
                     return;
                   }
 
-                  if (Number(e.target.value) > show.package.value.guestLimit) {
-                    toast(`Guest exceeds max guest of ${show.package.value.guestLimit}.`, { type: "error" })
-                    return;
-                  }
                   setInputs(prev => ({ ...prev, guest: Number(e.target.value) }))
                 }} className='w-full h-full outline-0' placeholder='Enter Number of Participant' />
               </div>
+              {spaceGuestCapacity && inputs.guest > 0 && (
+                <p className={`text-xs ${inputs.guest > spaceGuestCapacity.remainingGuests ? "text-[#CA1919]" : "text-[#717068]"}`}>
+                  {inputs.guest > spaceGuestCapacity.remainingGuests
+                    ? `${spaceGuestCapacity.name} has only ${spaceGuestCapacity.remainingGuests} guest ${spaceGuestCapacity.remainingGuests === 1 ? "spot" : "spots"} remaining for this date.`
+                    : `${spaceGuestCapacity.remainingGuests} of ${spaceGuestCapacity.limit} guest spots remain in ${spaceGuestCapacity.name} for this date.`}
+                </p>
+              )}
             </div>
             <div className='space-y-1 text-sm'>
               <label htmlFor="package" className='block text-[#1A1A1A]'>First name</label>

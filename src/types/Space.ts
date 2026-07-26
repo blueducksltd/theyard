@@ -1,7 +1,5 @@
 // types/Space.ts
-import { Model } from "mongoose";
-import { Document } from "mongoose";
-// import { Model } from "mongoose";
+import { Model, Document } from "mongoose";
 import { z } from "zod";
 
 // -----------------------------
@@ -9,85 +7,52 @@ import { z } from "zod";
 // -----------------------------
 export interface ISpace extends Document {
   name: string;
-  imageUrl: string;
-  pricePerHour: number;
-  specs: string[];
-  address: string;
-  capacity: number;
-  description?: string;
+  guestLimit: number;
   createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Instance methods
 export interface ISpaceMethods {
-  formatAddress(): string;
+  // placeholder for future methods
 }
 
 // Statics
-export interface ISpaceModel extends Model<ISpace, ISpaceMethods> {
+export interface ISpaceModel extends Model<ISpace, object, ISpaceMethods> {
   findByName(name: string): Promise<ISpace | null>;
-  filterByCapacity(minCapacity: number): Promise<ISpace[]>;
 }
 
-// Other utility types
+// Safe serialisable type (sent to the client)
 export type SafeSpace = {
   id: string;
   name: string;
-  pricePerHour: number;
-  imageUrl: string;
-  specs: string[];
-  address: string;
-  capacity: number;
-  description?: string;
-  createdAt?: Date
+  guestLimit: number;
+  createdAt?: Date;
+  updatedAt?: Date;
 };
 
 export function sanitizeSpace(space: ISpace): SafeSpace {
   return {
-    id: space.id,
+    id: space.id || (space as unknown as { _id: string })._id?.toString(),
     name: space.name,
-    pricePerHour: space.pricePerHour,
-    imageUrl: space.imageUrl,
-    specs: space.specs,
-    address: space.address,
-    capacity: space.capacity,
-    description: space.description,
+    guestLimit: space.guestLimit ?? 50,
     createdAt: space.createdAt,
+    updatedAt: space.updatedAt,
   };
 }
 
 // ---------------------------
-//      Zod Schemas (DTOs)    //
+//      Zod Schemas (DTOs)
 // ---------------------------
 export const CreateSpaceDto = z.object({
-  name: z.string().min(3).max(100),
-  pricePerHour: z.number().min(0),
-  specs: z.array(z.string().min(1)).min(1),
-  address: z.string().min(5).max(200),
-  capacity: z.number().min(1),
-  description: z.string().min(10).max(1000),
-  imageUrl: z.string().url().optional(),
+  name: z.string().min(2, "Name must be at least 2 characters").max(100),
+  guestLimit: z.coerce.number().min(1, "Guest limit must be at least 1"),
 });
 
 export const UpdateSpaceDTO = z.object({
-  name: z.string().optional(),
-  pricePerHour: z.coerce.number().optional(), // accepts "1000" and coerces to 1000
-  specs: z.preprocess((val) => {
-    if (Array.isArray(val)) {
-      return val;
-    }
-    if (typeof val === "string") {
-      // comma-separated string from form-data
-      return val.split(",").map((s) => s.trim());
-    }
-    return [];
-  }, z.array(z.string())).optional(),
-  description: z.string().optional(),
-  imageUrl: z.url().optional(),
-  address: z.string().optional(),
-  capacity: z.number().optional(),
+  name: z.string().min(2).max(100).optional(),
+  guestLimit: z.coerce.number().min(1).optional(),
 });
-
 
 export type CreateSpaceInput = z.infer<typeof CreateSpaceDto>;
 export type UpdateSpaceInput = z.infer<typeof UpdateSpaceDTO>;

@@ -12,7 +12,11 @@ const PackageSchema = new Schema<IPackage, IPackageModel, IPackageMethods>(
     price: { type: Number, required: true },
     weekendPrice: {type: Number},
     capacity: { type: Number, required: true, default: 0 },
-    guestLimit: { type: Number, required: true },
+    packageSpace: {
+      type: Schema.Types.ObjectId,
+      ref: "Space",
+      required: true,
+    },
     extraGuestFee: { type: Number, required: true },
     specs: [{ type: String, required: true }],
     description: { type: String },
@@ -21,7 +25,12 @@ const PackageSchema = new Schema<IPackage, IPackageModel, IPackageMethods>(
   { timestamps: true }
 );
 
-// Export model
+// Mongoose keeps registered models across Next.js hot reloads. Re-register the
+// model in development so removed required fields do not remain in the schema.
+if (process.env.NODE_ENV === "development" && models.Package) {
+  delete models.Package;
+}
+
 const Package =
   (models.Package as IPackageModel) ||
   model<IPackage, IPackageModel>("Package", PackageSchema);

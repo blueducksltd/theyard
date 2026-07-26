@@ -10,6 +10,7 @@ import Booking from "@/models/Booking";
 import ClosedDay from "@/models/ClosedDay";
 import Customer from "@/models/Customer";
 import Package from "@/models/Package";
+import Space from "@/models/Space";
 import AddOn from "@/models/AddOn";
 import { isShutdownPackage } from "@/lib/packageRules";
 import {
@@ -235,27 +236,45 @@ export const POST = errorHandler(async (request: NextRequest) => {
     }
   }
 
+  // Check Space Guest Limit for the date
+  let targetSpace = null;
   if (body.spaceId) {
-    const conflictingBooking = dayBookings.find((booking) => {
-      if (booking.space?.toString() !== body.spaceId) {
-        return false;
-      }
+    targetSpace = await Space.findById(body.spaceId);
+  } else if (_package.packageSpace) {
+    const pSpace = _package.packageSpace as unknown as string | { id?: string; _id?: string };
+    if (typeof pSpace === "string") {
+      targetSpace = (await Space.findById(pSpace).catch(() => null)) || (await Space.findOne({ name: pSpace }));
+    } else if (pSpace._id || pSpace.id) {
+      targetSpace = await Space.findById(pSpace.id || pSpace._id).catch(() => null);
+    }
+  }
 
-      const existingTime = normalizeBookingTime(booking.time);
+  if (targetSpace) {
+    const targetSpaceIdStr = targetSpace._id.toString();
+    const targetSpaceNameLower = (targetSpace.name || "").toLowerCase();
 
-      if (!existingTime || !requestedTime) {
-        return true;
-      }
+    const existingSpaceGuests = dayBookings.reduce((sum, b) => {
+      const bSpaceId = b.space?.toString();
+      const bPackage = b.package as unknown as {
+        packageSpace?: string | { id?: string; _id?: { toString(): string }; name?: string };
+      } | null;
+      const bPkgSpace = bPackage?.packageSpace;
+      const bPkgSpaceStr = typeof bPkgSpace === "string"
+        ? bPkgSpace
+        : bPkgSpace?._id?.toString() || bPkgSpace?.id?.toString() || bPkgSpace?.name;
 
-      return existingTime === requestedTime;
-    });
+      const isSameSpace =
+        (bSpaceId && bSpaceId === targetSpaceIdStr) ||
+        (bPkgSpaceStr && (bPkgSpaceStr === targetSpaceIdStr || bPkgSpaceStr.toLowerCase() === targetSpaceNameLower));
 
-    if (conflictingBooking) {
-      const conflictingTime = normalizeBookingTime(conflictingBooking.time);
+      return isSameSpace ? sum + (b.guestCount || 0) : sum;
+    }, 0);
+
+    const spaceLimit = Number(targetSpace.guestLimit ?? 0);
+
+    if (spaceLimit > 0 && existingSpaceGuests + body.guestCount > spaceLimit) {
       throw APIError.BadRequest(
-        conflictingTime
-          ? `This space is already booked at ${conflictingTime} on this date. Please choose another time.`
-          : "This space is already booked for this date. Please choose another space or date.",
+        `The space (${targetSpace.name}) has reached its daily guest limit for the selected date. Current booked guests: ${existingSpaceGuests}, Limit: ${spaceLimit}. No more bookings can be made for packages under this space for this day.`
       );
     }
   }
@@ -300,23 +319,10 @@ export const POST = errorHandler(async (request: NextRequest) => {
     ? _package.weekendPrice
     : _package.price;
 
-  // Calculate totalPrice using baseLimit, guestLimit, and extraGuestFee
+  // The base limit is included in the package price; each additional guest is charged.
   const baseLimit = Number(_package.capacity ?? 0);
-  const guestLimit = _package.guestLimit as unknown as number;
   const extraGuestFee = _package.extraGuestFee as unknown as number;
   const guestCount = body.guestCount;
-
-  if (guestCount > guestLimit) {
-    throw APIError.BadRequest(
-      `Guest count exceeds package guest limit of ${guestLimit}.`,
-    );
-  }
-
-  if (baseLimit > guestLimit) {
-    throw APIError.Internal(
-      "Package configuration is invalid: base limit is greater than guest limit.",
-    );
-  }
 
   let totalPrice = basePrice as unknown as number;
   if (guestCount > baseLimit) {
@@ -337,7 +343,7 @@ export const POST = errorHandler(async (request: NextRequest) => {
   const booking = await Booking.create({
     customer: customer.id,
     package: _package.id,
-    space: body.spaceId,
+    space: targetSpace ? targetSpace._id : body.spaceId,
     eventDate: bookingDate,
     guestCount,
     time: requestedTime ?? undefined,
@@ -384,7 +390,6 @@ export const POST = errorHandler(async (request: NextRequest) => {
           name: _package.name,
           price: _package.price,
           baseLimit: _package.capacity,
-          guestLimit: _package.guestLimit,
           extraGuestFee: _package.extraGuestFee,
         },
         eventDate: booking.eventDate,

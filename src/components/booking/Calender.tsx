@@ -450,7 +450,7 @@ const BookingCalendar: React.FC<CalendarProps> = ({
                       name: pck.name,
                       price: pck.price,
                       extraguestfee: pck.extraGuestFee,
-                      guestLimit: pck.guestLimit
+                      capacity: pck.capacity,
                     })
                   }
                   className="radio radio-sm text-yard-primary mt-1 border-2"
