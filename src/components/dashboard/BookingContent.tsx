@@ -23,7 +23,6 @@ export interface IPageBooking {
     name?: string;
     price?: number;
     capacity?: number;
-    guestLimit?: number;
     extraGuestFee?: number;
   } | string;
   space?: unknown;
@@ -596,7 +595,7 @@ export default function BookingContent() {
                     <span className="font-semibold text-[#737373]">Package price:</span> {selectedBooking.package && typeof selectedBooking.package === "object" && selectedBooking.package.price != null ? Number(selectedBooking.package.price).toLocaleString() : "-"}
                   </p>
                   <p>
-                    <span className="font-semibold text-[#737373]">Capacity:</span> {selectedBooking.package && typeof selectedBooking.package === "object" && selectedBooking.package.capacity != null ? selectedBooking.package.capacity : selectedBooking.package && typeof selectedBooking.package === "object" && selectedBooking.package.guestLimit != null ? selectedBooking.package.guestLimit : "-"}
+                    <span className="font-semibold text-[#737373]">Base limit:</span> {selectedBooking.package && typeof selectedBooking.package === "object" && selectedBooking.package.capacity != null ? selectedBooking.package.capacity : "-"}
                   </p>
                 </div>
               </div>

@@ -43,8 +43,8 @@ export const PUT = errorHandler<{ params: { id: string } }>(
         const capacityStr = form.get("capacity") as string | null;
         if (capacityStr) data.capacity = z.coerce.number().parse(capacityStr);
 
-        const guestLimitStr = form.get("guestLimit") as string | null;
-        if (guestLimitStr) data.guestLimit = z.coerce.number().parse(guestLimitStr);
+        const packageSpace = form.get("packageSpace") as UpdatePackageInput["packageSpace"] | null;
+        if (packageSpace) data.packageSpace = packageSpace;
 
         const extraGuestFeeStr = form.get("extraGuestFee") as string | null;
         if (extraGuestFeeStr) data.extraGuestFee = z.coerce.number().parse(extraGuestFeeStr);

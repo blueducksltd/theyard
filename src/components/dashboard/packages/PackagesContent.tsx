@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Modal from "@/components/Modal";
 import { AddOnCategory, SafeAddOn } from "@/types/AddOn";
-import { IPackage } from "@/types/Package";
+import { IPackage, PackageSpace } from "@/types/Package";
 import { IService } from "@/types/Service";
 import {
   createAddon,
@@ -14,10 +14,12 @@ import {
   getAddons,
   getPackages,
   getServices,
+  getSpaces,
   updateAddon,
   updatePackage,
   updateService,
 } from "@/util";
+import { SafeSpace } from "@/types/Space";
 import { compressImage } from "@/util/helper";
 import Image from "next/image";
 import React, { DragEvent, FormEvent, useEffect } from "react";
@@ -29,9 +31,9 @@ const DEFAULT_INPUTS = {
   description: "",
   price: "",
   capacity: "",
-  guestLimit: "",
   extraGuestFee: "",
   specs: "",
+  packageSpace: "" as PackageSpace,
   category: "decoration" as AddOnCategory,
   pricePerMin: "",
 };
@@ -95,6 +97,7 @@ export default function PackagesContent() {
   const [packages, setPackages] = React.useState<IPackage[]>([]);
   const [services, setServices] = React.useState<IService[]>([]);
   const [addons, setAddons] = React.useState<SafeAddOn[]>([]);
+  const [spaces, setSpaces] = React.useState<SafeSpace[]>([]);
 
   const handleDrop = (e: DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -143,9 +146,9 @@ export default function PackagesContent() {
       });
       return;
     }
+    const compressedImage = await compressImage(preview);
     const payload: Record<string, any> = {
       ...inputs,
-      image: (await compressImage(preview)) || "null",
     };
 
     if (payload.price) {
@@ -164,9 +167,9 @@ export default function PackagesContent() {
             "description",
             "price",
             "capacity",
-            "guestLimit",
             "extraGuestFee",
             "specs",
+            "packageSpace",
           ];
 
     const FIELD_LABELS: Record<string, string> = {
@@ -174,9 +177,9 @@ export default function PackagesContent() {
       description: "Description",
       price: "Price",
       capacity: "Base limit",
-      guestLimit: "Guest limit",
       extraGuestFee: "Extra guest fee",
       specs: "Specs",
+      packageSpace: "Package space",
     };
 
     const firstMissingRequiredField = requiredFields.find((field) => {
@@ -197,8 +200,6 @@ export default function PackagesContent() {
 
     if (section === "packages") {
       const baseLimit = Number(payload.capacity);
-      const guestLimit = Number(payload.guestLimit);
-
       if (Number.isNaN(baseLimit) || baseLimit < 1) {
         toast.update(toastId, {
           render: "Base limit must be at least 1.",
@@ -209,15 +210,6 @@ export default function PackagesContent() {
         return;
       }
 
-      if (Number.isNaN(guestLimit) || guestLimit < baseLimit) {
-        toast.update(toastId, {
-          render: "Guest limit cannot be less than base limit.",
-          type: "error",
-          isLoading: false,
-          autoClose: 8000,
-        });
-        return;
-      }
     }
 
     const formData = new FormData();
@@ -226,6 +218,9 @@ export default function PackagesContent() {
         formData.append(key, String(value));
       }
     });
+    if (compressedImage) {
+      formData.append("image", compressedImage);
+    }
 
     try {
       const response =
@@ -255,9 +250,11 @@ export default function PackagesContent() {
         });
         return;
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.update(toastId, {
-        render: `An error occurred. Please try again later. (${error})`,
+        render:
+          error?.response?.data?.message ||
+          "Unable to add the package. Please try again.",
         type: "error",
         isLoading: false,
         autoClose: 8000,
@@ -452,22 +449,18 @@ export default function PackagesContent() {
       position: "bottom-right",
     });
 
-    if (preview && preview !== null) {
-      inputs.image = (await compressImage(preview));
+    const updateInputs = { ...inputs };
+
+    if (updateInputs.price) {
+      updateInputs.price = updateInputs.price.toString().replace(/[.,]/g, "");
     }
 
-    if (inputs.price) {
-      inputs.price = inputs.price.toString().replace(/[.,]/g, "");
-    }
-
-    if (inputs.extraGuestFee) {
-      inputs.extraGuestFee = inputs.extraGuestFee.toString().replace(/[.,]/g, "");
+    if (updateInputs.extraGuestFee) {
+      updateInputs.extraGuestFee = updateInputs.extraGuestFee.toString().replace(/[.,]/g, "");
     }
 
     if (section === "packages") {
-      const baseLimit = Number(inputs.capacity);
-      const guestLimit = Number(inputs.guestLimit);
-
+      const baseLimit = Number(updateInputs.capacity);
       if (Number.isNaN(baseLimit) || baseLimit < 1) {
         toast.update(toastId, {
           render: "Base limit must be at least 1.",
@@ -478,28 +471,25 @@ export default function PackagesContent() {
         return;
       }
 
-      if (Number.isNaN(guestLimit) || guestLimit < baseLimit) {
-        toast.update(toastId, {
-          render: "Guest limit cannot be less than base limit.",
-          type: "error",
-          isLoading: false,
-          autoClose: 8000,
-        });
-        return;
-      }
     }
 
-
     const formData = new FormData();
-    Object.entries(inputs).map(([key, value]) => {
-      formData.append(key, value);
+
+    if (preview) {
+      const compressedImage = await compressImage(preview);
+      formData.append("image", compressedImage);
+    }
+
+    Object.entries(updateInputs).forEach(([key, value]) => {
+      if (value == null || key === "image" || key === "imageUrl" || key === "id") return;
+      formData.append(key, String(value));
     });
 
     try {
       const response =
         section == "services"
-          ? await updateService(formData, inputs.id)
-          : await updatePackage(formData, inputs.id);
+          ? await updateService(formData, updateInputs.id)
+          : await updatePackage(formData, updateInputs.id);
       if (response.success == true) {
         formElement.reset();
         // Handle success
@@ -609,15 +599,17 @@ export default function PackagesContent() {
   };
 
   const fetchData = async () => {
-    const [packages, services, addons] = await Promise.all([
+    const [packagesRes, servicesRes, addonsRes, spacesRes] = await Promise.all([
       getPackages(),
       getServices(),
       getAddons(),
+      getSpaces(),
     ]);
 
-    setPackages(packages.data.packages);
-    setServices(services.data.services);
-    setAddons(addons.data.addOns);
+    setPackages(packagesRes.data.packages);
+    setServices(servicesRes.data.services);
+    setAddons(addonsRes.data.addOns);
+    setSpaces(spacesRes.data.spaces || []);
   };
 
   useEffect(() => {
@@ -722,6 +714,11 @@ export default function PackagesContent() {
                 className="text-[#595959] text-sm leading-[22px] tracking-[0.5px] duration-1000 hover:bg-[#E4E8E5] rounded"
                 onClick={() => {
                   setSection("packages");
+                  setInputs({
+                    ...DEFAULT_INPUTS,
+                    packageSpace: spaces[0]?.id || "",
+                  });
+                  setPreview(undefined);
                   setAddPackageModal(true);
                 }}
               >
@@ -816,8 +813,16 @@ export default function PackagesContent() {
                     <ActionButton
                       variant="edit"
                       onClick={() => {
-                        setInputs(pck)
-                        setUpdatePackageModal(true)
+                        const spaceId = typeof pck.packageSpace === "object" && pck.packageSpace
+                          ? (pck.packageSpace as any).id || (pck.packageSpace as any)._id
+                          : pck.packageSpace;
+                        setInputs({
+                          ...pck,
+                          packageSpace: spaceId || spaces[0]?.id || "",
+                          specs: Array.isArray(pck.specs) ? pck.specs.join(", ") : pck.specs,
+                        });
+                        setPreview(undefined);
+                        setUpdatePackageModal(true);
                       }}
                     >
                       Edit
@@ -1318,16 +1323,18 @@ export default function PackagesContent() {
             onSubmit={(e: FormEvent<HTMLFormElement>) => handleSubmit(e)}
           >
             <label
-              htmlFor="media"
+              htmlFor="addPackageMedia"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="bg-cover bg-center"
+              className="bg-cover bg-center bg-no-repeat"
               style={{
-                backgroundImage: `url(${preview ? URL.createObjectURL(preview) : null})`,
+                backgroundImage: preview
+                  ? `url(${URL.createObjectURL(preview)})`
+                  : undefined,
               }}
             >
               <div className="flex flex-col h-[200px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
-                {preview == undefined ? (
+                {!preview ? (
                   <>
                     <Image
                       src={"/icons/upload.svg"}
@@ -1347,9 +1354,9 @@ export default function PackagesContent() {
               </div>
               <input
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*"
                 onChange={(e) => setPreview(e.target.files?.[0])}
-                id="media"
+                id="addPackageMedia"
                 className="hidden"
               />
             </label>
@@ -1434,7 +1441,7 @@ export default function PackagesContent() {
                   htmlFor="capacity"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
-                  Enter base limit
+                  Included guests (base limit)
                 </label>
                 <input
                   type="number"
@@ -1445,26 +1452,9 @@ export default function PackagesContent() {
                   placeholder="Base limit (100)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
-              </div>
-            </div>
-
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="guestLimit"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter guest limit
-                </label>
-                <input
-                  type="number"
-                  id="guestLimit"
-                  name="guestLimit"
-                  value={inputs.guestLimit ?? ""}
-                  onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
-                  placeholder="Guest limit (120)"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
+                <p className="text-xs text-[#999999] leading-5 tracking-[0.5px]">
+                  Guests above this number are charged the extra guest fee.
+                </p>
               </div>
             </div>
 
@@ -1485,6 +1475,36 @@ export default function PackagesContent() {
                   placeholder="Extra Guest Fee"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="addPackageSpace"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Package space
+                </label>
+                <select
+                  id="addPackageSpace"
+                  name="packageSpace"
+                  value={inputs.packageSpace || spaces[0]?.id || ""}
+                  onChange={(e) =>
+                    setInputs({ ...inputs, packageSpace: e.target.value })
+                  }
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none bg-white"
+                >
+                  {spaces.length === 0 ? (
+                    <option value="">No spaces available (Create one in Spaces Mgt)</option>
+                  ) : (
+                    spaces.map((space) => (
+                      <option key={space.id} value={space.id}>
+                        {space.name} (Limit: {space.guestLimit ?? 50} guests/day)
+                      </option>
+                    ))
+                  )}
+                </select>
               </div>
             </div>
 
@@ -1765,16 +1785,20 @@ export default function PackagesContent() {
             onSubmit={(e: FormEvent<HTMLFormElement>) => handleUpdate(e)}
           >
             <label
-              htmlFor="media"
+              htmlFor="updatePackageMedia"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="bg-cover bg-center"
+              className="bg-cover bg-center bg-no-repeat"
               style={{
-                backgroundImage: `url(${preview ? URL.createObjectURL(preview) : inputs.imageUrl})`,
+                backgroundImage: preview
+                  ? `url(${URL.createObjectURL(preview)})`
+                  : inputs.imageUrl
+                    ? `url(${inputs.imageUrl})`
+                    : undefined,
               }}
             >
               <div className="flex flex-col h-[200px] items-center justify-center border-[1px] border-dashed border-[#BFBFBF] py-3 px-5 cursor-pointer rounded2px">
-                {preview == undefined ? (
+                {!preview && !inputs.imageUrl ? (
                   <>
                     <Image
                       src={"/icons/upload.svg"}
@@ -1794,9 +1818,9 @@ export default function PackagesContent() {
               </div>
               <input
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*"
                 onChange={(e) => setPreview(e.target.files?.[0])}
-                id="media"
+                id="updatePackageMedia"
                 className="hidden"
               />
             </label>
@@ -1804,15 +1828,15 @@ export default function PackagesContent() {
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label
-                  htmlFor="packageName"
+                  htmlFor="updatePackageName"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
                   Enter package name
                 </label>
                 <input
                   type="text"
-                  id="packageName"
-                  name="packageName"
+                  id="updatePackageName"
+                  name="updatePackageName"
                   value={inputs.name || ""}
                   onChange={(e) => {
                     const limited = limitWords(
@@ -1880,7 +1904,7 @@ export default function PackagesContent() {
                   htmlFor="updateCapacity"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
-                  Enter base limit
+                  Included guests (base limit)
                 </label>
                 <input
                   type="number"
@@ -1891,26 +1915,9 @@ export default function PackagesContent() {
                   placeholder="Base limit (100)"
                   className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
                 />
-              </div>
-            </div>
-
-            <div className="form-group flex flex-col md:flex-row items-start gap-6">
-              <div className="w-full input-group flex flex-col gap-3">
-                <label
-                  htmlFor="guestLimit"
-                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
-                >
-                  Enter guest limit
-                </label>
-                <input
-                  type="number"
-                  id="guestLimit"
-                  name="guestLimit"
-                  value={inputs.guestLimit ?? ""}
-                  onChange={(e) => setInputs({ ...inputs, guestLimit: e.target.value })}
-                  placeholder="Guest limit (120)"
-                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none placeholder:text-[14px]"
-                />
+                <p className="text-xs text-[#999999] leading-5 tracking-[0.5px]">
+                  Guests above this number are charged the extra guest fee.
+                </p>
               </div>
             </div>
 
@@ -1937,7 +1944,37 @@ export default function PackagesContent() {
             <div className="form-group flex flex-col md:flex-row items-start gap-6">
               <div className="w-full input-group flex flex-col gap-3">
                 <label
-                  htmlFor="packageSpecs"
+                  htmlFor="updatePackageSpace"
+                  className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
+                >
+                  Package space
+                </label>
+                <select
+                  id="updatePackageSpace"
+                  name="packageSpace"
+                  value={inputs.packageSpace || spaces[0]?.id || ""}
+                  onChange={(e) =>
+                    setInputs({ ...inputs, packageSpace: e.target.value })
+                  }
+                  className="w-full h-[52px] rounded2px p-3 border-[1px] border-[#BFBFBF] transition-colors duration-500 focus:border-yard-dark-primary outline-none bg-white"
+                >
+                  {spaces.length === 0 ? (
+                    <option value="">No spaces available (Create one in Spaces Mgt)</option>
+                  ) : (
+                    spaces.map((space) => (
+                      <option key={space.id} value={space.id}>
+                        {space.name} (Limit: {space.guestLimit ?? 50} guests/day)
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-group flex flex-col md:flex-row items-start gap-6">
+              <div className="w-full input-group flex flex-col gap-3">
+                <label
+                  htmlFor="updatePackageSpecs"
                   className="w-max leading-6 tracking-[0.5px] text-[#1A1A1A]"
                 >
                   Enter package specs{" "}
@@ -1947,8 +1984,8 @@ export default function PackagesContent() {
                 </label>
                 <input
                   type="text"
-                  id="packageSpecs"
-                  name="packageSpecs"
+                  id="updatePackageSpecs"
+                  name="updatePackageSpecs"
                   value={inputs.specs || ""}
                   onChange={(e) => setInputs({ ...inputs, specs: e.target.value })}
                   placeholder="games and dates, Game hall special, Game hall special"
@@ -1963,7 +2000,7 @@ export default function PackagesContent() {
                 className="w-full flex justify-center cta-btn border-[#8C5C5C] bg-base-100 text-[#8C5C5C] group relative overflow-hidden rounded-[5px] cursor-pointer"
                 onClick={() => {
                   clearInputs();
-                  setAddPackageModal(false);
+                  setUpdatePackageModal(false);
                 }}
               >
                 <span className="z-40 font-sen">Cancel</span>

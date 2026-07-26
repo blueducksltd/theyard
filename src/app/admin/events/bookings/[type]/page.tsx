@@ -583,14 +583,10 @@ export default function BookingPage() {
                       : "-"}
                   </p>
                   <p>
-                    <span className="font-semibold text-[#737373]">Capacity:</span>{" "}
+                    <span className="font-semibold text-[#737373]">Base limit:</span>{" "}
                     {selectedBooking.package && typeof selectedBooking.package === "object" && selectedBooking.package.capacity != null
                       ? selectedBooking.package.capacity
-                      : selectedBooking.package &&
-                          typeof selectedBooking.package === "object" &&
-                          selectedBooking.package.guestLimit != null
-                        ? selectedBooking.package.guestLimit
-                        : "-"}
+                      : "-"}
                   </p>
                 </div>
               </div>

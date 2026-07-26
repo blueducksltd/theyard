@@ -1,7 +1,7 @@
 {
   /*eslint-disable @next/next/no-img-element*/
 }
-import { ISpace } from "@/types/Space";
+import { SafeSpace } from "@/types/Space";
 import { getSpaces } from "@/util";
 import moment from "moment";
 import Link from "next/link";
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const Space = async () => {
-  const spaces: ISpace[] = (await getSpaces()).data.spaces;
+  const spaces: SafeSpace[] = (await getSpaces()).data.spaces;
 
   return (
     <main className="md:my-4">
@@ -34,11 +34,11 @@ const Space = async () => {
             key={space.id}
             className="relative overflow-hidden group w-max flex-grow"
           >
-            <img
-              src={space.imageUrl}
-              alt="Gallery"
-              className="h-[260px] 2xl:h-[300px] w-full object-cover"
-            />
+            <div
+              className="h-[260px] 2xl:h-[300px] w-full object-cover bg-[#EDF0EE] flex items-center justify-center text-4xl"
+            >
+              🏟️
+            </div>
             {/*Inner Hover - same as before*/}
             <div className="absolute w-full h-full p-4 bg-[#090F10CC] top-48 md:top-0 left-0 transition-all duration-500 md:translate-y-full group-hover:translate-y-0 opacity-80">
               <p className="text-yard-milk transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 absolute top-2 md:top-auto md:bottom-12 md:relative md:mt-12">
@@ -57,7 +57,7 @@ const Space = async () => {
                 <span className="absolute left-0 -bottom-0.5 h-[1px] w-0 bg-gray-600 transition-all duration-500 group-hover:w-full"></span>
               </Link>
               <p className="paragraph hidden md:block text-gray-200 w-[340px] transition-all delay-300 duration-500 translate-y-full group-hover:translate-y-0 -mt-7">
-                {space.address}
+                {space.guestLimit} guests/day limit
               </p>
               <div className="w-7 h-7 md:w-9 md:h-9 border-2 border-yard-milk flex justify-center items-center rounded2px absolute top-7 md:top-auto md:bottom-5 transition-all delay-300 duration-500 md:translate-y-full group-hover:translate-y-0 right-5 md:left-5">
                 <img src={"/icons/share.svg"} alt="share icon" />
