@@ -12,10 +12,9 @@ export interface ISpace extends Document {
   updatedAt?: Date;
 }
 
-// Instance methods
-export interface ISpaceMethods {
-  // placeholder for future methods
-}
+// Instance methods. `Record<string, never>` explicitly represents a model with
+// no custom instance methods while keeping the Mongoose generic type accurate.
+export type ISpaceMethods = Record<string, never>;
 
 // Statics
 export interface ISpaceModel extends Model<ISpace, object, ISpaceMethods> {
