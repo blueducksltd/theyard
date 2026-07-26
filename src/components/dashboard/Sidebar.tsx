@@ -172,6 +172,23 @@ export default function Sidebar() {
         </Link>
 
         <Link
+          href={"/admin/spaces"}
+          className={`md:flex items-center py-3 px-4 rounded-sm gap-2 hidden group hover:text-yard-primary relative overflow-hidden ${pathname === "/admin/spaces" ? "bg-yard-hover" : ""}`}
+        >
+          <Image
+            src={"/icons/box-tick.svg"}
+            className="z-40"
+            width={20}
+            height={20}
+            alt="Spaces Icon"
+          />
+          <div className="md:flex justify-center text-[#44433E] z-40">
+            <span>Spaces Mgt</span>
+          </div>
+          <div className="absolute top-0 left-0 bg-yard-hover w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0 z-10"></div>
+        </Link>
+
+        <Link
           href={"/admin/gallery"}
           className={`md:flex items-center py-3 px-4 rounded-sm gap-2 hidden group hover:text-yard-primary relative overflow-hidden ${pathname === "/admin/gallery" ? "bg-yard-hover" : ""}`}
         >

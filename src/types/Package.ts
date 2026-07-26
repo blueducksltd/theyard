@@ -4,6 +4,9 @@ import z from "zod";
 import {
   isWeekend
 } from "date-fns";
+import { SafeSpace } from "./Space";
+
+export type PackageSpace = string | SafeSpace;
 
 // Document fields
 export interface IPackage extends Document {
@@ -11,10 +14,10 @@ export interface IPackage extends Document {
   price: number;
   weekendPrice?: number;
   capacity: number;
+  packageSpace: PackageSpace;
   specs: string[];
   description: string;
   imageUrl: string;
-  guestLimit: number;
   extraGuestFee: number;
 }
 
@@ -24,10 +27,10 @@ export interface IPackageClient {
   price: number;
   weekendPrice?: number;
   capacity: number;
+  packageSpace: PackageSpace;
   specs: string[];
   description: string;
   imageUrl: string;
-  guestLimit: number;
   extraGuestFee: number;
 }
 
@@ -46,10 +49,10 @@ export type SafePackage = {
   name: string;
   price: number;
   capacity: number;
+  packageSpace: PackageSpace;
   specs: string[];
   description: string;
   imageUrl: string;
-  guestLimit: number;
   extraGuestFee: number;
   isWeekend: boolean;
 };
@@ -60,14 +63,14 @@ export function sanitizePackage(packages: IPackage): SafePackage {
     : packages.price
 
   return {
-    id: packages.id,
+    id: packages.id || (packages as unknown as { _id: string })._id?.toString(),
     name: packages.name,
     price,
-    capacity: packages.capacity ?? packages.guestLimit,
+    capacity: packages.capacity,
+    packageSpace: packages.packageSpace,
     specs: packages.specs,
     description: packages.description,
     imageUrl: packages.imageUrl,
-    guestLimit: packages.guestLimit,
     extraGuestFee: packages.extraGuestFee,
     isWeekend: isWeekend(new Date()),
   };
@@ -78,7 +81,7 @@ export const CreatePackageDTO = z.object({
   price: z.coerce.number(), // accepts "1000" and coerces to 1000
   weekendPrice: z.coerce.number().optional(), // accepts "1000" and coerces to 1000
   capacity: z.coerce.number(),
-  guestLimit: z.coerce.number(),
+  packageSpace: z.string().min(1, "Space is required"),
   extraGuestFee: z.coerce.number(),
   specs: z.preprocess((val) => {
     if (Array.isArray(val)) {
@@ -93,9 +96,6 @@ export const CreatePackageDTO = z.object({
   }, z.array(z.string())),
   description: z.string(),
   imageUrl: z.string().url().optional()
-}).refine((data) => data.guestLimit >= data.capacity, {
-  message: "Guest limit cannot be less than base limit",
-  path: ["guestLimit"],
 });
 
 export const UpdatePackageDTO = z.object({
@@ -103,7 +103,7 @@ export const UpdatePackageDTO = z.object({
   price: z.coerce.number().optional(), // accepts "1000" and coerces to 1000
   weekendPrice: z.coerce.number().optional(), // accepts "1000" and coerces to 1000
   capacity: z.coerce.number().optional(),
-  guestLimit: z.coerce.number().optional(),
+  packageSpace: z.string().optional(),
   extraGuestFee: z.coerce.number().optional(),
   specs: z.preprocess((val) => {
     if (Array.isArray(val)) {
@@ -118,13 +118,7 @@ export const UpdatePackageDTO = z.object({
   }, z.array(z.string())).optional(),
   description: z.string().optional(),
   imageUrl: z.string().url().optional()
-}).refine(
-  (data) => data.capacity == null || data.guestLimit == null || data.guestLimit >= data.capacity,
-  {
-    message: "Guest limit cannot be less than base limit",
-    path: ["guestLimit"],
-  }
-);
+});
 
 export type CreatePackageInput = z.infer<typeof CreatePackageDTO>;
 export type UpdatePackageInput = z.infer<typeof UpdatePackageDTO>;
