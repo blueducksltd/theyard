@@ -601,7 +601,7 @@ export default function BookingPage() {
                   }
 
                   setInputs(prev => ({ ...prev, guest: Number(e.target.value) }))
-                }} className='w-full h-full outline-0' placeholder='Enter Number of Participant' />
+                }} className='w-full h-full outline-0' placeholder='Enter Number of Participant' max={spaceGuestCapacity?.remainingGuests} />
               </div>
               {spaceGuestCapacity && inputs.guest > 0 && (
                 <p className={`text-xs ${inputs.guest > spaceGuestCapacity.remainingGuests ? "text-[#CA1919]" : "text-[#717068]"}`}>
