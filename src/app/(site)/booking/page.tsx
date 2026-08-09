@@ -131,40 +131,40 @@ const PackageModalContent = ({
       } grid grid-cols-1 md:grid-cols-2 gap-4 h-100 overflow-auto`}>
 
 
-      {packages.length === 0 && (
-        <EmptyState
-          icon={PackageX}
-          title="No Packages"
-          message="There are no packages available at the moment. Please check back soon."
-        />
-      )}
+    {packages.length === 0 && (
+      <EmptyState
+        icon={PackageX}
+        title="No Packages"
+        message="There are no packages available at the moment. Please check back soon."
+      />
+    )}
 
-      {packages.map((pkg, index) => {
-        const isSoldOut = hasSelectedDate && isPackageUnavailableForSelectedDate(pkg);
+    {packages.map((pkg, index) => {
+      const isSoldOut = hasSelectedDate && isPackageUnavailableForSelectedDate(pkg);
 
-        return (
-          <div key={pkg.id} className='relative'>
-            <div className={isSoldOut ? 'pointer-events-none opacity-45' : ''}>
-              <PackageCard
-                pkg={pkg}
-                index={index}
-                onSelect={() => {
-                  if (isSoldOut) {
-                    toast.error('This package is fully booked for the selected date. Please choose another day.');
-                    return;
-                  }
-                  setViewing(pkg)
-                }}
-              />
-            </div>
-            {isSoldOut && (
-              <div className='absolute top-3 right-3 bg-[#CA1919] text-white text-[10px] px-2 py-1 rounded-sm'>
-                Fully booked on this date
-              </div>
-            )}
+      return (
+        <div key={pkg.id} className='relative'>
+          <div className={isSoldOut ? 'pointer-events-none opacity-45' : ''}>
+            <PackageCard
+              pkg={pkg}
+              index={index}
+              onSelect={() => {
+                if (isSoldOut) {
+                  toast.error('This package is fully booked for the selected date. Please choose another day.');
+                  return;
+                }
+                setViewing(pkg)
+              }}
+            />
           </div>
-        );
-      })}
+          {isSoldOut && (
+            <div className='absolute top-3 right-3 bg-[#CA1919] text-white text-[10px] px-2 py-1 rounded-sm'>
+              Fully booked on this date
+            </div>
+          )}
+        </div>
+      );
+    })}
   </div>
 }
 
@@ -600,7 +600,13 @@ export default function BookingPage() {
                     return;
                   }
 
-                  setInputs(prev => ({ ...prev, guest: Number(e.target.value) }))
+                  let guest = Number(e.target.value)
+
+                  if (spaceGuestCapacity && guest > spaceGuestCapacity.remainingGuests) {
+                    guest = spaceGuestCapacity.remainingGuests
+                  }
+
+                  setInputs(prev => ({ ...prev, guest }))
                 }} className='w-full h-full outline-0' placeholder='Enter Number of Participant' />
               </div>
               {spaceGuestCapacity && inputs.guest > 0 && (

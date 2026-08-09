@@ -91,7 +91,7 @@ export const GET = errorHandler<{ params: { id: string } }>(async (request: Next
     throw APIError.NotFound("Event not found");
   }
 
-  const registrations = await SignUp.find({ eventId: event._id }).sort({ createdAt: -1 });
+  const registrations = await SignUp.find({ eventId: event._id }).populate("addons").sort({ createdAt: -1 });
 
   return APIResponse.success("Event registrations fetched successfully", {
     event: {
