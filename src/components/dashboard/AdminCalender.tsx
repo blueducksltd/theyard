@@ -21,6 +21,8 @@ import moment from "moment";
 import Modal from "../Modal";
 import { toast } from "react-toastify";
 import { DESCRIPTION_WORD_LIMIT, limitWords } from "./GalleryContent";
+import { motion, AnimatePresence } from "motion/react";
+import { ChevronDown, Tag } from "lucide-react";
 
 // Type definitions
 type BookingStatus = "available" | "unavailable" | "pending";
@@ -109,6 +111,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   const [eventToEdit, setEventToEdit] = useState<any | null>(null);
   const [eventToDelete, setEventToDelete] = useState<any | null>(null);
   const [registrations, setRegistrations] = useState<any[]>([]);
+  const [expandedRegistrationId, setExpandedRegistrationId] = useState<string | number | null>(null);
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [isRegLoading, setIsRegLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -293,6 +296,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
     setIsRegModalOpen(true);
     setIsRegLoading(true);
     setRegistrations([]);
+    setExpandedRegistrationId(null);
     try {
       const res = await getEventRegistrations(event.id || event._id);
       if (res.success) {
@@ -1766,7 +1770,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             </div>
             <div
               className="w-9 h-9 bg-[#EDF0EE] relative group flex justify-center items-center cursor-pointer rounded2px overflow-hidden"
-              onClick={() => { setIsRegModalOpen(false); setSelectedEvent(null); setRegistrations([]); }}
+              onClick={() => { setIsRegModalOpen(false); setSelectedEvent(null); setRegistrations([]); setExpandedRegistrationId(null); }}
             >
               <img src={"/icons/cancel.svg"} alt="Close Icon" className="z-40" />
               <span className="absolute top-0 left-0 bg-[#C7CFC9] w-full h-full transition-all duration-500 -translate-x-full group-hover:translate-x-0"></span>
@@ -1794,37 +1798,120 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                 const name = reg.name || `${reg.firstname || ""} ${reg.lastname || ""}`.trim() || "Guest";
                 const email = reg.email || reg.customerEmail || "";
                 const phone = reg.phone || reg.customerPhone || "";
-                const adults = reg.adults ?? reg.adultCount ?? null;
-                const children = reg.children ?? reg.childCount ?? null;
+                const adults = reg.adultsComing;
+                const children = reg.childrenComing;
+                const addons: {
+                  _id: string;
+                  name: string;
+                  category: string;
+                  description: string;
+                  price: number;
+                  createdAt: string;
+                  updatedAt: string;
+                  imageUrl: string;
+                }[] = reg.addons;
+
+                const regId = reg._id || idx;
+                const isExpanded = expandedRegistrationId === regId;
+                const addonsTotal = (addons || []).reduce((sum, addon) => sum + (Number(addon.price) || 0), 0);
+
                 return (
-                  <div key={reg._id || idx} className="flex items-center gap-4 p-3 rounded-lg border border-[#E4E8E5] bg-white hover:bg-[#FAFAFA] transition-colors">
-                    {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-yard-primary flex items-center justify-center text-white font-bold font-sen text-sm flex-shrink-0">
-                      {name.charAt(0).toUpperCase()}
-                    </div>
-
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium font-sen text-[#1A1A1A] text-sm leading-5 truncate">{name}</p>
-                      <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-                        {email && <span className="text-xs text-[#666] font-sen truncate">{email}</span>}
-                        {phone && <span className="text-xs text-[#999] font-sen">{phone}</span>}
+                  <div key={regId} className="rounded-lg border border-[#E4E8E5] bg-white overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedRegistrationId(isExpanded ? null : regId)}
+                      className="w-full flex items-center gap-4 p-3 hover:bg-[#FAFAFA] transition-colors text-left"
+                    >
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-full bg-yard-primary flex items-center justify-center text-white font-bold font-sen text-sm flex-shrink-0">
+                        {name.charAt(0).toUpperCase()}
                       </div>
-                    </div>
 
-                    {/* Ticket counts */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {adults !== null && (
-                        <span className="text-xs px-2 py-1 rounded-full bg-[#EDF0EE] text-yard-primary font-sen font-medium">
-                          {adults} adult{adults !== 1 ? "s" : ""}
-                        </span>
+                      {/* Details */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium font-sen text-[#1A1A1A] text-sm leading-5 truncate">{name}</p>
+                        <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                          {email && <span className="text-xs text-[#666] font-sen truncate">{email}</span>}
+                          {phone && <span className="text-xs text-[#999] font-sen">{phone}</span>}
+                        </div>
+                      </div>
+
+                      {/* Ticket counts */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {adults !== null && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-[#EDF0EE] text-yard-primary font-sen font-medium">
+                            {adults} adult{adults !== 1 ? "s" : ""}
+                          </span>
+                        )}
+                        {children !== null && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-[#EDF0EE] text-yard-primary font-sen font-medium">
+                            {children} child{children !== 1 ? "ren" : ""}
+                          </span>
+                        )}
+                        <motion.span
+                          animate={{ rotate: isExpanded ? 180 : 0 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="w-6 h-6 rounded-full bg-[#EDF0EE] flex items-center justify-center flex-shrink-0"
+                        >
+                          <ChevronDown size={14} className="text-yard-primary" />
+                        </motion.span>
+                      </div>
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {isExpanded && (
+                        <motion.div
+                          key="details"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-3 pb-3 pt-1 border-t border-[#E4E8E5] bg-[#FAFAFA]">
+                            <div className="flex items-center gap-2 mt-3 flex-wrap">
+                              <span className="text-xs px-2.5 py-1 rounded-full bg-white border border-[#E4E8E5] text-[#555] font-sen">
+                                {adults ?? 0} adult{adults !== 1 ? "s" : ""}
+                              </span>
+                              <span className="text-xs px-2.5 py-1 rounded-full bg-white border border-[#E4E8E5] text-[#555] font-sen">
+                                {children ?? 0} child{children !== 1 ? "ren" : ""}
+                              </span>
+                            </div>
+
+                            <div className="mt-3">
+                              <p className="text-xs font-medium font-sen text-[#999] uppercase tracking-wide mb-2">
+                                Add-ons {addons?.length ? `(${addons.length})` : ""}
+                              </p>
+
+                              {!addons || addons.length === 0 ? (
+                                <p className="text-xs text-[#999] font-sen italic">No add-ons selected</p>
+                              ) : (
+                                <div className="flex flex-col gap-1.5">
+                                  {addons.map((addon) => (
+                                    <div
+                                      key={addon._id}
+                                      className="flex items-center justify-between gap-3 bg-white border border-[#E4E8E5] rounded-md px-3 py-2"
+                                    >
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <Tag size={13} className="text-yard-primary flex-shrink-0" />
+                                        <span className="text-xs font-medium font-sen text-[#1A1A1A] truncate">{addon.name}</span>
+                                      </div>
+                                      <span className="text-xs font-semibold font-sen text-yard-primary flex-shrink-0">
+                                        ₦{Number(addon.price || 0).toLocaleString()}
+                                      </span>
+                                    </div>
+                                  ))}
+                                  <div className="flex items-center justify-between pt-1.5 mt-0.5 border-t border-dashed border-[#E4E8E5]">
+                                    <span className="text-xs font-medium font-sen text-[#666]">Add-ons total</span>
+                                    <span className="text-xs font-bold font-sen text-yard-primary">₦{addonsTotal.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
-                      {children !== null && (
-                        <span className="text-xs px-2 py-1 rounded-full bg-[#EDF0EE] text-yard-primary font-sen font-medium">
-                          {children} child{children !== 1 ? "ren" : ""}
-                        </span>
-                      )}
-                    </div>
+                    </AnimatePresence>
                   </div>
                 );
               })}
