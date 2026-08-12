@@ -127,6 +127,7 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
     );
 
     const total = packageTotal + funTotal;
+    const isClosed = event.status === "closed";
     const coverImage = event.images?.find((img) => typeof img === "string" && img.trim().length > 0) ?? null;
 
     const summary = useMemo(() => [
@@ -232,6 +233,12 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
                     ))}
                 </div>
 
+                {isClosed && (
+                    <p className="rounded bg-[#FDECEC] p-3 text-center text-sm font-semibold text-[#B42318]">
+                        Registration for this event is closed.
+                    </p>
+                )}
+
                 <div className="grid grid-cols-2 gap-4 font-sen text-xs">
                     <button
                         type="button"
@@ -242,10 +249,11 @@ const EventModalContent = React.memo(function EventModalContent({ event, onClose
                     </button>
                     <button
                         type="button"
-                        className="p-2 bg-primaryGreen text-white cursor-pointer"
-                        onClick={() => setStep('form')}
+                        disabled={isClosed}
+                        className="p-2 bg-primaryGreen text-white cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-400"
+                        onClick={() => !isClosed && setStep('form')}
                     >
-                        Join this event
+                        {isClosed ? "Registration closed" : "Join this event"}
                     </button>
                 </div>
             </div>
@@ -446,6 +454,9 @@ const EventCard = React.memo(function EventCard({ event, index, onOpen, onShare 
                             ? (description.length > 100 ? description.slice(0, 100) + "..." : description)
                             : "Event details will be shared soon."}
                     </p>
+                    {event.status === "closed" && (
+                        <p className="mt-1 text-sm font-semibold text-[#B42318]">Registration closed</p>
+                    )}
                     <div className='flex justify-between items-center mt-6'>
                         <p className="font-lato text-primaryGreen text-sm  font-medium">
                             {new Date(event.date).toLocaleDateString("en-us", { dateStyle: "medium" })}

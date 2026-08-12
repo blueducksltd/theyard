@@ -17,7 +17,7 @@ export interface IEvent extends Document {
   activities: string[];
   adultPrice?: number;
   childPrice?: number;
-  status: "active" | "completed" | "cancelled" | "pending";
+  status: "active" | "completed" | "cancelled" | "pending" | "closed";
   location: string;
   customer?: unknown;
   createdAt?: Date;
@@ -39,7 +39,7 @@ export interface IEventClient {
   activities: string[];
   adultPrice?: number;
   childPrice?: number;
-  status: "active" | "completed" | "cancelled" | "pending";
+  status: "active" | "completed" | "cancelled" | "pending" | "closed";
   location: string;
 }
 
