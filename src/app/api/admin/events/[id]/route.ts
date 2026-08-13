@@ -22,7 +22,7 @@ const UpdateEventAdminDTO = z
     location: z.string().optional(),
     activities: z.array(z.string()).optional(),
     images: z.array(z.string()).optional(),
-    status: z.enum(["active", "completed", "cancelled", "pending"]).optional(),
+    status: z.enum(["active", "completed", "cancelled", "pending", "closed"]).optional(),
   })
   .superRefine((data, ctx) => {
     const audience = data.audienceType;
@@ -107,7 +107,7 @@ export const PUT = errorHandler<{ params: { id: string } }>(async (request: Next
       childPrice: form.get("childPrice"),
       public: form.get("public"),
       location: (form.get("location") as string) || undefined,
-      status: (form.get("status") as "active" | "completed" | "cancelled" | "pending") || undefined,
+      status: (form.get("status") as "active" | "completed" | "cancelled" | "pending" | "closed") || undefined,
       activities,
     };
 
