@@ -1829,7 +1829,8 @@ const AdminCalendar: React.FC<CalendarProps> = ({
             </div>
           ) : (
             <>
-              <p className="text-sm text-[#555] font-sen mb-2">{registrations.length} attendee{registrations.length !== 1 ? "s" : ""} registered</p>
+              <p className="text-sm tex
+              t-[#555] font-sen mb-2">{registrations.length} attendee{registrations.length !== 1 ? "s" : ""} registered</p>
               {registrations.map((reg: any, idx: number) => {
                 const name = reg.name || `${reg.firstname || ""} ${reg.lastname || ""}`.trim() || "Guest";
                 const email = reg.email || reg.customerEmail || "";

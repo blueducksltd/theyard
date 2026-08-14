@@ -692,9 +692,11 @@ export default function Home() {
                   variants={revealItem}
                   transition={{ duration: 0.55, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <div className="h-50 relative">
-                    <Image src={event.images[0]} fill alt="" className="object-cover" />
-                  </div>
+                  {
+                    event.images[0] && <div className="h-50 relative">
+                      <Image src={event.images[0]} fill alt="" className="object-cover" />
+                    </div>
+                  }
 
                   <div className="grid gap-1">
                     <p className={`font-semibold text-lg font-playfair-display text-primaryGreen`}>{event.title}</p>

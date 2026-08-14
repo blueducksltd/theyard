@@ -7,7 +7,7 @@ import Footer from "@/components/v2/Footer";
 export const metadata: Metadata = {
   title: "The Yard",
   description:
-    "The Yard Picnic Park Enugu – a serene outdoor venue for picnics, parties & intimate events.",
+    "The Yard Picnic Park Enugu, a serene outdoor venue for picnics, parties & intimate events.",
 };
 
 export default function SiteLayout({
