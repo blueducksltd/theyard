@@ -65,7 +65,7 @@ const UpdateEventDTO = z.object({
     time: z.string().optional(),
     location: z.string().min(1, "Location is required").optional(),
     public: z.boolean().optional(),
-    status: z.enum(["active", "completed", "cancelled", "pending"]),
+    status: z.enum(["active", "completed", "cancelled", "pending", "closed"]).optional(),
     images: z.array(z.string()).optional(),
 });
 
@@ -135,6 +135,7 @@ export const PUT = errorHandler<{ params: { id: string } }>(
                 time: data.time ? { start: data.time, end: data.time } : event.time,
                 location: data.location,
                 public: data.public ?? event.public,
+                status: data.status ?? event.status,
                 images: data.images ?? event.images,
             },
             { new: true }

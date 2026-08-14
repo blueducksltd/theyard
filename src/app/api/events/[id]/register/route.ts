@@ -49,6 +49,10 @@ export const POST = errorHandler<{ params: { id: string } }>(async (request: Nex
     throw APIError.NotFound("Event not found");
   }
 
+  if (event.status === "closed") {
+    throw APIError.Conflict("Registration for this event is closed");
+  }
+
   if (data.addons.length > 0) {
     const foundAddons = await AddOn.find({ _id: { $in: data.addons } });
     if (foundAddons.length !== data.addons.length) {

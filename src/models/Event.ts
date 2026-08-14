@@ -34,7 +34,7 @@ const EventSchema = new Schema<IEvent, IEventModel, IEventMethods>(
     childPrice: { type: Number },
     status: {
       type: String,
-      enum: ["active", "completed", "cancelled", "pending"],
+      enum: ["active", "completed", "cancelled", "pending", "closed"],
       default: "pending"
     },
     customer: { type: Schema.Types.ObjectId, ref: "Customer" },
@@ -55,10 +55,19 @@ EventSchema.statics.filter = async function (filter: Record<string, string>, sor
     .sort({ [sort]: direction === "ASC" ? 1 : -1 });
 }
 
+// Reuse the model during hot reloads, but also update an already-cached
+// schema created before the `closed` status was added. Without this, the
+// development server can keep validating against the old enum.
+const cachedEventModel = models.Event as IEventModel | undefined;
+if (cachedEventModel) {
+  const statusPath = cachedEventModel.schema.path("status") as { enumValues?: string[] } | undefined;
+  if (statusPath?.enumValues && !statusPath.enumValues.includes("closed")) {
+    statusPath.enumValues.push("closed");
+  }
+}
+
 // Export model
-const Event =
-  (models.Event as IEventModel) ||
-  model<IEvent, IEventModel>("Event", EventSchema);
+const Event = cachedEventModel || model<IEvent, IEventModel>("Event", EventSchema);
 
 
 export default Event;

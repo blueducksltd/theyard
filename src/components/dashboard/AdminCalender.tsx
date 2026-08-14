@@ -116,6 +116,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
   const [isRegLoading, setIsRegLoading] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [eventStatusLoadingId, setEventStatusLoadingId] = useState<string | null>(null);
   const [eventSearch, setEventSearch] = useState("");
   const [eventDateFilter, setEventDateFilter] = useState<EventDateFilter>("all");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -454,6 +455,34 @@ const AdminCalendar: React.FC<CalendarProps> = ({
         isLoading: false,
         autoClose: 5000,
       });
+    }
+  };
+
+  const handleToggleEventStatus = async (event: any) => {
+    const id = event.id || event._id;
+    if (!id) return;
+
+    const nextStatus = event.status === "closed" ? "pending" : "closed";
+    setEventStatusLoadingId(id);
+    try {
+      const formData = new FormData();
+      formData.append("status", nextStatus);
+      const response = await updateEvent(formData, id);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update event status");
+      }
+
+      setEvents((prev) => prev.map((item) => (item.id === id ? { ...item, status: nextStatus } : item)));
+      toast.success(nextStatus === "closed" ? "Event registration closed" : "Event reopened for registration", {
+        position: "bottom-right",
+      });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message || "Failed to update event status", {
+        position: "bottom-right",
+      });
+    } finally {
+      setEventStatusLoadingId(null);
     }
   };
 
@@ -1125,14 +1154,9 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium font-sen capitalize ${dateCategoryStyles[dateCategory]}`}>
                           {dateCategory}
                         </span>
-                        {/* <span className={`text-xs px-2 py-0.5 rounded-full font-medium font-sen capitalize ${event.status === "confirmed"
-                          ? "bg-green-100 text-green-700"
-                          : event.status === "cancelled"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
-                          }`}>
-                          {event.status || "pending"}
-                        </span> */}
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium font-sen capitalize ${event.status === "closed" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
+                          {event.status === "closed" ? "Registration closed" : event.status || "pending"}
+                        </span>
                       </div>
                     </div>
 
@@ -1167,6 +1191,17 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                         className="px-3 py-2 rounded2px bg-[#FDECEC] text-[#B42318] text-xs font-medium font-sen hover:bg-[#FBD5D5] transition-colors"
                       >
                         Delete
+                      </button>
+                      <button
+                        type="button"
+                        disabled={eventStatusLoadingId === (event.id || event._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleEventStatus(event);
+                        }}
+                        className={`px-3 py-2 rounded2px text-xs font-medium font-sen transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${event.status === "closed" ? "bg-[#E8F3EA] text-[#246B38] hover:bg-[#D8EBDD]" : "bg-[#FFF3D6] text-[#8A5B00] hover:bg-[#FFE8B0]"}`}
+                      >
+                        {eventStatusLoadingId === (event.id || event._id) ? "Updating..." : event.status === "closed" ? "Reopen" : "Close registrations"}
                       </button>
                     </div>
                   </div>
@@ -1629,6 +1664,7 @@ const AdminCalendar: React.FC<CalendarProps> = ({
                 <option value="active">Active</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="closed">Registration closed</option>
               </select>
             </div>
           </div>
