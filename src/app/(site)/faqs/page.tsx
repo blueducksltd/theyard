@@ -127,7 +127,7 @@ export default function Page() {
 
             <motion.div className='py-20 flex flex-col justify-center items-center gap-4' initial={shouldReduceMotion ? false : 'hidden'} whileInView={shouldReduceMotion ? undefined : 'visible'} viewport={{ once: true, amount: 0.2 }} variants={sectionReveal} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
                 <p className='text-primaryGreen font-lato'>COULD NOT FIND YOUR QUESTION?</p>
-                <Link href={"/"} className='px-9 py-3 bg-primaryGreen text-white w-fit flex gap-3 items-center font-lato text-sm'>Send us a whatsapp <RiWhatsappLine  size={18}/></Link>
+                <Link href={"https://wa.me/+2349018257388"} className='px-9 py-3 bg-primaryGreen text-white w-fit flex gap-3 items-center font-lato text-sm'>Send us a whatsapp <RiWhatsappLine  size={18}/></Link>
             </motion.div>
         </div>
     )

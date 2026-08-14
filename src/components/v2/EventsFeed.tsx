@@ -542,15 +542,52 @@ export default function EventsFeed({ initialSlug }: EventsFeedProps) {
         const endOfToday = new Date(startOfToday);
         endOfToday.setDate(endOfToday.getDate() + 1);
 
+        // Robust date parser that handles both Date objects and ISO strings
+        const parseLocalDate = (dateInput: Date | string) => {
+            let date: Date;
+
+            // If it's already a Date object, use it directly
+            if (dateInput instanceof Date) {
+                date = new Date(dateInput);
+            }
+            // If it's a string, parse it
+            else if (typeof dateInput === 'string') {
+                date = new Date(dateInput);
+            }
+            // Fallback
+            else {
+                return new Date(0); // Epoch time as fallback
+            }
+
+            // Check if date is valid
+            if (isNaN(date.getTime())) {
+                console.warn('Invalid date:', dateInput);
+                return new Date(0); // Epoch time as fallback
+            }
+
+            // Normalize to midnight in local time
+            return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        };
+
         const getStatus = (event: (typeof events)[number]) => {
             const date = parseLocalDate(event.date);
+
+            // Debug (remove in production)
+            console.log('Event:', event.title, 'Date:', event.date, 'Parsed:', date, 'Status:',
+                date >= startOfToday && date < endOfToday ? 'Ongoing' :
+                    date >= endOfToday ? 'Upcoming' : 'Passed'
+            );
+
             if (date >= startOfToday && date < endOfToday) return "Ongoing";
             if (date >= endOfToday) return "Upcoming";
             return "Passed";
         };
 
+        type EventStatus = "Ongoing" | "Upcoming" | "Passed";
+        const validFilters: EventStatus[] = ["Ongoing", "Upcoming", "Passed"];
+
         if (activeFilter === "All") {
-            const statusOrder: Record<string, number> = {
+            const statusOrder: Record<EventStatus, number> = {
                 Ongoing: 0,
                 Upcoming: 1,
                 Passed: 2,
@@ -560,9 +597,13 @@ export default function EventsFeed({ initialSlug }: EventsFeedProps) {
             );
         }
 
-        return indexed.filter(({ event }) => getStatus(event) === activeFilter);
-    }, [activeFilter, events]);
+        if (validFilters.includes(activeFilter as EventStatus)) {
+            return indexed.filter(({ event }) => getStatus(event) === activeFilter);
+        }
 
+        return indexed;
+    }, [activeFilter, events]);
+    
     const selectedEvent = selectedIndex !== null ? events[selectedIndex] : null;
     useEffect(() => {
         let cancelled = false;
